@@ -13,7 +13,7 @@
     <PackageReference Include="NServiceBus" />
     <PackageReference Include="Microsoft.Data.SqlClient" />
     <PackageReference Include="ProjectDefaults" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.Sbom.Targets" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Sbom.Targets" PrivateAssets="all" Condition="$(Configuration)=='Release'" />
     <Using Include="NServiceBus.IMessageHandlerContext" Alias="HandlerContext" />
     <Using Include="System.Data.CommandBehavior" Static="True" />
   </ItemGroup>

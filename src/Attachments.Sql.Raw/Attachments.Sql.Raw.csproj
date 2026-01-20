@@ -11,7 +11,7 @@
     <PackageReference Include="Fody" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Data.SqlClient" />
     <PackageReference Include="ProjectDefaults" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.Sbom.Targets" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Sbom.Targets" PrivateAssets="all" Condition="$(Configuration)=='Release'" />
     <Compile Include="..\Attachments.Sql\Persister\*.cs" />
     <Compile Include="..\Attachments.Sql\Install\Installer.cs" />
     <Compile Include="..\Attachments.Sql\SqlSanitizer.cs" />
