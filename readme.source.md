@@ -1,10 +1,9 @@
-# <img src="/src/icon.png" height="25px"> NServiceBus.Attachments
+# <img src="/src/icon.png" height="25px"> NServiceBus.Community.Attachments
 
-[![Build status](https://ci.appveyor.com/api/projects/status/6483bemehfuowaa2/branch/main?svg=true)](https://ci.appveyor.com/project/SimonCropp/nservicebus-attachments)
-[![NuGet Status](https://img.shields.io/nuget/v/NServiceBus.Attachments.FileShare.svg?label=Attachments.FileShare)](https://www.nuget.org/packages/NServiceBus.Attachments.FileShare/)
-[![NuGet Status](https://img.shields.io/nuget/v/NServiceBus.Attachments.FileShare.Raw.svg?label=Attachments.FileShare.Raw)](https://www.nuget.org/packages/NServiceBus.Attachments.FileShare.Raw/)
-[![NuGet Status](https://img.shields.io/nuget/v/NServiceBus.Attachments.Sql.svg?label=Attachments.Sql)](https://www.nuget.org/packages/NServiceBus.Attachments.Sql/)
-[![NuGet Status](https://img.shields.io/nuget/v/NServiceBus.Attachments.Sql.Raw.svg?label=Attachments.Sql.Raw)](https://www.nuget.org/packages/NServiceBus.Attachments.Sql.Raw/)
+[![Build status](https://img.shields.io/appveyor/build/SimonCropp/nservicebus-community-attachments)](https://ci.appveyor.com/project/SimonCropp/nservicebus-community-attachments)
+[![NuGet Status](https://img.shields.io/nuget/v/NServiceBus.Community.Attachments.FileShare.Raw.svg?label=Attachments.FileShare.Raw)](https://www.nuget.org/packages/NServiceBus.Community.Attachments.FileShare.Raw/)
+[![NuGet Status](https://img.shields.io/nuget/v/NServiceBus.Community.Attachments.Sql.svg?label=Attachments.Sql)](https://www.nuget.org/packages/NServiceBus.Community.Attachments.Sql/)
+[![NuGet Status](https://img.shields.io/nuget/v/NServiceBus.Community.Attachments.Sql.Raw.svg?label=Attachments.Sql.Raw)](https://www.nuget.org/packages/NServiceBus.Community.Attachments.Sql.Raw/)
 
 Adds a streaming based attachment functionality to [NServiceBus](https://docs.particular.net/nservicebus/).
 
@@ -17,19 +16,19 @@ Adds a streaming based attachment functionality to [NServiceBus](https://docs.pa
 
 ## Community backed
 
-**It is expected that all developers either [become a Patron](https://opencollective.com/nservicebusextensions/contribute/patron-6976) to use NServiceBusExtensions. [Go to licensing FAQ](https://github.com/NServiceBusExtensions/Home/#licensingpatron-faq)**
+**It is expected that all developers [become a Patron](https://opencollective.com/nservicebuscommunity/contribute/patron-6976) to use NServiceBus Community Extensions. [Go to licensing FAQ](https://github.com/NServiceBusCommunity/Home/#licensingpatron-faq)**
 
 
 ### Sponsors
 
-Support this project by [becoming a Sponsor](https://opencollective.com/nservicebusextensions/contribute/sponsor-6972). The company avatar will show up here with a website link. The avatar will also be added to all GitHub repositories under the [NServiceBusExtensions organization](https://github.com/NServiceBusExtensions).
+Support this project by [becoming a Sponsor](https://opencollective.com/nservicebuscommunity/contribute/sponsor-6972). The company avatar will show up here with a website link. The avatar will also be added to all GitHub repositories under the [NServiceBusCommunity organization](https://github.com/NServiceBusCommunity).
 
 
 ### Patrons
 
-Thanks to all the backing developers. Support this project by [becoming a patron](https://opencollective.com/nservicebusextensions/contribute/patron-6976).
+Thanks to all the backing developers. Support this project by [becoming a patron](https://opencollective.com/nservicebuscommunity/contribute/patron-6976).
 
-<img src="https://opencollective.com/nservicebusextensions/tiers/patron.svg?width=890&avatarHeight=60&button=false">
+<img src="https://opencollective.com/nservicebuscommunity/tiers/patron.svg?width=890&avatarHeight=60&button=false">
 
 <a href="#" id="endofbacking"></a>
 
@@ -41,10 +40,10 @@ toc
 
 ## NuGet packages
 
- * https://www.nuget.org/packages/NServiceBus.Attachments.FileShare
- * https://www.nuget.org/packages/NServiceBus.Attachments.FileShare.Raw
- * https://www.nuget.org/packages/NServiceBus.Attachments.Sql
- * https://www.nuget.org/packages/NServiceBus.Attachments.Sql.Raw
+ * https://www.nuget.org/packages/NServiceBus.Community.Attachments.FileShare
+ * https://www.nuget.org/packages/NServiceBus.Community.Attachments.FileShare.Raw
+ * https://www.nuget.org/packages/NServiceBus.Community.Attachments.Sql
+ * https://www.nuget.org/packages/NServiceBus.Community.Attachments.Sql.Raw
 
 
 ## Compared to the DataBus
