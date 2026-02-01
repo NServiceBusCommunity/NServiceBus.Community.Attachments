@@ -18,6 +18,7 @@ public class AttachmentStream :
     Stream,
     IAttachment
 {
+    // ReSharper disable once CollectionNeverUpdated.Local
     static Dictionary<string, string> emptyDictionary = [];
 
     /// <summary>

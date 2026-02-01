@@ -1,9 +1,9 @@
 
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <AssemblyName>NServiceBus.Attachments.Sql.Raw</AssemblyName>
-    <PackageName>NServiceBus.Attachments.Sql.Raw</PackageName>
-    <TargetFramework>net9.0</TargetFramework>
+    <AssemblyName>NServiceBus.Community.Attachments.Sql.Raw</AssemblyName>
+    <PackageName>NServiceBus.Community.Attachments.Sql.Raw</PackageName>
+    <TargetFramework>net10.0</TargetFramework>
     <DefineConstants>$(DefineConstants);Sql;Raw</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
