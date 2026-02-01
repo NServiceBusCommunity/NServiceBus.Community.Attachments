@@ -46,12 +46,12 @@ class ReceiveBehavior(Func<Cancel, Task<SqlConnection>> connectionBuilder, IPers
 
                 if (transportTransaction.TryGet("System.Data.SqlClient.SqlTransaction", out SqlTransaction? dbTransaction))
                 {
-                    return new(dbTransaction!, persister);
+                    return new(dbTransaction, persister);
                 }
 
                 if (transportTransaction.TryGet("System.Data.SqlClient.SqlConnection", out SqlConnection? connection))
                 {
-                    return new(connection!, persister);
+                    return new(connection, persister);
                 }
             }
             else

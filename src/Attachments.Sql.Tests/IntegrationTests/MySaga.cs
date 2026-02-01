@@ -3,8 +3,8 @@
     IAmStartedByMessages<SendMessage>
 {
     protected override void ConfigureHowToFindSaga(SagaPropertyMapper<SagaData> mapper) =>
-        mapper.ConfigureMapping<SendMessage>(msg => msg.MyId)
-            .ToSaga(saga => saga.MyId);
+        mapper.MapSaga(saga => saga.MyId)
+            .ToMessage<SendMessage>(msg => msg.MyId);
 
     public async Task Handle(SendMessage message, HandlerContext context)
     {

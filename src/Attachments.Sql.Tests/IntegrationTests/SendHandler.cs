@@ -10,7 +10,7 @@
         Assert.Equal("value", attachment.Metadata["key"]);
         Assert.NotNull(attachment);
 
-        var directory = Path.Combine(ProjectFiles.SolutionDirectory, "temp");
+        using var directory = new TempDirectory();
         await incomingAttachments.CopyToDirectory(directory, cancel: context.CancellationToken);
 
         var outgoingAttachment = replyOptions.Attachments();

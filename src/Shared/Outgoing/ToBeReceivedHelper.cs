@@ -7,7 +7,7 @@ static class ToBeReceivedHelper
     {
         if (extensions.TryGet(out DiscardIfNotReceivedBefore? constraint))
         {
-            return constraint?.MaxTime;
+            return constraint.MaxTime;
         }
 
         return null;
