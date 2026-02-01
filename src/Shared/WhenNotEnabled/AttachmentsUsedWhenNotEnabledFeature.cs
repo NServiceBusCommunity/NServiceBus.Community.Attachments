@@ -11,8 +11,10 @@ using NServiceBus.Attachments;
 class AttachmentsUsedWhenNotEnabledFeature :
     Feature
 {
+#pragma warning disable CS0618 // EnableByDefault is obsolete but still needed for this feature
     public AttachmentsUsedWhenNotEnabledFeature() =>
         EnableByDefault();
+#pragma warning restore CS0618
 
     protected override void Setup(FeatureConfigurationContext context)
     {

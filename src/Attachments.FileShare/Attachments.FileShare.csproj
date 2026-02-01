@@ -1,9 +1,9 @@
 
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <AssemblyName>NServiceBus.Attachments.FileShare</AssemblyName>
-    <PackageName>NServiceBus.Attachments.FileShare</PackageName>
-    <TargetFramework>net9.0</TargetFramework>
+    <AssemblyName>NServiceBus.Community.Attachments.FileShare</AssemblyName>
+    <PackageName>NServiceBus.Community.Attachments.FileShare</PackageName>
+    <TargetFramework>net10.0</TargetFramework>
     <DefineConstants>$(DefineConstants);FileShare</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
