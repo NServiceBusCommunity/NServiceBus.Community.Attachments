@@ -11,7 +11,7 @@
     <PackageReference Include="Fody" PrivateAssets="all" />
     <PackageReference Include="NServiceBus" />
     <PackageReference Include="ProjectDefaults" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.Sbom.Targets" PrivateAssets="all" Condition="$(Configuration)=='Release'" />
+    <PackageReference Include="Microsoft.Sbom.Targets" PrivateAssets="all" Condition="'$(CI)' == 'true'" />
     <Using Include="NServiceBus.IMessageHandlerContext" Alias="HandlerContext" />
   </ItemGroup>
   <Import Project="..\Shared\Shared.projitems" Label="Shared" />
