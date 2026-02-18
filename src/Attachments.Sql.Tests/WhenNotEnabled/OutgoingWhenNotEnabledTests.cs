@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-public class OutgoingWhenNotEnabledTests
+﻿public class OutgoingWhenNotEnabledTests
 {
     static OutgoingWhenNotEnabledTests() =>
         DbSetup.Setup();
@@ -14,9 +12,16 @@ public class OutgoingWhenNotEnabledTests
         configuration.UseSerialization<SystemJsonSerializer>();
         var endpoint = await Endpoint.Start(configuration);
 
-        var exception = await await Assert.ThrowsAsync<Exception>(() => SendStartMessageWithAttachment(endpoint));
-        await Assert.That(exception).IsNotNull();
-        await Verify(exception.Message);
+        try
+        {
+            await SendStartMessageWithAttachment(endpoint);
+            throw new InvalidOperationException("Expected exception was not thrown");
+        }
+        catch (Exception exception)
+        {
+            await Verify(exception.Message);
+        }
+
         await endpoint.Stop();
     }
 

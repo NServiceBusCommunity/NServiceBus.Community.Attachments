@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-public class PersisterTests
+﻿public class PersisterTests
 {
     DateTime defaultTestDate = new(2000, 1, 1, 1, 1, 1, DateTimeKind.Utc);
     Dictionary<string, string> metadata = new() {{"key", "value"}};
@@ -19,7 +17,7 @@ public class PersisterTests
         await persister.CopyTo("theMessageId", "theName", connection, null, memoryStream);
 
         memoryStream.Position = 0;
-        await Assert.That(memoryStream.GetBuffer()[0]).IsEqualTo(5);
+        await Assert.That((int)memoryStream.GetBuffer()[0]).IsEqualTo(5);
     }
 
     [Test]
@@ -30,7 +28,7 @@ public class PersisterTests
         await persister.DeleteAllAttachments(connection, null);
         await persister.SaveStream(connection, null, "theMessageId", "theName", defaultTestDate, GetStream(), metadata);
         byte[] bytes = await persister.GetBytes("theMessageId", "theName", connection, null);
-        await Assert.That(bytes[0]).IsEqualTo(5);
+        await Assert.That((int)bytes[0]).IsEqualTo(5);
     }
 
     [Test]
@@ -52,7 +50,7 @@ public class PersisterTests
         await persister.DeleteAllAttachments(connection, null);
         await persister.SaveStream(connection, null, "theMessageId", "theName", defaultTestDate, GetStream());
         byte[] bytes = await persister.GetBytes("themeSsageid", "Thename", connection, null);
-        await Assert.That(bytes[0]).IsEqualTo(5);
+        await Assert.That((int)bytes[0]).IsEqualTo(5);
     }
 
     [Test]
@@ -64,7 +62,7 @@ public class PersisterTests
         var name = new string('a', 255);
         await persister.SaveStream(connection, null, "theMessageId", name, defaultTestDate, GetStream());
         byte[] bytes = await persister.GetBytes("theMessageId", name, connection, null);
-        await Assert.That(bytes[0]).IsEqualTo(5);
+        await Assert.That((int)bytes[0]).IsEqualTo(5);
     }
 
     [Test]
@@ -76,12 +74,11 @@ public class PersisterTests
         var count = 0;
         await persister.SaveStream(connection, null, "theMessageId", "theName", defaultTestDate, GetStream(), metadata);
         await persister.ProcessStream("theMessageId", "theName", connection, null,
-            action: (stream, _) =>
+            action: async (stream, _) =>
             {
                 count++;
                 var array = ToBytes(stream);
-                await Assert.That(array[0]).IsEqualTo(5);
-                return Task.CompletedTask;
+                await Assert.That((int)array[0]).IsEqualTo(5);
             });
         await Assert.That(count).IsEqualTo(1);
     }
@@ -95,12 +92,11 @@ public class PersisterTests
         var count = 0;
         await persister.SaveStream(connection, null, "theMessageId", "theName", defaultTestDate, GetStream(), metadata);
         await persister.ProcessByteArray("theMessageId", "theName", connection, null,
-            action: (bytes, _) =>
+            action: async (bytes, _) =>
             {
                 count++;
                 var array = bytes.Bytes;
-                await Assert.That(array[0]).IsEqualTo(5);
-                return Task.CompletedTask;
+                await Assert.That((int)array[0]).IsEqualTo(5);
             });
         await Assert.That(count).IsEqualTo(1);
     }
@@ -120,12 +116,11 @@ public class PersisterTests
         for (var i = 0; i < 10; i++)
         {
             await persister.ProcessStream("theMessageId", $"theName{i}", connection, null,
-                action: (stream, _) =>
+                action: async (stream, _) =>
                 {
                     Interlocked.Increment(ref count);
                     var array = ToBytes(stream);
-                    await Assert.That(array[0]).IsEqualTo(5);
-                    return Task.CompletedTask;
+                    await Assert.That((int)array[0]).IsEqualTo(5);
                 });
         }
 
@@ -215,23 +210,21 @@ public class PersisterTests
         await persister.SaveStream(connection, null, "theMessageId", "theName1", defaultTestDate, GetStream(1), metadata);
         await persister.SaveStream(connection, null, "theMessageId", "theName2", defaultTestDate, GetStream(2), metadata);
         await persister.ProcessStreams("theMessageId", connection, null,
-            action: (stream, _) =>
+            action: async (stream, _) =>
             {
                 count++;
                 var array = ToBytes(stream);
                 if (count == 1)
                 {
-                    await Assert.That(array[0]).IsEqualTo(1);
+                    await Assert.That((int)array[0]).IsEqualTo(1);
                     await Assert.That(stream.Name).IsEqualTo("theName1");
                 }
 
                 if (count == 2)
                 {
-                    await Assert.That(array[0]).IsEqualTo(2);
+                    await Assert.That((int)array[0]).IsEqualTo(2);
                     await Assert.That(stream.Name).IsEqualTo("theName2");
                 }
-
-                return Task.CompletedTask;
             });
         await Assert.That(count).IsEqualTo(2);
     }
@@ -246,23 +239,21 @@ public class PersisterTests
         await persister.SaveStream(connection, null, "theMessageId", "theName1", defaultTestDate, GetStream(1), metadata);
         await persister.SaveStream(connection, null, "theMessageId", "theName2", defaultTestDate, GetStream(2), metadata);
         await persister.ProcessByteArrays("theMessageId", connection, null,
-            action: (array, _) =>
+            action: async (array, _) =>
             {
                 count++;
                 var bytes = array.Bytes;
                 if (count == 1)
                 {
-                    await Assert.That(bytes[0]).IsEqualTo(1);
+                    await Assert.That((int)bytes[0]).IsEqualTo(1);
                     await Assert.That(array.Name).IsEqualTo("theName1");
                 }
 
                 if (count == 2)
                 {
-                    await Assert.That(bytes[0]).IsEqualTo(2);
+                    await Assert.That((int)bytes[0]).IsEqualTo(2);
                     await Assert.That(array.Name).IsEqualTo("theName2");
                 }
-
-                return Task.CompletedTask;
             });
         await Assert.That(count).IsEqualTo(2);
     }

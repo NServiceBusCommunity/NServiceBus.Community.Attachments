@@ -1,5 +1,4 @@
 ﻿using Microsoft.Data.SqlClient;
-using System.Threading.Tasks;
 
 public class InstallerTests
 {
@@ -11,7 +10,7 @@ public class InstallerTests
     {
         await using var connection = await Connection.OpenAsyncConnection();
         await Installer.CreateTable(connection, "MessageAttachments");
-        TableExists("[dbo].[MessageAttachments]", connection);
+        await TableExists("[dbo].[MessageAttachments]", connection);
     }
 
     static async Task TableExists(string tableName, SqlConnection connection)

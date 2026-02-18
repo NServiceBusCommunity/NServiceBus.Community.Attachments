@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 // ReSharper disable MustUseReturnValue
 // ReSharper disable StreamReadReturnValueIgnored
 public class StreamWrapperTests
@@ -10,24 +9,24 @@ public class StreamWrapperTests
         Run(_ => _.ReadAsync(new byte[2], 0, 2));
 
     [Test]
-    public void ReadBytes() =>
-        Run(_ => _.Read(new byte[2], 0, 2));
+    public async Task ReadBytes() =>
+        await Run(_ => _.Read(new byte[2], 0, 2));
 
     [Test]
-    public void ReadSpan() =>
-        Run(_ => _.Read(new(new byte[2])));
+    public async Task ReadSpan() =>
+        await Run(_ => _.Read(new(new byte[2])));
 
     [Test]
     public Task ReadMemory() =>
         Run(async _ => await _.ReadAsync(new(new byte[2])));
 
     [Test]
-    public void ReadByte() =>
-        Run(_ => _.ReadByte());
+    public async Task ReadByte() =>
+        await Run(_ => _.ReadByte());
 
     [Test]
-    public void CopyTo() =>
-        Run(_ => _.CopyTo(new MemoryStream()));
+    public async Task CopyTo() =>
+        await Run(_ => _.CopyTo(new MemoryStream()));
 
     [Test]
     public Task CopyToAsync() =>

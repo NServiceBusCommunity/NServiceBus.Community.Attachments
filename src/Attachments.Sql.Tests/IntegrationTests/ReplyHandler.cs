@@ -12,7 +12,7 @@
         await using var stream = await incomingAttachment.GetStream(context.CancellationToken);
         Debug.WriteLine(stream);
         var attachmentInfos = await incomingAttachment.GetMetadata(context.CancellationToken).ToAsyncList();
-        Assert.Single(attachmentInfos);
+        await Assert.That(attachmentInfos).HasSingleItem();
         tests.HandlerEvent.Set();
     }
 }

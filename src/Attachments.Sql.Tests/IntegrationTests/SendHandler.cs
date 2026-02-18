@@ -7,8 +7,8 @@
         replyOptions.RouteToThisEndpoint();
         var incomingAttachments = context.Attachments();
         var attachment = await incomingAttachments.GetBytes("withMetadata", context.CancellationToken);
-        Assert.Equal("value", attachment.Metadata["key"]);
-        Assert.NotNull(attachment);
+        await Assert.That(attachment).IsNotNull();
+        await Assert.That(attachment.Metadata["key"]).IsEqualTo("value");
 
         using var directory = new TempDirectory();
         await incomingAttachments.CopyToDirectory(directory, cancel: context.CancellationToken);
@@ -17,7 +17,7 @@
         outgoingAttachment.AddBytes(attachment);
 
         var attachmentInfos = await incomingAttachments.GetMetadata(context.CancellationToken).ToAsyncList();
-        Assert.Equal(6, attachmentInfos.Count);
+        await Assert.That(attachmentInfos.Count).IsEqualTo(6);
         tests.PerformNestedConnection();
 
         await context.Send(new ReplyMessage(), replyOptions);

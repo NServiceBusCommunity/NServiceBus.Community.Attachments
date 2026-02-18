@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-public class IncomingWhenNotEnabledTests : IDisposable
+﻿public class IncomingWhenNotEnabledTests : IDisposable
 {
     public ManualResetEvent ResetEvent = new(false);
     public Exception? Exception;
@@ -13,7 +11,6 @@ public class IncomingWhenNotEnabledTests : IDisposable
         configuration.RegisterComponents(_ => _.AddSingleton(this));
         configuration.UseTransport<LearningTransport>();
         configuration.UseSerialization<SystemJsonSerializer>();
-        configuration.AssemblyScanner().ExcludeAssemblies("xunit.runner.utility.netcoreapp10.dll");
         var endpoint = await Endpoint.Start(configuration);
         await endpoint.SendLocal(new SendMessage());
         ResetEvent.WaitOne();

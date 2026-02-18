@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-public class AsyncTimerTests
+﻿public class AsyncTimerTests
 {
     [Test]
     public async Task It_calls_error_callback()
@@ -29,7 +27,7 @@ public class AsyncTimerTests
         var exceptionThrown = false;
         var timer = new AsyncTimer();
         timer.Start(
-            callback: (_, _) =>
+            callback: async (_, _) =>
             {
                 if (fail)
                 {
@@ -39,7 +37,6 @@ public class AsyncTimerTests
 
                 await Assert.That(exceptionThrown).IsTrue();
                 callbackInvokedAfterError.SetResult(true);
-                return Task.CompletedTask;
             },
             interval: TimeSpan.Zero,
             errorCallback: _ =>

@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-public class OutgoingWhenNotEnabledTests
+﻿public class OutgoingWhenNotEnabledTests
 {
     [Test]
     public async Task Run()
@@ -9,11 +7,18 @@ public class OutgoingWhenNotEnabledTests
         configuration.UsePersistence<LearningPersistence>();
         configuration.UseTransport<LearningTransport>();
         configuration.UseSerialization<SystemJsonSerializer>();
-        configuration.AssemblyScanner().ExcludeAssemblies("xunit.runner.utility.netcoreapp10.dll");
         var endpoint = await Endpoint.Start(configuration);
 
-        var exception = await await Assert.ThrowsAsync<Exception>(() => SendStartMessageWithAttachment(endpoint));
-        await Verify(exception.Message);
+        try
+        {
+            await SendStartMessageWithAttachment(endpoint);
+            throw new InvalidOperationException("Expected exception was not thrown");
+        }
+        catch (Exception exception)
+        {
+            await Verify(exception.Message);
+        }
+
         await endpoint.Stop();
     }
 
