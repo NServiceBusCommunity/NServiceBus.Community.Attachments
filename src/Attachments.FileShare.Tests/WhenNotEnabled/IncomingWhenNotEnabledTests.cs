@@ -1,9 +1,11 @@
-﻿public class IncomingWhenNotEnabledTests : IDisposable
+﻿using System.Threading.Tasks;
+
+public class IncomingWhenNotEnabledTests : IDisposable
 {
     public ManualResetEvent ResetEvent = new(false);
     public Exception? Exception;
 
-    [Fact]
+    [Test]
     public async Task Run()
     {
         var configuration = new EndpointConfiguration("FileShareIncomingWhenNotEnabledTests");
@@ -16,7 +18,7 @@
         await endpoint.SendLocal(new SendMessage());
         ResetEvent.WaitOne();
         await endpoint.Stop();
-        Assert.NotNull(Exception);
+        await Assert.That(Exception).IsNotNull();
         await Verify(Exception!.Message);
     }
 

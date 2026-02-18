@@ -1,4 +1,6 @@
-﻿public class PersisterTests
+﻿using System.Threading.Tasks;
+
+public class PersisterTests
 {
     DateTime defaultTestDate = new(2000, 1, 1, 1, 1, 1, DateTimeKind.Utc);
     Dictionary<string, string> metadata = new() {{"key", "value"}};
@@ -6,7 +8,7 @@
 
     static PersisterTests() => DbSetup.Setup();
 
-    [Fact]
+    [Test]
     public async Task CopyTo()
     {
         await using var connection = Connection.OpenConnection();
@@ -17,10 +19,10 @@
         await persister.CopyTo("theMessageId", "theName", connection, null, memoryStream);
 
         memoryStream.Position = 0;
-        Assert.Equal(5, memoryStream.GetBuffer()[0]);
+        await Assert.That(memoryStream.GetBuffer()[0]).IsEqualTo(5);
     }
 
-    [Fact]
+    [Test]
     public async Task GetBytes()
     {
         await using var connection = Connection.OpenConnection();
@@ -28,10 +30,10 @@
         await persister.DeleteAllAttachments(connection, null);
         await persister.SaveStream(connection, null, "theMessageId", "theName", defaultTestDate, GetStream(), metadata);
         byte[] bytes = await persister.GetBytes("theMessageId", "theName", connection, null);
-        Assert.Equal(5, bytes[0]);
+        await Assert.That(bytes[0]).IsEqualTo(5);
     }
 
-    [Fact]
+    [Test]
     public async Task GetMemoryStream()
     {
         await using var connection = Connection.OpenConnection();
@@ -39,10 +41,10 @@
         await persister.DeleteAllAttachments(connection, null);
         await persister.SaveStream(connection, null, "theMessageId", "theName", defaultTestDate, GetStream(), metadata);
         var bytes = await persister.GetMemoryStream("theMessageId", "theName", connection, null);
-        Assert.Equal(5, bytes.ReadByte());
+        await Assert.That(bytes.ReadByte()).IsEqualTo(5);
     }
 
-    [Fact]
+    [Test]
     public async Task CaseInsensitiveRead()
     {
         await using var connection = Connection.OpenConnection();
@@ -50,10 +52,10 @@
         await persister.DeleteAllAttachments(connection, null);
         await persister.SaveStream(connection, null, "theMessageId", "theName", defaultTestDate, GetStream());
         byte[] bytes = await persister.GetBytes("themeSsageid", "Thename", connection, null);
-        Assert.Equal(5, bytes[0]);
+        await Assert.That(bytes[0]).IsEqualTo(5);
     }
 
-    [Fact]
+    [Test]
     public async Task LongName()
     {
         await using var connection = Connection.OpenConnection();
@@ -62,10 +64,10 @@
         var name = new string('a', 255);
         await persister.SaveStream(connection, null, "theMessageId", name, defaultTestDate, GetStream());
         byte[] bytes = await persister.GetBytes("theMessageId", name, connection, null);
-        Assert.Equal(5, bytes[0]);
+        await Assert.That(bytes[0]).IsEqualTo(5);
     }
 
-    [Fact]
+    [Test]
     public async Task ProcessStream()
     {
         await using var connection = Connection.OpenConnection();
@@ -78,13 +80,13 @@
             {
                 count++;
                 var array = ToBytes(stream);
-                Assert.Equal(5, array[0]);
+                await Assert.That(array[0]).IsEqualTo(5);
                 return Task.CompletedTask;
             });
-        Assert.Equal(1, count);
+        await Assert.That(count).IsEqualTo(1);
     }
 
-    [Fact]
+    [Test]
     public async Task ProcessByteArray()
     {
         await using var connection = Connection.OpenConnection();
@@ -97,13 +99,13 @@
             {
                 count++;
                 var array = bytes.Bytes;
-                Assert.Equal(5, array[0]);
+                await Assert.That(array[0]).IsEqualTo(5);
                 return Task.CompletedTask;
             });
-        Assert.Equal(1, count);
+        await Assert.That(count).IsEqualTo(1);
     }
 
-    [Fact]
+    [Test]
     public async Task ProcessStreamMultiple()
     {
         await using var connection = Connection.OpenConnection();
@@ -122,15 +124,15 @@
                 {
                     Interlocked.Increment(ref count);
                     var array = ToBytes(stream);
-                    Assert.Equal(5, array[0]);
+                    await Assert.That(array[0]).IsEqualTo(5);
                     return Task.CompletedTask;
                 });
         }
 
-        Assert.Equal(10, count);
+        await Assert.That(count).IsEqualTo(10);
     }
 
-    [Fact]
+    [Test]
     public async Task GetMultipleStreams()
     {
         await using var connection = Connection.OpenConnection();
@@ -143,13 +145,13 @@
         {
             var array = ToBytes(attachment);
             names.Add(attachment.Name);
-            Assert.True(array[0] == 1 || array[0] == 2);
+            await Assert.That(array[0] == 1 || array[0] == 2).IsTrue();
         }
 
-        Assert.True(names.SequenceEqual(["theName1", "theName2"]));
+        await Assert.That(names.SequenceEqual(["theName1", "theName2"])).IsTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task GetMultipleBytes()
     {
         await using var connection = Connection.OpenConnection();
@@ -161,13 +163,13 @@
         await foreach (var attachment in persister.GetBytes("theMessageId", connection, null))
         {
             names.Add(attachment.Name);
-            Assert.True(attachment.Bytes[0] == 1 || attachment.Bytes[0] == 2);
+            await Assert.That(attachment.Bytes[0] == 1 || attachment.Bytes[0] == 2).IsTrue();
         }
 
-        Assert.True(names.SequenceEqual(["theName1", "theName2"]));
+        await Assert.That(names.SequenceEqual(["theName1", "theName2"])).IsTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task GetMultipleWithPause()
     {
         await using var connection = Connection.OpenConnection();
@@ -182,10 +184,10 @@
             names.Add(attachment.Name);
         }
 
-        Assert.True(names.SequenceEqual(["theName1", "theName2"]));
+        await Assert.That(names.SequenceEqual(["theName1", "theName2"])).IsTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task GetMultipleStrings()
     {
         await using var connection = Connection.OpenConnection();
@@ -197,13 +199,13 @@
         await foreach (var attachment in persister.GetStrings("theMessageId", connection, null))
         {
             names.Add(attachment.Name);
-            Assert.True(attachment.Value is "a" or "b", attachment.Value);
+            await Assert.That(attachment.Value is "a" or "b").IsTrue();
         }
 
-        Assert.True(names.SequenceEqual(["theName1", "theName2"]));
+        await Assert.That(names.SequenceEqual(["theName1", "theName2"])).IsTrue();
     }
 
-    [Fact]
+    [Test]
     public async Task ProcessStreams()
     {
         await using var connection = Connection.OpenConnection();
@@ -219,22 +221,22 @@
                 var array = ToBytes(stream);
                 if (count == 1)
                 {
-                    Assert.Equal(1, array[0]);
-                    Assert.Equal("theName1", stream.Name);
+                    await Assert.That(array[0]).IsEqualTo(1);
+                    await Assert.That(stream.Name).IsEqualTo("theName1");
                 }
 
                 if (count == 2)
                 {
-                    Assert.Equal(2, array[0]);
-                    Assert.Equal("theName2", stream.Name);
+                    await Assert.That(array[0]).IsEqualTo(2);
+                    await Assert.That(stream.Name).IsEqualTo("theName2");
                 }
 
                 return Task.CompletedTask;
             });
-        Assert.Equal(2, count);
+        await Assert.That(count).IsEqualTo(2);
     }
 
-    [Fact]
+    [Test]
     public async Task ProcessByteArrays()
     {
         await using var connection = Connection.OpenConnection();
@@ -250,19 +252,19 @@
                 var bytes = array.Bytes;
                 if (count == 1)
                 {
-                    Assert.Equal(1, bytes[0]);
-                    Assert.Equal("theName1", array.Name);
+                    await Assert.That(bytes[0]).IsEqualTo(1);
+                    await Assert.That(array.Name).IsEqualTo("theName1");
                 }
 
                 if (count == 2)
                 {
-                    Assert.Equal(2, bytes[0]);
-                    Assert.Equal("theName2", array.Name);
+                    await Assert.That(bytes[0]).IsEqualTo(2);
+                    await Assert.That(array.Name).IsEqualTo("theName2");
                 }
 
                 return Task.CompletedTask;
             });
-        Assert.Equal(2, count);
+        await Assert.That(count).IsEqualTo(2);
     }
 
     static byte[] ToBytes(Stream stream)
@@ -272,7 +274,7 @@
         return memoryStream.ToArray();
     }
 
-    [Fact]
+    [Test]
     public async Task SaveStream()
     {
         await using var connection = Connection.OpenConnection();
@@ -283,7 +285,7 @@
         await Verify(result);
     }
 
-    [Fact]
+    [Test]
     public async Task SaveBytes()
     {
         await using var connection = Connection.OpenConnection();
@@ -294,7 +296,7 @@
         await Verify(result);
     }
 
-    [Fact]
+    [Test]
     public async Task SaveString()
     {
         await using var connection = Connection.OpenConnection();
@@ -305,7 +307,7 @@
         await Verify(result);
     }
 
-    [Fact]
+    [Test]
     public async Task LargeString()
     {
         await using var connection = Connection.OpenConnection();
@@ -314,10 +316,10 @@
         var expected = new string('*', 100000);
         await persister.SaveString(connection, null, "theMessageId", "theName", defaultTestDate, expected, null, metadata);
         var result = await persister.GetString("theMessageId", "theName", connection, null);
-        Assert.Equal(expected, result);
+        await Assert.That(result).IsEqualTo(expected);
     }
 
-    [Fact]
+    [Test]
     public async Task DiffEncoding()
     {
         await using var connection = Connection.OpenConnection();
@@ -328,11 +330,11 @@
 
         var result = await persister.GetString("theMessageId", "theName", connection, null);
         var encodingName = result.Metadata["encoding"];
-        Assert.Equal(encodingName, encoding.WebName);
-        Assert.Equal("Sample", result);
+        await Assert.That(encoding.WebName).IsEqualTo(encodingName);
+        await Assert.That(result).IsEqualTo("Sample");
     }
 
-    [Fact]
+    [Test]
     public async Task DiffEncodingOverride()
     {
         await using var connection = Connection.OpenConnection();
@@ -343,11 +345,11 @@
 
         var result = await persister.GetString("theMessageId", "theName", connection, null, Encoding.BigEndianUnicode);
         var encodingName = result.Metadata["encoding"];
-        Assert.Equal(encodingName, encoding.WebName);
-        Assert.Equal("Sample", result);
+        await Assert.That(encoding.WebName).IsEqualTo(encodingName);
+        await Assert.That(result).IsEqualTo("Sample");
     }
 
-    [Fact]
+    [Test]
     public async Task SaveStringEncoding()
     {
         await using var connection = Connection.OpenConnection();
@@ -360,11 +362,11 @@
         Trace.Write(result);
         var attachmentBytes = await persister.GetBytes("theMessageId", "theName", connection, null);
         var bytes = attachmentBytes.Bytes;
-        Assert.True(bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF, "Expected a BOM");
-        Assert.Equal(expected.ToBytes(encoding), bytes);
+        await Assert.That(bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF).IsTrue().Because("Expected a BOM");
+        await Assert.That(bytes).IsEqualTo(expected.ToBytes(encoding));
     }
 
-    [Fact]
+    [Test]
     public async Task DuplicateAll()
     {
         await using var connection = Connection.OpenConnection();
@@ -383,7 +385,7 @@
             .IgnoreMember("Created");
     }
 
-    [Fact]
+    [Test]
     public async Task Duplicate()
     {
         await using var connection = Connection.OpenConnection();
@@ -401,12 +403,12 @@
         var sourceInfo = info.Single(_ => _ is { Name: "sourceName", MessageId: "theSourceMessageId" });
         var duplicateInfo = info.Single(_ => _.MessageId == "theTargetMessageId");
 
-        Assert.Equal(sourceInfo.Expiry, duplicateInfo.Expiry);
+        await Assert.That(duplicateInfo.Expiry).IsEqualTo(sourceInfo.Expiry);
         await Verify(info.Where(_ => _.MessageId == "theTargetMessageId"))
             .IgnoreMember("Created");
     }
 
-    [Fact]
+    [Test]
     public async Task DuplicateWithRename()
     {
         await using var connection = Connection.OpenConnection();
@@ -416,12 +418,12 @@
         Thread.Sleep(1000); // Ensure different Created time
         await persister.Duplicate("theSourceMessageId", "theName1", connection, null, "theTargetMessageId", "theName2");
         var info = await persister.ReadAllInfo(connection, null);
-        Assert.Equal(info[0].Expiry, info[1].Expiry);
+        await Assert.That(info[1].Expiry).IsEqualTo(info[0].Expiry);
         await Verify(info.Where(_ => _.MessageId == "theTargetMessageId"))
             .IgnoreMember("Created");
     }
 
-    [Fact]
+    [Test]
     public async Task ReadAllMessageInfoAction()
     {
         await using var connection = Connection.OpenConnection();
@@ -440,7 +442,7 @@
             .IgnoreMember("Created");
     }
 
-    [Fact]
+    [Test]
     public async Task ReadAllMessageInfo()
     {
         await using var connection = Connection.OpenConnection();
@@ -452,7 +454,7 @@
             .IgnoreMember("Created");
     }
 
-    [Fact]
+    [Test]
     public async Task ReadAllMessageNames()
     {
         await using var connection = Connection.OpenConnection();
@@ -463,7 +465,7 @@
         await Verify(persister.ReadAllMessageNames(connection, null, "theMessageId"));
     }
 
-    [Fact]
+    [Test]
     public async Task CleanupItemsOlderThan()
     {
         await using var connection = Connection.OpenConnection();
@@ -476,7 +478,7 @@
         await Verify(new {cleanupCount, result});
     }
 
-    [Fact]
+    [Test]
     public async Task PurgeItems()
     {
         await using var connection = Connection.OpenConnection();
@@ -495,7 +497,7 @@
             });
     }
 
-    [Fact]
+    [Test]
     public async Task DeleteAttachments()
     {
         await using var connection = Connection.OpenConnection();

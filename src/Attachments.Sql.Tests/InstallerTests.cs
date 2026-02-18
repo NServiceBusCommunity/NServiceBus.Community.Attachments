@@ -1,11 +1,12 @@
 ﻿using Microsoft.Data.SqlClient;
+using System.Threading.Tasks;
 
 public class InstallerTests
 {
     static InstallerTests() =>
         DbSetup.Setup();
 
-    [Fact]
+    [Test]
     public async Task Run()
     {
         await using var connection = await Connection.OpenAsyncConnection();
@@ -13,7 +14,7 @@ public class InstallerTests
         TableExists("[dbo].[MessageAttachments]", connection);
     }
 
-    static void TableExists(string tableName, SqlConnection connection)
+    static async Task TableExists(string tableName, SqlConnection connection)
     {
         using var command = connection.CreateCommand();
         command.CommandText =
@@ -25,6 +26,6 @@ public class InstallerTests
              ) then 1 else 0 end;
              """;
         var tableExists = (int) command.ExecuteScalar()! == 1;
-        Assert.True(tableExists);
+        await Assert.That(tableExists).IsTrue();
     }
 }

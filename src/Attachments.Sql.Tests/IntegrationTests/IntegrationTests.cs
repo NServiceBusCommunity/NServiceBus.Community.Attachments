@@ -1,6 +1,7 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.DependencyInjection;
 using NServiceBus.Persistence.Sql;
+using System.Threading.Tasks;
 
 public class IntegrationTests : IDisposable
 {
@@ -11,7 +12,7 @@ public class IntegrationTests : IDisposable
     static IntegrationTests() =>
         DbSetup.Setup();
 
-    [Fact]
+    [Test]
     public Task AdHoc() =>
         RunSql(
             useSqlTransport: false,
@@ -21,8 +22,8 @@ public class IntegrationTests : IDisposable
             transactionMode: TransportTransactionMode.SendsAtomicWithReceive,
             runEarlyCleanup: true);
 
-    [Theory]
-    [ClassData(typeof(TestDataGenerator))]
+    [Test]
+    [MethodDataSource(typeof(TestDataGenerator), "GetEnumerator")]
     public async Task RunSql(
         bool useSqlTransport,
         bool useSqlTransportConnection,

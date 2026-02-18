@@ -1,6 +1,8 @@
-﻿public class AttachmentCleanerTests
+﻿using System.Threading.Tasks;
+
+public class AttachmentCleanerTests
 {
-    [Fact]
+    [Test]
     public async Task If_triggers_critical_action_after_10_failures()
     {
         var criticalActionTriggered = false;
@@ -14,19 +16,19 @@
             timer.OnError(new("Simulated!"));
         }
 
-        Assert.False(criticalActionTriggered);
+        await Assert.That(criticalActionTriggered).IsFalse();
 
         //Trigger the 10th time
         timer.OnError(new("Simulated!"));
-        Assert.True(criticalActionTriggered);
+        await Assert.That(criticalActionTriggered).IsTrue();
         criticalActionTriggered = false;
 
         //Trigger again -- the counter should be reset
         timer.OnError(new("Simulated!"));
-        Assert.False(criticalActionTriggered);
+        await Assert.That(criticalActionTriggered).IsFalse();
     }
 
-    [Fact]
+    [Test]
     public async Task It_resets_the_failure_counter_after_successful_attempt()
     {
         var criticalActionTriggered = false;
@@ -47,7 +49,7 @@
             }
         }
 
-        Assert.False(criticalActionTriggered);
+        await Assert.That(criticalActionTriggered).IsFalse();
     }
 
     class TestableCleaner(Func<Cancel, Task> cleanup, Action<string, Exception, Cancel> criticalError, TimeSpan frequencyToRunCleanup, IAsyncTimer timer) :

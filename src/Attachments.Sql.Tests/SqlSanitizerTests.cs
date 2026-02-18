@@ -1,9 +1,11 @@
-﻿public class SqlSanitizerTests
+﻿using System.Threading.Tasks;
+
+public class SqlSanitizerTests
 {
-    [Fact]
-    public void Table_name_and_schema_should_be_quoted()
+    [Test]
+    public async Task Table_name_and_schema_should_be_quoted()
     {
-        Assert.Equal("[MyEndpoint]", SqlSanitizer.Sanitize("MyEndpoint"));
-        Assert.Equal("[MyEndpoint]]; SOME OTHER SQL;--]", SqlSanitizer.Sanitize("MyEndpoint]; SOME OTHER SQL;--"));
+        await Assert.That(SqlSanitizer.Sanitize("MyEndpoint")).IsEqualTo("[MyEndpoint]");
+        await Assert.That(SqlSanitizer.Sanitize("MyEndpoint]; SOME OTHER SQL;--")).IsEqualTo("[MyEndpoint]]; SOME OTHER SQL;--]");
     }
 }

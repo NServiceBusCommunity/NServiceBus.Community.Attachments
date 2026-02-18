@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using System.Threading.Tasks;
 
 public class IncomingWhenNotEnabledTests : IDisposable
 {
@@ -8,7 +9,7 @@ public class IncomingWhenNotEnabledTests : IDisposable
     static IncomingWhenNotEnabledTests() =>
         DbSetup.Setup();
 
-    [Fact]
+    [Test]
     public async Task Run()
     {
         var configuration = new EndpointConfiguration("SqlIncomingWhenNotEnabledTests");
@@ -21,7 +22,7 @@ public class IncomingWhenNotEnabledTests : IDisposable
         ResetEvent.WaitOne();
         await endpoint.Stop();
 
-        Assert.NotNull(Exception);
+        await Assert.That(Exception).IsNotNull();
         await Verify(Exception!.Message);
     }
 

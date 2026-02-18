@@ -1,6 +1,8 @@
-﻿public class OutgoingWhenNotEnabledTests
+﻿using System.Threading.Tasks;
+
+public class OutgoingWhenNotEnabledTests
 {
-    [Fact]
+    [Test]
     public async Task Run()
     {
         var configuration = new EndpointConfiguration("FileShareOutgoingWhenNotEnabledTests");
@@ -10,7 +12,7 @@
         configuration.AssemblyScanner().ExcludeAssemblies("xunit.runner.utility.netcoreapp10.dll");
         var endpoint = await Endpoint.Start(configuration);
 
-        var exception = await Assert.ThrowsAsync<Exception>(() => SendStartMessageWithAttachment(endpoint));
+        var exception = await await Assert.ThrowsAsync<Exception>(() => SendStartMessageWithAttachment(endpoint));
         await Verify(exception.Message);
         await endpoint.Stop();
     }

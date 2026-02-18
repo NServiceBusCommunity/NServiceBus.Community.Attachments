@@ -1,9 +1,11 @@
-﻿public class OutgoingWhenNotEnabledTests
+﻿using System.Threading.Tasks;
+
+public class OutgoingWhenNotEnabledTests
 {
     static OutgoingWhenNotEnabledTests() =>
         DbSetup.Setup();
 
-    [Fact]
+    [Test]
     public async Task Run()
     {
         var configuration = new EndpointConfiguration("SqlOutgoingWhenNotEnabledTests");
@@ -12,8 +14,8 @@
         configuration.UseSerialization<SystemJsonSerializer>();
         var endpoint = await Endpoint.Start(configuration);
 
-        var exception = await Assert.ThrowsAsync<Exception>(() => SendStartMessageWithAttachment(endpoint));
-        Assert.NotNull(exception);
+        var exception = await await Assert.ThrowsAsync<Exception>(() => SendStartMessageWithAttachment(endpoint));
+        await Assert.That(exception).IsNotNull();
         await Verify(exception.Message);
         await endpoint.Stop();
     }

@@ -1,4 +1,7 @@
-﻿public class PersisterTests
+﻿using System.IO;
+using System.Threading.Tasks;
+
+public class PersisterTests
 {
     DateTime defaultTestDate = new(2000, 1, 1, 1, 1, 1, DateTimeKind.Utc);
     Dictionary<string, string> metadata = new()
@@ -13,7 +16,7 @@
         return persister;
     }
 
-    [Fact]
+    [Test]
     public async Task CopyTo()
     {
         var persister = GetPersister();
@@ -22,37 +25,37 @@
         await persister.CopyTo("theMessageId", "theName", memoryStream);
 
         memoryStream.Position = 0;
-        Assert.Equal(5, memoryStream.GetBuffer()[0]);
+        await Assert.That(memoryStream.GetBuffer()[0]).IsEqualTo(5);
     }
 
-    [Fact]
+    [Test]
     public async Task GetBytes()
     {
         var persister = GetPersister();
         await persister.SaveStream("theMessageId", "theName", defaultTestDate, GetStream(), metadata);
         byte[] bytes = await persister.GetBytes("theMessageId", "theName");
-        Assert.Equal(5, bytes[0]);
+        await Assert.That(bytes[0]).IsEqualTo(5);
     }
 
-    [Fact]
+    [Test]
     public async Task GetMemoryStream()
     {
         var persister = GetPersister();
         await persister.SaveStream("theMessageId", "theName", defaultTestDate, GetStream(), metadata);
         var bytes = await persister.GetMemoryStream("theMessageId", "theName");
-        Assert.Equal(5, bytes.ReadByte());
+        await Assert.That(bytes.ReadByte()).IsEqualTo(5);
     }
 
-    [Fact]
+    [Test]
     public async Task CaseInsensitiveRead()
     {
         var persister = GetPersister();
         await persister.SaveStream("theMessageId", "theName", defaultTestDate, GetStream());
         byte[] bytes = await persister.GetBytes("themeSsageid", "Thename");
-        Assert.Equal(5, bytes[0]);
+        await Assert.That(bytes[0]).IsEqualTo(5);
     }
 
-    [Fact]
+    [Test]
     public async Task ProcessStream()
     {
         var persister = GetPersister();
@@ -63,13 +66,13 @@
             {
                 count++;
                 var array = ToBytes(stream);
-                Assert.Equal(5, array[0]);
+                await Assert.That(array[0]).IsEqualTo(5);
                 return Task.CompletedTask;
             });
-        Assert.Equal(1, count);
+        await Assert.That(count).IsEqualTo(1);
     }
 
-    [Fact]
+    [Test]
     public async Task ProcessStreams()
     {
         var persister = GetPersister();
@@ -83,22 +86,22 @@
                 var array = ToBytes(stream);
                 if (count == 1)
                 {
-                    Assert.Equal(1, array[0]);
-                    Assert.Equal("theName1", stream.Name);
+                    await Assert.That(array[0]).IsEqualTo(1);
+                    await Assert.That(stream.Name).IsEqualTo("theName1");
                 }
 
                 if (count == 2)
                 {
-                    Assert.Equal(2, array[0]);
-                    Assert.Equal("theName2", stream.Name);
+                    await Assert.That(array[0]).IsEqualTo(2);
+                    await Assert.That(stream.Name).IsEqualTo("theName2");
                 }
 
                 return Task.CompletedTask;
             });
-        Assert.Equal(2, count);
+        await Assert.That(count).IsEqualTo(2);
     }
 
-    [Fact]
+    [Test]
     public async Task GetMultipleStreams()
     {
         var persister = GetPersister();
@@ -108,15 +111,15 @@
         await foreach (var attachment in persister.GetStreams("theMessageId"))
         {
             var array = ToBytes(attachment);
-            Assert.True(attachment.Name is "theName1" or "theName2");
-            Assert.True(array[0] == 1 || array[0] == 2);
+            await Assert.That(attachment.Name is "theName1" or "theName2").IsTrue();
+            await Assert.That(array[0] == 1 || array[0] == 2).IsTrue();
             Interlocked.Increment(ref count);
         }
 
-        Assert.Equal(2, count);
+        await Assert.That(count).IsEqualTo(2);
     }
 
-    [Fact]
+    [Test]
     public async Task GetMultipleBytes()
     {
         var persister = GetPersister();
@@ -125,15 +128,15 @@
         await persister.SaveStream("theMessageId", "theName2", defaultTestDate, GetStream(2), metadata);
         await foreach (var attachment in persister.GetBytes("theMessageId"))
         {
-            Assert.True(attachment.Name is "theName1" or "theName2");
-            Assert.True(attachment.Bytes[0] == 1 || attachment.Bytes[0] == 2);
+            await Assert.That(attachment.Name is "theName1" or "theName2").IsTrue();
+            await Assert.That(attachment.Bytes[0] == 1 || attachment.Bytes[0] == 2).IsTrue();
             Interlocked.Increment(ref count);
         }
 
-        Assert.Equal(2, count);
+        await Assert.That(count).IsEqualTo(2);
     }
 
-    [Fact]
+    [Test]
     public async Task GetMultipleStrings()
     {
         var persister = GetPersister();
@@ -142,12 +145,12 @@
         await persister.SaveString("theMessageId", "theName2", defaultTestDate, "b", null, metadata);
         await foreach (var attachment in persister.GetStrings("theMessageId"))
         {
-            Assert.True(attachment.Name is "theName1" or "theName2");
-            Assert.True(attachment.Value is "a" or "b", attachment.Value);
+            await Assert.That(attachment.Name is "theName1" or "theName2").IsTrue();
+            await Assert.That(attachment.Value is "a" or "b").IsTrue();
             Interlocked.Increment(ref count);
         }
 
-        Assert.Equal(2, count);
+        await Assert.That(count).IsEqualTo(2);
     }
 
     static byte[] ToBytes(Stream stream)
@@ -157,7 +160,7 @@
         return memoryStream.ToArray();
     }
 
-    [Fact]
+    [Test]
     public async Task SaveStream()
     {
         var persister = GetPersister();
@@ -169,7 +172,7 @@
         await Verify(persister.ReadAllInfo());
     }
 
-    [Fact]
+    [Test]
     public async Task ReadAllMessageNames()
     {
         var persister = GetPersister();
@@ -178,7 +181,7 @@
         await Verify(persister.ReadAllMessageNames("theMessageId"));
     }
 
-    [Fact]
+    [Test]
     public async Task ReadAllMessageInfo()
     {
         var persister = GetPersister();
@@ -188,7 +191,7 @@
             .IgnoreMember("Created");
     }
 
-    [Fact]
+    [Test]
     public async Task SaveBytes()
     {
         var persister = GetPersister();
@@ -196,7 +199,7 @@
         await Verify(persister.ReadAllInfo());
     }
 
-    [Fact]
+    [Test]
     public async Task SaveString()
     {
         var persister = GetPersister();
@@ -204,7 +207,7 @@
         await Verify(persister.ReadAllInfo());
     }
 
-    [Fact]
+    [Test]
     public async Task SaveStringEncoding()
     {
         var persister = GetPersister();
@@ -214,11 +217,11 @@
         var result = await persister.GetString("theMessageId", "theName", encoding);
         var attachmentBytes = await persister.GetBytes("theMessageId", "theName");
         var bytes = attachmentBytes.Bytes;
-        Assert.True(bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF, "Expected a BOM");
-        Assert.Equal(expected, result.Value);
+        await Assert.That(bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF).IsTrue().Because("Expected a BOM");
+        await Assert.That(result.Value).IsEqualTo(expected);
     }
 
-    [Fact]
+    [Test]
     public async Task DiffEncoding()
     {
         var persister = GetPersister();
@@ -226,11 +229,11 @@
         await persister.SaveString("theMessageId", "theName", defaultTestDate, "Sample", encoding, metadata);
         var result = await persister.GetString("theMessageId", "theName", null);
         var encodingName = result.Metadata["encoding"];
-        Assert.Equal(encodingName, encoding.WebName);
-        Assert.Equal("Sample", result);
+        await Assert.That(encoding.WebName).IsEqualTo(encodingName);
+        await Assert.That(result).IsEqualTo("Sample");
     }
 
-    [Fact]
+    [Test]
     public async Task DiffEncodingOverride()
     {
         var persister = GetPersister();
@@ -238,11 +241,11 @@
         await persister.SaveString("theMessageId", "theName", defaultTestDate, "Sample", encoding, metadata);
         var result = await persister.GetString("theMessageId", "theName", Encoding.Latin1);
         var encodingName = result.Metadata["encoding"];
-        Assert.Equal(encodingName, encoding.WebName);
-        Assert.Equal("Sample", result);
+        await Assert.That(encoding.WebName).IsEqualTo(encodingName);
+        await Assert.That(result).IsEqualTo("Sample");
     }
 
-    [Fact]
+    [Test]
     public async Task DuplicateAll()
     {
         var persister = GetPersister();
@@ -252,7 +255,7 @@
         var info = await persister
             .ReadAllInfo()
             .ToAsyncList();
-        Assert.Equal(info[0].Created, info[2].Created);
+        await Assert.That(info[2].Created).IsEqualTo(info[0].Created);
         await Verify(
                 new
                 {
@@ -262,7 +265,7 @@
             .IgnoreMember("Created");
     }
 
-    [Fact]
+    [Test]
     public async Task Duplicate()
     {
         var persister = GetPersister();
@@ -272,12 +275,12 @@
         var info = await persister
             .ReadAllInfo()
             .ToAsyncList();
-        Assert.Equal(info[0].Created, info[2].Created);
+        await Assert.That(info[2].Created).IsEqualTo(info[0].Created);
         await Verify(info.Where(_ => _.MessageId == "theTargetMessageId"))
             .IgnoreMember("Created");
     }
 
-    [Fact]
+    [Test]
     public async Task DuplicateWithRename()
     {
         var persister = GetPersister();
@@ -286,12 +289,12 @@
         var info = await persister
             .ReadAllInfo()
             .ToAsyncList();
-        Assert.Equal(info[0].Created, info[1].Created);
+        await Assert.That(info[1].Created).IsEqualTo(info[0].Created);
         await Verify(info.Where(_ => _.MessageId == "theTargetMessageId"))
             .IgnoreMember("Created");
     }
 
-    [Fact]
+    [Test]
     public async Task CleanupItemsOlderThan()
     {
         var persister = GetPersister();

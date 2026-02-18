@@ -1,4 +1,3 @@
-
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -14,17 +13,17 @@
     <PackageReference Include="NServiceBus.Persistence.Sql" />
     <PackageReference Include="NServiceBus.Transport.SqlServer" />
     <PackageReference Include="Verify.DiffPlex" />
-    <PackageReference Include="Verify.XunitV3" />
+    <PackageReference Include="Verify.TUnit" />
     <PackageReference Include="DiffEngine" />
     <PackageReference Include="EmptyFiles" />
     <PackageReference Include="SimpleInfoName" />
     <PackageReference Include="Verify" />
     <PackageReference Include="Verify.NServiceBus" />
-    <PackageReference Include="xunit.v3" />
     <ProjectReference Include="..\Attachments.Sql\Attachments.Sql.csproj" />
     <ProjectReference Include="..\Helpers\Helpers.csproj" />
     <PackageReference Include="ProjectDefaults" PrivateAssets="all" />
     <Compile Remove="IntegrationTests\**" Condition=" '$(Configuration)' == 'Release' " />
     <Using Include="NServiceBus.IMessageHandlerContext" Alias="HandlerContext" />
+    <PackageReference Include="TUnit" />
   </ItemGroup>
 </Project>

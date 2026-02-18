@@ -1,4 +1,5 @@
-﻿// ReSharper disable UnusedMember.Global
+﻿using System.Threading.Tasks;
+// ReSharper disable UnusedMember.Global
 
 // ReSharper disable UnusedVariable
 
@@ -50,7 +51,7 @@ public class TestingIncoming
 
     #region TestIncoming
 
-    [Fact]
+    [Test]
     public async Task TestIncomingAttachment()
     {
         //Arrange
@@ -63,7 +64,7 @@ public class TestingIncoming
         await handler.Handle(new(), context);
 
         //Assert
-        Assert.True(mockMessageAttachments.GetBytesWasCalled);
+        await Assert.That(mockMessageAttachments.GetBytesWasCalled).IsTrue();
     }
 
     #endregion

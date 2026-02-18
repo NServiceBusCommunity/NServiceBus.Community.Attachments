@@ -1,4 +1,7 @@
-﻿public class TestingOutgoing
+﻿using System.IO;
+using System.Threading.Tasks;
+
+public class TestingOutgoing
 {
     #region TestOutgoingHandler
 
@@ -18,7 +21,7 @@
 
     #region TestOutgoing
 
-    [Fact]
+    [Test]
     public async Task TestOutgoingAttachments()
     {
         //Arrange
@@ -32,8 +35,8 @@
         var sentMessage = context.Sent.Single();
         var attachments = sentMessage.Options.Attachments();
         var attachment = attachments.Items.Single();
-        Assert.Contains("theName", attachment.Name);
-        Assert.True(attachments.HasPendingAttachments);
+        await Assert.That(attachment.Name).Contains("theName");
+        await Assert.That(attachments.HasPendingAttachments).IsTrue();
     }
 
     #endregion

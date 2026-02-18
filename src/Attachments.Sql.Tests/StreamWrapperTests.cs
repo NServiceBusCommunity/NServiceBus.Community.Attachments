@@ -1,43 +1,44 @@
+using System.Threading.Tasks;
 // ReSharper disable MustUseReturnValue
 // ReSharper disable StreamReadReturnValueIgnored
 public class StreamWrapperTests
 {
     static byte[] buffer = "content"u8.ToArray();
 
-    [Fact]
+    [Test]
     public Task ReadBytesAsync() =>
         Run(_ => _.ReadAsync(new byte[2], 0, 2));
 
-    [Fact]
+    [Test]
     public void ReadBytes() =>
         Run(_ => _.Read(new byte[2], 0, 2));
 
-    [Fact]
+    [Test]
     public void ReadSpan() =>
         Run(_ => _.Read(new(new byte[2])));
 
-    [Fact]
+    [Test]
     public Task ReadMemory() =>
         Run(async _ => await _.ReadAsync(new(new byte[2])));
 
-    [Fact]
+    [Test]
     public void ReadByte() =>
         Run(_ => _.ReadByte());
 
-    [Fact]
+    [Test]
     public void CopyTo() =>
         Run(_ => _.CopyTo(new MemoryStream()));
 
-    [Fact]
+    [Test]
     public Task CopyToAsync() =>
         Run(_ => _.CopyToAsync(new MemoryStream()));
 
-    static void Run(Action<AttachmentStream> action)
+    static async Task Run(Action<AttachmentStream> action)
     {
         using var stream = new MemoryStream(buffer);
         var wrapper = new AttachmentStream("name", stream,buffer.Length, new Dictionary<string, string>());
         action(wrapper);
-        Assert.Equal(stream.Position, wrapper.Position);
+        await Assert.That(wrapper.Position).IsEqualTo(stream.Position);
     }
 
     static async Task Run(Func<AttachmentStream, Task> action)
@@ -45,6 +46,6 @@ public class StreamWrapperTests
         using var stream = new MemoryStream(buffer);
         var wrapper = new AttachmentStream("name", stream,buffer.Length, new Dictionary<string, string>());
         await action(wrapper);
-        Assert.Equal(stream.Position, wrapper.Position);
+        await Assert.That(wrapper.Position).IsEqualTo(stream.Position);
     }
 }

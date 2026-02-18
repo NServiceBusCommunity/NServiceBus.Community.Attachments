@@ -1,6 +1,9 @@
-﻿public class TestingTests
+﻿using System.IO;
+using System.Threading.Tasks;
+
+public class TestingTests
 {
-    [Fact]
+    [Test]
     public async Task OutgoingAttachments()
     {
         var context = new RecordingHandlerContext();
@@ -21,7 +24,7 @@
         }
     }
 
-    [Fact]
+    [Test]
     public async Task IncomingAttachment()
     {
         var context = new RecordingHandlerContext();
@@ -29,7 +32,7 @@
         var mockMessageAttachments = new CustomMockMessageAttachments();
         context.InjectAttachmentsInstance(mockMessageAttachments);
         await handler.Handle(new(), context);
-        Assert.True(mockMessageAttachments.GetBytesWasCalled);
+        await Assert.That(mockMessageAttachments.GetBytesWasCalled).IsTrue();
     }
 
     public class CustomMockMessageAttachments :

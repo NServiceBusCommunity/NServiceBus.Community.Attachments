@@ -1,4 +1,5 @@
-﻿// ReSharper disable UnusedVariable
+﻿using System.Threading.Tasks;
+// ReSharper disable UnusedVariable
 
 class IncomingAttachment
 {
@@ -48,7 +49,7 @@ public class TestingIncoming
 
     #region TestIncoming
 
-    [Fact]
+    [Test]
     public async Task TestIncomingAttachment()
     {
         //Arrange
@@ -61,7 +62,7 @@ public class TestingIncoming
         await handler.Handle(new(), context);
 
         //Assert
-        Assert.True(mockMessageAttachments.GetBytesWasCalled);
+        await Assert.That(mockMessageAttachments.GetBytesWasCalled).IsTrue();
     }
 
     #endregion

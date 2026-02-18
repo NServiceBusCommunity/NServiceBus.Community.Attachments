@@ -1,9 +1,11 @@
-﻿public class IntegrationTests :
+﻿using System.Threading.Tasks;
+
+public class IntegrationTests :
     IDisposable
 {
     static ManualResetEvent resetEvent = new(false);
 
-    [Fact]
+    [Test]
     public async Task Run()
     {
         var configuration = new EndpointConfiguration("FileShareIntegrationTests");
@@ -62,13 +64,13 @@
         {
             var incomingAttachments = context.Attachments();
             var withAttachment = await incomingAttachments.GetBytes("withMetadata", context.CancellationToken);
-            Assert.Equal("value", withAttachment.Metadata["key"]);
+            await Assert.That(withAttachment.Metadata["key"]).IsEqualTo("value");
             var replyOptions = new ReplyOptions();
             var outgoingAttachment = replyOptions.Attachments();
             outgoingAttachment.Add(() => incomingAttachments.GetStream());
             await context.Reply(new ReplyMessage(), replyOptions);
             var attachmentInfos = await incomingAttachments.GetMetadata(context.CancellationToken).ToAsyncList();
-            Assert.Equal(4, attachmentInfos.Count);
+            await Assert.That(attachmentInfos.Count).IsEqualTo(4);
         }
     }
 
@@ -84,7 +86,7 @@
             var buffer = memoryStream.GetBuffer();
             Debug.WriteLine(buffer);
             var attachmentInfos = await incomingAttachment.GetMetadata(context.CancellationToken).ToAsyncList();
-            Assert.Single(attachmentInfos);
+            await Assert.That(attachmentInfos).HasSingleItem();
             resetEvent.Set();
         }
     }
