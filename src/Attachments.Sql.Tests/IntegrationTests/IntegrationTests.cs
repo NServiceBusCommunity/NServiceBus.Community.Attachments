@@ -7,7 +7,7 @@ public class IntegrationTests : IDisposable
 {
     internal ManualResetEvent HandlerEvent = new(false);
     internal ManualResetEvent SagaEvent = new(false);
-    bool shouldPerformNestedConnection = true;
+    internal bool shouldPerformNestedConnection;
 
     static IntegrationTests() =>
         DbSetup.Setup();
@@ -23,7 +23,7 @@ public class IntegrationTests : IDisposable
             runEarlyCleanup: true);
 
     [Test]
-    [MethodDataSource(typeof(TestDataGenerator), "GetEnumerator")]
+    [MethodDataSource(typeof(TestDataGenerator), nameof(TestDataGenerator.GetTestData))]
     public async Task RunSql(
         bool useSqlTransport,
         bool useSqlTransportConnection,
@@ -53,12 +53,11 @@ public class IntegrationTests : IDisposable
             return;
         }
 
-        if (useSqlPersistence &&
-            transactionMode == TransportTransactionMode.TransactionScope)
-        {
-            // so a nested connection will cause DTC
-            shouldPerformNestedConnection = false;
-        }
+        // so a nested connection will cause DTC
+#pragma warning disable TUnit0018
+        shouldPerformNestedConnection = !(useSqlPersistence &&
+            transactionMode == TransportTransactionMode.TransactionScope);
+#pragma warning restore TUnit0018
 
         var endpointName = "SqlIntegrationTests";
         var configuration = new EndpointConfiguration(endpointName);

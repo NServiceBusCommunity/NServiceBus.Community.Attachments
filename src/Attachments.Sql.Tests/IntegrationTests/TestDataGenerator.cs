@@ -1,72 +1,42 @@
-﻿public class TestDataGenerator :
-    IEnumerable<object[]>
+public static class TestDataGenerator
 {
-    List<TransportTransactionMode> transactionModes =
-    [
-        TransportTransactionMode.None,
-        TransportTransactionMode.ReceiveOnly,
-        TransportTransactionMode.SendsAtomicWithReceive,
-        TransportTransactionMode.TransactionScope
-    ];
-
-    List<bool> useSqlPersistenceList =
-    [
-        true,
-        false
-    ];
-
-    List<bool> runEarlyCleanupList =
-    [
-        true,
-        false
-    ];
-
-    List<bool> useSqlTransportList =
-    [
-        true,
-        false
-    ];
-
-    List<bool> useStorageSessionList =
-    [
-        true,
-        false
-    ];
-
-    List<bool> useSqlTransportConnectionList =
-    [
-        true,
-        false
-    ];
-
-    public IEnumerator<object[]> GetEnumerator()
+    public static IEnumerable<Func<(bool useSqlTransport, bool useSqlTransportConnection, bool useSqlPersistence, bool useStorageSession, TransportTransactionMode mode, bool runEarlyCleanup)>> GetTestData()
     {
-        foreach (var useSqlPersistence in useSqlPersistenceList)
+        List<TransportTransactionMode> transactionModes =
+        [
+            TransportTransactionMode.None,
+            TransportTransactionMode.ReceiveOnly,
+            TransportTransactionMode.SendsAtomicWithReceive,
+            TransportTransactionMode.TransactionScope
+        ];
+
+        List<bool> boolValues = [true, false];
+
+        foreach (var useSqlPersistence in boolValues)
         {
-            foreach (var useSqlTransportConnection in useSqlTransportConnectionList)
+            foreach (var useSqlTransportConnection in boolValues)
             {
-                foreach (var useStorageSession in useStorageSessionList)
+                foreach (var useStorageSession in boolValues)
                 {
-                    foreach (var useSqlTransport in useSqlTransportList)
+                    foreach (var useSqlTransport in boolValues)
                     {
                         foreach (var mode in transactionModes)
                         {
-                            foreach (var runEarlyCleanup in runEarlyCleanupList)
+                            foreach (var runEarlyCleanup in boolValues)
                             {
                                 if (!useSqlTransport && mode != TransportTransactionMode.SendsAtomicWithReceive)
                                 {
                                     continue;
                                 }
 
-                                yield return
-                                [
-                                    useSqlTransport,
-                                    useSqlTransportConnection,
-                                    useSqlPersistence,
-                                    useStorageSession,
-                                    mode,
-                                    runEarlyCleanup
-                                ];
+                                var capturedUseSqlTransport = useSqlTransport;
+                                var capturedUseSqlTransportConnection = useSqlTransportConnection;
+                                var capturedUseSqlPersistence = useSqlPersistence;
+                                var capturedUseStorageSession = useStorageSession;
+                                var capturedMode = mode;
+                                var capturedRunEarlyCleanup = runEarlyCleanup;
+
+                                yield return () => (capturedUseSqlTransport, capturedUseSqlTransportConnection, capturedUseSqlPersistence, capturedUseStorageSession, capturedMode, capturedRunEarlyCleanup);
                             }
                         }
                     }
@@ -74,7 +44,4 @@
             }
         }
     }
-
-    IEnumerator IEnumerable.GetEnumerator() =>
-        GetEnumerator();
 }
