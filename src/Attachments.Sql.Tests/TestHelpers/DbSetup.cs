@@ -1,21 +1,25 @@
 ﻿public class DbSetup
 {
+    static readonly object lockObj = new();
     static bool init;
 
     public static void Setup()
     {
-        if (init)
+        lock (lockObj)
         {
-            return;
-        }
+            if (init)
+            {
+                return;
+            }
 
-        init = true;
-        if (!Connection.IsUsingEnvironmentVariable)
-        {
-            SqlHelper.EnsureDatabaseExists(Connection.ConnectionString);
-        }
+            init = true;
+            if (!Connection.IsUsingEnvironmentVariable)
+            {
+                SqlHelper.EnsureDatabaseExists(Connection.ConnectionString);
+            }
 
-        using var connection = Connection.OpenConnection();
-        Installer.CreateTable(connection, "MessageAttachments").Wait();
+            using var connection = Connection.OpenConnection();
+            Installer.CreateTable(connection, "MessageAttachments").Wait();
+        }
     }
 }
