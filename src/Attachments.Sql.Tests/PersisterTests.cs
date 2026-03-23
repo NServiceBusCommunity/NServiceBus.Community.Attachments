@@ -355,7 +355,7 @@ public class PersisterTests
         var attachmentBytes = await persister.GetBytes("theMessageId", "theName", connection, null);
         var bytes = attachmentBytes.Bytes;
         await Assert.That(bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF).IsTrue().Because("Expected a BOM");
-        await Assert.That(bytes).IsEqualTo(expected.ToBytes(encoding));
+        await Assert.That(bytes.SequenceEqual(expected.ToBytes(encoding))).IsTrue();
     }
 
     [Test]
