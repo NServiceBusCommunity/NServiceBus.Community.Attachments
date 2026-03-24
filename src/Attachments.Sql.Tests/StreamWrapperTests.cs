@@ -9,24 +9,24 @@ public class StreamWrapperTests
         Run(_ => _.ReadAsync(new byte[2], 0, 2));
 
     [Test]
-    public async Task ReadBytes() =>
-        await Run(_ => _.Read(new byte[2], 0, 2));
+    public Task ReadBytes() =>
+        Run(_ => _.Read(new byte[2], 0, 2));
 
     [Test]
-    public async Task ReadSpan() =>
-        await Run(_ => _.Read(new(new byte[2])));
+    public Task ReadSpan() =>
+        Run(_ => _.Read(new(new byte[2])));
 
     [Test]
     public Task ReadMemory() =>
         Run(async _ => await _.ReadAsync(new(new byte[2])));
 
     [Test]
-    public async Task ReadByte() =>
-        await Run(_ => _.ReadByte());
+    public Task ReadByte() =>
+        Run(_ => _.ReadByte());
 
     [Test]
-    public async Task CopyTo() =>
-        await Run(_ => _.CopyTo(new MemoryStream()));
+    public Task CopyTo() =>
+        Run(_ => _.CopyTo(new MemoryStream()));
 
     [Test]
     public Task CopyToAsync() =>

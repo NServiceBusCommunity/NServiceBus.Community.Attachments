@@ -1,7 +1,4 @@
-﻿using System.IO;
-using System.Threading.Tasks;
-
-public class TestingOutgoing
+﻿public class TestingOutgoing
 {
     #region TestOutgoingHandler
 

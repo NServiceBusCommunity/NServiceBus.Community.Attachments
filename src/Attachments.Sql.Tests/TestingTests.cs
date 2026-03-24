@@ -1,7 +1,4 @@
-﻿using System.IO;
-using System.Threading.Tasks;
-
-public class TestingTests
+﻿public class TestingTests
 {
     [Test]
     public async Task OutgoingAttachments()

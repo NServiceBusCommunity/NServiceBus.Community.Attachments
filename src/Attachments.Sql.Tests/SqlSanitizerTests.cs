@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-public class SqlSanitizerTests
+﻿public class SqlSanitizerTests
 {
     [Test]
     public async Task Table_name_and_schema_should_be_quoted()

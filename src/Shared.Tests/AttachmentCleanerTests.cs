@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-public class AttachmentCleanerTests
+﻿public class AttachmentCleanerTests
 {
     [Test]
     public async Task If_triggers_critical_action_after_10_failures()

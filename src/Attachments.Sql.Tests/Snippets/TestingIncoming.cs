@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-// ReSharper disable UnusedVariable
+﻿// ReSharper disable UnusedVariable
 
 class IncomingAttachment
 {

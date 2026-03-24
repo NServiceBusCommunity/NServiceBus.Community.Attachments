@@ -550,7 +550,7 @@ public class Handler :
     }
 }
 ```
-<sup><a href='/src/Attachments.FileShare.Tests/Snippets/TestingOutgoing.cs#L6-L20' title='Snippet source file'>snippet source</a> | <a href='#snippet-TestOutgoingHandler' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.FileShare.Tests/Snippets/TestingOutgoing.cs#L3-L17' title='Snippet source file'>snippet source</a> | <a href='#snippet-TestOutgoingHandler' title='Start of snippet'>anchor</a></sup>
 <a id='snippet-TestOutgoingHandler-1'></a>
 ```cs
 public class Handler :
@@ -565,7 +565,7 @@ public class Handler :
     }
 }
 ```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/TestingOutgoing.cs#L6-L20' title='Snippet source file'>snippet source</a> | <a href='#snippet-TestOutgoingHandler-1' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/TestingOutgoing.cs#L3-L17' title='Snippet source file'>snippet source</a> | <a href='#snippet-TestOutgoingHandler-1' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 <!-- snippet: TestOutgoing -->
@@ -589,7 +589,7 @@ public async Task TestOutgoingAttachments()
     await Assert.That(attachments.HasPendingAttachments).IsTrue();
 }
 ```
-<sup><a href='/src/Attachments.FileShare.Tests/Snippets/TestingOutgoing.cs#L22-L42' title='Snippet source file'>snippet source</a> | <a href='#snippet-TestOutgoing' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.FileShare.Tests/Snippets/TestingOutgoing.cs#L19-L39' title='Snippet source file'>snippet source</a> | <a href='#snippet-TestOutgoing' title='Start of snippet'>anchor</a></sup>
 <a id='snippet-TestOutgoing-1'></a>
 ```cs
 [Test]
@@ -610,7 +610,7 @@ public async Task TestOutgoingAttachments()
     await Assert.That(attachments.HasPendingAttachments).IsTrue();
 }
 ```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/TestingOutgoing.cs#L22-L42' title='Snippet source file'>snippet source</a> | <a href='#snippet-TestOutgoing-1' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/TestingOutgoing.cs#L19-L39' title='Snippet source file'>snippet source</a> | <a href='#snippet-TestOutgoing-1' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 
@@ -628,14 +628,14 @@ var context = new RecordingHandlerContext();
 var mockMessageAttachments = new MyMessageAttachments();
 context.InjectAttachmentsInstance(mockMessageAttachments);
 ```
-<sup><a href='/src/Attachments.FileShare.Tests/Snippets/TestingIncoming.cs#L10-L16' title='Snippet source file'>snippet source</a> | <a href='#snippet-InjectAttachmentsInstance' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.FileShare.Tests/Snippets/TestingIncoming.cs#L9-L15' title='Snippet source file'>snippet source</a> | <a href='#snippet-InjectAttachmentsInstance' title='Start of snippet'>anchor</a></sup>
 <a id='snippet-InjectAttachmentsInstance-1'></a>
 ```cs
 var context = new RecordingHandlerContext();
 var mockMessageAttachments = new MyMessageAttachments();
 context.InjectAttachmentsInstance(mockMessageAttachments);
 ```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/TestingIncoming.cs#L8-L14' title='Snippet source file'>snippet source</a> | <a href='#snippet-InjectAttachmentsInstance-1' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/TestingIncoming.cs#L7-L13' title='Snippet source file'>snippet source</a> | <a href='#snippet-InjectAttachmentsInstance-1' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 The implementation of `IMessageHandlerContext` can be a custom coded mock or constructed using any of the popular mocking/assertion frameworks.
@@ -657,7 +657,7 @@ public class CustomMockMessageAttachments :
     public bool GetBytesWasCalled { get; private set; }
 }
 ```
-<sup><a href='/src/Attachments.FileShare.Tests/Snippets/TestingIncoming.cs#L22-L36' title='Snippet source file'>snippet source</a> | <a href='#snippet-CustomMockMessageAttachments' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.FileShare.Tests/Snippets/TestingIncoming.cs#L21-L35' title='Snippet source file'>snippet source</a> | <a href='#snippet-CustomMockMessageAttachments' title='Start of snippet'>anchor</a></sup>
 <a id='snippet-CustomMockMessageAttachments-1'></a>
 ```cs
 public class CustomMockMessageAttachments :
@@ -672,7 +672,7 @@ public class CustomMockMessageAttachments :
     public bool GetBytesWasCalled { get; private set; }
 }
 ```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/TestingIncoming.cs#L20-L34' title='Snippet source file'>snippet source</a> | <a href='#snippet-CustomMockMessageAttachments-1' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/TestingIncoming.cs#L19-L33' title='Snippet source file'>snippet source</a> | <a href='#snippet-CustomMockMessageAttachments-1' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 Putting these parts together allows a handler, using incoming attachments, to be tested.
@@ -690,7 +690,7 @@ public class Handler :
     }
 }
 ```
-<sup><a href='/src/Attachments.FileShare.Tests/Snippets/TestingIncoming.cs#L38-L50' title='Snippet source file'>snippet source</a> | <a href='#snippet-TestIncomingHandler' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.FileShare.Tests/Snippets/TestingIncoming.cs#L37-L49' title='Snippet source file'>snippet source</a> | <a href='#snippet-TestIncomingHandler' title='Start of snippet'>anchor</a></sup>
 <a id='snippet-TestIncomingHandler-1'></a>
 ```cs
 public class Handler :
@@ -703,7 +703,7 @@ public class Handler :
     }
 }
 ```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/TestingIncoming.cs#L36-L48' title='Snippet source file'>snippet source</a> | <a href='#snippet-TestIncomingHandler-1' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/TestingIncoming.cs#L35-L47' title='Snippet source file'>snippet source</a> | <a href='#snippet-TestIncomingHandler-1' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 <!-- snippet: TestIncoming -->
@@ -725,7 +725,7 @@ public async Task TestIncomingAttachment()
     await Assert.That(mockMessageAttachments.GetBytesWasCalled).IsTrue();
 }
 ```
-<sup><a href='/src/Attachments.FileShare.Tests/Snippets/TestingIncoming.cs#L52-L70' title='Snippet source file'>snippet source</a> | <a href='#snippet-TestIncoming' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.FileShare.Tests/Snippets/TestingIncoming.cs#L51-L69' title='Snippet source file'>snippet source</a> | <a href='#snippet-TestIncoming' title='Start of snippet'>anchor</a></sup>
 <a id='snippet-TestIncoming-1'></a>
 ```cs
 [Test]
@@ -744,6 +744,6 @@ public async Task TestIncomingAttachment()
     await Assert.That(mockMessageAttachments.GetBytesWasCalled).IsTrue();
 }
 ```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/TestingIncoming.cs#L50-L68' title='Snippet source file'>snippet source</a> | <a href='#snippet-TestIncoming-1' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/TestingIncoming.cs#L49-L67' title='Snippet source file'>snippet source</a> | <a href='#snippet-TestIncoming-1' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 <!-- endInclude -->

@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-// ReSharper disable UnusedMember.Global
+﻿// ReSharper disable UnusedMember.Global
 
 // ReSharper disable UnusedVariable
 
