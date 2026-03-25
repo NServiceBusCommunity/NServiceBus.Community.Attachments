@@ -1,6 +1,3 @@
-using LocalDb;
-using Microsoft.Data.SqlClient;
-
 public static class Connection
 {
     public static SqlInstance SqlInstance = new(
