@@ -1,10 +1,5 @@
 ﻿using NServiceBus.Attachments.FileShare;
 
-if (!Connection.IsUsingEnvironmentVariable)
-{
-    SqlHelper.EnsureDatabaseExists(Connection.ConnectionString);
-}
-
 var configuration = new EndpointConfiguration("Attachments.FileShare.Sample");
 configuration.EnableInstallers();
 configuration.UsePersistence<LearningPersistence>();

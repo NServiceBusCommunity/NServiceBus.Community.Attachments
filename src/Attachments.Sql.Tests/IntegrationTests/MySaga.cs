@@ -1,4 +1,4 @@
-﻿class MySaga(IntegrationTests tests) :
+class MySaga(IntegrationTestContext context) :
     Saga<MySaga.SagaData>,
     IAmStartedByMessages<SendMessage>
 {
@@ -6,11 +6,11 @@
         mapper.MapSaga(saga => saga.MyId)
             .ToMessage<SendMessage>(msg => msg.MyId);
 
-    public async Task Handle(SendMessage message, HandlerContext context)
+    public async Task Handle(SendMessage message, HandlerContext handlerContext)
     {
-        var incomingAttachment = context.Attachments();
-        await using var stream = await incomingAttachment.GetStream(context.CancellationToken);
-        tests.SagaEvent.Set();
+        var incomingAttachment = handlerContext.Attachments();
+        await using var stream = await incomingAttachment.GetStream(handlerContext.CancellationToken);
+        context.SagaEvent.Set();
     }
 
     public class SagaData :

@@ -1,0 +1,108 @@
+using BenchmarkDotNet.Attributes;
+using LocalDb;
+using Microsoft.Data.SqlClient;
+using NServiceBus.Attachments.Sql;
+
+[MemoryDiagnoser]
+[GcServer(true)]
+public class PersisterBenchmarks
+{
+    static SqlInstance sqlInstance = null!;
+    SqlDatabase database = null!;
+    SqlConnection connection = null!;
+    Persister persister = null!;
+    byte[] data = null!;
+    int counter;
+
+    [Params(1024, 1024 * 100, 1024 * 1024, 1024 * 1024 * 10)]
+    public int DataSize { get; set; }
+
+    [GlobalSetup]
+    public void GlobalSetup()
+    {
+        sqlInstance = new(
+            "AttachmentsBenchmark",
+            async connection =>
+            {
+                await using var command = connection.CreateCommand();
+                command.CommandText =
+                    """
+                    create table [dbo].[MessageAttachments](
+                        Id uniqueidentifier default newsequentialid() primary key not null,
+                        MessageId nvarchar(50) not null,
+                        MessageIdLower as lower(MessageId),
+                        Name nvarchar(255) not null,
+                        NameLower as lower(Name),
+                        Created datetime2(0) not null default sysutcdatetime(),
+                        Expiry datetime2(0) not null,
+                        Metadata nvarchar(max),
+                        Data varbinary(max) not null
+                    );
+                    create unique index Index_MessageIdName
+                        on [dbo].[MessageAttachments](MessageIdLower, NameLower);
+                    """;
+                await command.ExecuteNonQueryAsync();
+            });
+
+        persister = new("MessageAttachments");
+        data = new byte[DataSize];
+        Random.Shared.NextBytes(data);
+    }
+
+    [IterationSetup]
+    public void IterationSetup()
+    {
+        database = sqlInstance.Build($"Bench{Interlocked.Increment(ref counter)}").GetAwaiter().GetResult();
+        connection = database.Connection;
+    }
+
+    [IterationCleanup]
+    public void IterationCleanup() =>
+        database.Dispose();
+
+    [GlobalCleanup]
+    public static void GlobalCleanup()
+    {
+        sqlInstance.Cleanup();
+        sqlInstance.Dispose();
+    }
+
+    [Benchmark]
+    public Task<Guid> SaveStream()
+    {
+        var stream = new MemoryStream(data);
+        return persister.SaveStream(
+            connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), stream, null);
+    }
+
+    [Benchmark]
+    public Task<Guid> SaveBytes() =>
+        persister.SaveBytes(
+            connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), data, null);
+
+    [Benchmark]
+    public async Task SaveAndGetBytes()
+    {
+        await persister.SaveBytes(
+            connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), data, null);
+        await persister.GetBytes("msg1", "attachment", connection, null);
+    }
+
+    [Benchmark]
+    public async Task SaveAndCopyTo()
+    {
+        var stream = new MemoryStream(data);
+        await persister.SaveStream(
+            connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), stream, null);
+        await persister.CopyTo("msg1", "attachment", connection, null, Stream.Null);
+    }
+
+    [Benchmark]
+    public async Task SaveAndGetStream()
+    {
+        var stream = new MemoryStream(data);
+        await persister.SaveStream(
+            connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), stream, null);
+        await using var result = await persister.GetStream("msg1", "attachment", connection, null, false);
+    }
+}

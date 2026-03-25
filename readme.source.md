@@ -76,6 +76,80 @@ With the DataBus the only interaction is via byte arrays. NServiceBus.Attachment
 [Full Docs](/docs/fileshare.md)
 
 
+## Benchmarks
+
+Benchmark results for attachment persister operations at different data sizes. Results collected using [BenchmarkDotNet](https://benchmarkdotnet.org/).
+
+
+### Hardware
+
+ * BenchmarkDotNet v0.15.8, Windows 11 (10.0.26200.8037)
+ * 12th Gen Intel Core i5-12600 3.30GHz, 1 CPU, 12 logical and 6 physical cores
+ * .NET SDK 10.0.201
+
+
+### SQL Persister
+
+Uses [LocalDb](https://github.com/SimonCropp/LocalDb) with a per-benchmark isolated database.
+
+| Method | DataSize | Mean | Allocated |
+|---|---|---:|---:|
+| SaveStream | 1 KB | 11.09 ms | 24.12 KB |
+| SaveBytes | 1 KB | 10.93 ms | 19.91 KB |
+| SaveAndGetBytes | 1 KB | 16.31 ms | 37.34 KB |
+| SaveAndCopyTo | 1 KB | 16.02 ms | 41.09 KB |
+| SaveAndGetStream | 1 KB | 15.16 ms | 39.83 KB |
+| SaveStream | 100 KB | 12.11 ms | 29.45 KB |
+| SaveBytes | 100 KB | 13.33 ms | 26.60 KB |
+| SaveAndGetBytes | 100 KB | 17.91 ms | 240.02 KB |
+| SaveAndCopyTo | 100 KB | 18.12 ms | 51.87 KB |
+| SaveAndGetStream | 100 KB | 18.33 ms | 45.16 KB |
+| SaveStream | 1 MB | 34.81 ms | 73.41 KB |
+| SaveBytes | 1 MB | 33.94 ms | 58.53 KB |
+| SaveAndGetBytes | 1 MB | 41.26 ms | 2119.81 KB |
+| SaveAndCopyTo | 1 MB | 42.15 ms | 174.93 KB |
+| SaveAndGetStream | 1 MB | 41.53 ms | 90.70 KB |
+| SaveStream | 10 MB | 229.09 ms | 647.60 KB |
+| SaveBytes | 10 MB | 226.96 ms | 544.12 KB |
+| SaveAndGetBytes | 10 MB | 247.24 ms | 21023.27 KB |
+| SaveAndCopyTo | 10 MB | 253.22 ms | 1328.35 KB |
+| SaveAndGetStream | 10 MB | 249.76 ms | 710.08 KB |
+
+
+### FileShare Persister
+
+| Method | DataSize | Mean | Allocated |
+|---|---|---:|---:|
+| SaveStream | 1 KB | 0.75 ms | 67.73 KB |
+| SaveBytes | 1 KB | 0.63 ms | 67.67 KB |
+| SaveAndGetBytes | 1 KB | 0.90 ms | 70.37 KB |
+| SaveAndCopyTo | 1 KB | 0.88 ms | 69.61 KB |
+| SaveAndGetStream | 1 KB | 0.86 ms | 69.11 KB |
+| SaveStream | 100 KB | 0.68 ms | 3.45 KB |
+| SaveBytes | 100 KB | 0.66 ms | 3.38 KB |
+| SaveAndGetBytes | 100 KB | 0.93 ms | 105.08 KB |
+| SaveAndCopyTo | 100 KB | 0.87 ms | 5.31 KB |
+| SaveAndGetStream | 100 KB | 0.88 ms | 4.82 KB |
+| SaveStream | 1 MB | 0.89 ms | 3.45 KB |
+| SaveBytes | 1 MB | 0.88 ms | 3.38 KB |
+| SaveAndGetBytes | 1 MB | 1.25 ms | 1029.07 KB |
+| SaveAndCopyTo | 1 MB | 1.40 ms | 5.32 KB |
+| SaveAndGetStream | 1 MB | 1.07 ms | 4.82 KB |
+| SaveStream | 10 MB | 3.34 ms | 3.45 KB |
+| SaveBytes | 10 MB | 3.42 ms | 3.38 KB |
+| SaveAndGetBytes | 10 MB | 5.84 ms | 10245.08 KB |
+| SaveAndCopyTo | 10 MB | 6.46 ms | 5.31 KB |
+| SaveAndGetStream | 10 MB | 3.47 ms | 4.82 KB |
+
+
+### Key Insights
+
+ * **FileShare is ~15-70x faster than SQL** for raw operations, as expected for local file I/O vs database round-trips.
+ * **Streaming keeps allocations flat**: At 10 MB, `SaveAndCopyTo` allocates 1.3 MB (SQL) / 5 KB (FileShare), while `SaveAndGetBytes` allocates 21 MB / 10 MB (the full data in a byte array).
+ * **SQL save cost scales with data size**: ~11ms for 1 KB, ~13ms for 100 KB, ~34ms for 1 MB, ~228ms for 10 MB. FileShare stays under 4ms for all sizes up to 10 MB.
+ * **`SaveStream` vs `SaveBytes`**: Nearly identical performance in both implementations. For SQL, the stream is passed directly to the `SqlParameter` with no intermediate copy.
+
+
 ## Icon
 
 [Gecko](https://thenounproject.com/term/gecko/258949/) designed by [Alex Podolsky](https://thenounproject.com/alphatoster/) from [The Noun Project](https://thenounproject.com/).

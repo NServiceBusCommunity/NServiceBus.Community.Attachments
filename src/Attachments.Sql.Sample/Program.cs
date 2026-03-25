@@ -1,13 +1,12 @@
-﻿using NServiceBus.Attachments.Sql;
+using Microsoft.Data.SqlClient;
+using NServiceBus.Attachments.Sql;
 
 class Program
 {
     static async Task Main()
     {
-        if (!Connection.IsUsingEnvironmentVariable)
-        {
-            SqlHelper.EnsureDatabaseExists(Connection.ConnectionString);
-        }
+        await using var database = await Connection.SqlInstance.Build("sample");
+        var connectionString = database.ConnectionString;
 
         var configuration = new EndpointConfiguration("Attachments.Sql.Sample");
         configuration.EnableInstallers();
@@ -15,9 +14,10 @@ class Program
         configuration.UsePersistence<LearningPersistence>();
         configuration.UseSerialization<SystemJsonSerializer>();
         var transport = configuration.UseTransport<SqlServerTransport>();
-        transport.ConnectionString(Connection.ConnectionString);
+        transport.ConnectionString(connectionString);
         transport.Transactions(TransportTransactionMode.SendsAtomicWithReceive);
-        var attachments = configuration.EnableAttachments(Connection.NewConnection, TimeToKeep.Default);
+        SqlConnection NewConnection() => new(connectionString);
+        var attachments = configuration.EnableAttachments(NewConnection, TimeToKeep.Default);
         attachments.UseTransportConnectivity();
         var endpoint = await Endpoint.Start(configuration);
         await SendMessage(endpoint);

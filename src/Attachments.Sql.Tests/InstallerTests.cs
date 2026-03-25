@@ -1,15 +1,12 @@
-﻿using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 
 public class InstallerTests
 {
-    static InstallerTests() =>
-        DbSetup.Setup();
-
     [Test]
     public async Task Run()
     {
-        await using var connection = await Connection.OpenAsyncConnection();
-        await Installer.CreateTable(connection, "MessageAttachments");
+        await using var database = await Connection.SqlInstance.Build();
+        var connection = database.Connection;
         await TableExists("[dbo].[MessageAttachments]", connection);
     }
 

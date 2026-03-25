@@ -34,7 +34,7 @@ public partial class Persister
         Guard.AgainstNullOrEmpty(name);
         Guard.AgainstLongAttachmentName(name);
         await using var command = CreateGetDataCommand(messageId, name, connection, transaction);
-        await using var reader = await command.ExecuteReaderAsync(SingleRow, cancel);
+        await using var reader = await command.ExecuteReaderAsync(SequentialAccess | SingleRow, cancel);
         if (await reader.ReadAsync(cancel))
         {
             var metadataString = reader.GetStringOrNull(1);
@@ -54,7 +54,7 @@ public partial class Persister
         Guard.AgainstNullOrEmpty(name);
         Guard.AgainstLongAttachmentName(name);
         await using var command = CreateGetDataCommand(messageId, name, connection, transaction);
-        await using var reader = await command.ExecuteReaderAsync(SingleRow, cancel);
+        await using var reader = await command.ExecuteReaderAsync(SequentialAccess | SingleRow, cancel);
         if (await reader.ReadAsync(cancel))
         {
             var bytes = (byte[]) reader[2];
@@ -116,7 +116,7 @@ public partial class Persister
     {
         Guard.AgainstNullOrEmpty(messageId);
         await using var command = CreateGetDatasCommand(messageId, connection, transaction);
-        await using var reader = await command.ExecuteReaderAsync(cancel);
+        await using var reader = await command.ExecuteReaderAsync(SequentialAccess, cancel);
         while (await reader.ReadAsync(cancel))
         {
             cancel.ThrowIfCancellationRequested();

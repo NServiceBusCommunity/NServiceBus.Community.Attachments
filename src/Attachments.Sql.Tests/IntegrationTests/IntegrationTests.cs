@@ -1,17 +1,11 @@
-﻿using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.DependencyInjection;
 using NServiceBus.Persistence.Sql;
 
-public class IntegrationTests : IDisposable
+public class IntegrationTests
 {
-    internal ManualResetEvent HandlerEvent = new(false);
-    internal ManualResetEvent SagaEvent = new(false);
-    internal bool shouldPerformNestedConnection;
-
-    static IntegrationTests() =>
-        DbSetup.Setup();
-
     [Test]
+    [Explicit]
     public Task AdHoc() =>
         RunSql(
             useSqlTransport: false,
@@ -52,15 +46,20 @@ public class IntegrationTests : IDisposable
             return;
         }
 
+        await using var context = new IntegrationTestContext();
         // so a nested connection will cause DTC
-#pragma warning disable TUnit0018
-        shouldPerformNestedConnection = !(useSqlPersistence &&
+        context.ShouldPerformNestedConnection = !(useSqlPersistence &&
             transactionMode == TransportTransactionMode.TransactionScope);
-#pragma warning restore TUnit0018
+
+        var dbName = $"Int_{useSqlTransport}_{useSqlTransportConnection}_{useSqlPersistence}_{useStorageSession}_{transactionMode}_{runEarlyCleanup}";
+        context.Database = await Connection.SqlInstance.Build(dbName);
+        context.ConnectionString = context.Database.ConnectionString;
+        var connectionString = context.ConnectionString;
 
         var endpointName = "SqlIntegrationTests";
         var configuration = new EndpointConfiguration(endpointName);
-        var attachments = configuration.EnableAttachments(Connection.NewConnection, TimeToKeep.Default);
+        SqlConnection NewConnection() => new(connectionString);
+        var attachments = configuration.EnableAttachments(NewConnection, TimeToKeep.Default);
         configuration.UseSerialization<SystemJsonSerializer>();
         if (useStorageSession)
         {
@@ -75,14 +74,14 @@ public class IntegrationTests : IDisposable
         configuration.RegisterComponents(
             registration: configureComponents =>
             {
-                configureComponents.AddSingleton(this);
+                configureComponents.AddSingleton(context);
             });
         if (useSqlPersistence)
         {
             var persistence = configuration.UsePersistence<SqlPersistence>();
 
-            static SqlConnection ConnectionBuilder() =>
-                new(Connection.ConnectionString);
+            SqlConnection ConnectionBuilder() =>
+                new(connectionString);
 
             await RunSqlScripts(endpointName, ConnectionBuilder);
             persistence.SqlDialect<SqlDialect.MsSqlServer>();
@@ -110,12 +109,13 @@ public class IntegrationTests : IDisposable
         if (useSqlTransport)
         {
             var transport = configuration.UseTransport<SqlServerTransport>();
-            transport.ConnectionString(Connection.ConnectionString);
+            transport.ConnectionString(connectionString);
             transport.Transactions(transactionMode);
         }
         else
         {
             var transport = configuration.UseTransport<LearningTransport>();
+            transport.StorageDirectory($"Int_{useSqlTransportConnection}_{useSqlPersistence}_{useStorageSession}_{transactionMode}_{runEarlyCleanup}");
             transport.Transactions(transactionMode);
         }
 
@@ -123,12 +123,12 @@ public class IntegrationTests : IDisposable
         var startMessageId = await SendStartMessage(endpoint);
 
         var timeout = TimeSpan.FromSeconds(10);
-        if (!HandlerEvent.WaitOne(timeout))
+        if (!context.HandlerEvent.WaitOne(timeout))
         {
             throw new("TimedOut");
         }
 
-        if (!SagaEvent.WaitOne(timeout))
+        if (!context.SagaEvent.WaitOne(timeout))
         {
             throw new("TimedOut");
         }
@@ -138,7 +138,7 @@ public class IntegrationTests : IDisposable
             transactionMode != TransportTransactionMode.None &&
             runEarlyCleanup)
         {
-            await using var connection = new SqlConnection(Connection.ConnectionString);
+            await using var connection = new SqlConnection(connectionString);
             await connection.OpenAsync();
             var persister = new Persister("Attachments");
             await foreach (var _ in persister.ReadAllMessageInfo(connection, null, startMessageId))
@@ -166,15 +166,6 @@ public class IntegrationTests : IDisposable
             shouldInstallSagas: true,
             shouldInstallSubscriptions: false,
             cancellationToken: default);
-    }
-
-    internal void PerformNestedConnection()
-    {
-        if (shouldPerformNestedConnection)
-        {
-            using var connection = new SqlConnection(Connection.ConnectionString);
-            connection.Open();
-        }
     }
 
     static async Task<string> SendStartMessage(IEndpointInstance endpoint)
@@ -213,11 +204,5 @@ public class IntegrationTests : IDisposable
         streamWriter.Flush();
         stream.Position = 0;
         return stream;
-    }
-
-    public void Dispose()
-    {
-        HandlerEvent.Dispose();
-        SagaEvent.Dispose();
     }
 }

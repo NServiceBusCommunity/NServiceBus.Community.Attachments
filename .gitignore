@@ -10,3 +10,8 @@ nugets/
 src/.learningtransport/
 src/temp/
 TestResults
+/src/Attachments.Sql.Benchmarks/BenchmarkDotNet.Artifacts
+/src/Attachments.FileShare.Benchmarks/BenchmarkDotNet.Artifacts
+*/PersisterBenchmarks-*.*
+/BenchmarkDotNet.Artifacts/results
+/BenchmarkDotNet.Artifacts.FileShare/results

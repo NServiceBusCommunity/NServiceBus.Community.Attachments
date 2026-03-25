@@ -5,8 +5,10 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Argon" Version="0.33.5" />
+    <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageVersion Include="ConfigureAwait.Fody" Version="3.3.2" />
     <PackageVersion Include="Fody" Version="6.9.3" />
+    <PackageVersion Include="LocalDb" Version="24.0.0" />
     <PackageVersion Include="MarkdownSnippets.MsBuild" Version="28.0.1" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.0.0" />
     <PackageVersion Include="NServiceBus" Version="10.1.0" />
@@ -21,6 +23,6 @@
     <PackageVersion Include="EmptyFiles" Version="8.17.2" />
     <PackageVersion Include="SimpleInfoName" Version="3.2.0" />
     <PackageVersion Include="Verify" Version="31.13.5" />
-    <PackageVersion Include="TUnit" Version="1.21.6" />
+    <PackageVersion Include="TUnit" Version="1.21.20" />
   </ItemGroup>
 </Project>
