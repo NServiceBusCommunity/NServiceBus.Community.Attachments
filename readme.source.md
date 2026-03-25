@@ -94,26 +94,30 @@ Uses [LocalDb](https://github.com/SimonCropp/LocalDb) with a per-benchmark isola
 
 | Method | DataSize | Mean | Allocated |
 |---|---|---:|---:|
-| SaveStream | 1 KB | 14.46 ms | 24.59 KB |
-| SaveBytes | 1 KB | 14.77 ms | 20.39 KB |
-| SaveAndGetBytes | 1 KB | 23.99 ms | 38.22 KB |
-| SaveAndCopyTo | 1 KB | 24.30 ms | 41.96 KB |
-| SaveAndGetStream | 1 KB | 27.17 ms | 40.03 KB |
-| SaveStream | 100 KB | 17.44 ms | 29.92 KB |
-| SaveBytes | 100 KB | 16.74 ms | 25.06 KB |
-| SaveAndGetBytes | 100 KB | 27.99 ms | 240.89 KB |
-| SaveAndCopyTo | 100 KB | 28.76 ms | 57.79 KB |
-| SaveAndGetStream | 100 KB | 28.00 ms | 45.36 KB |
-| SaveStream | 1 MB | 106.83 ms | 44.37 KB |
-| SaveBytes | 1 MB | 100.53 ms | 51.70 KB |
-| SaveAndGetBytes | 1 MB | 123.98 ms | 2119.16 KB |
-| SaveAndCopyTo | 1 MB | 125.54 ms | 143.88 KB |
-| SaveAndGetStream | 1 MB | 129.32 ms | - |
-| SaveStream | 10 MB | 931.08 ms | - |
-| SaveBytes | 10 MB | 943.99 ms | - |
-| SaveAndGetBytes | 10 MB | 1,105.97 ms | 20879.84 KB |
-| SaveAndCopyTo | 10 MB | 1,157.36 ms | 1263.38 KB |
-| SaveAndGetStream | 10 MB | 1,044.62 ms | 485.57 KB |
+| SaveStream | 1 KB | 14.82 ms | 24.59 KB |
+| SaveBytes | 1 KB | 14.44 ms | 20.39 KB |
+| SaveViaPipe | 1 KB | 14.25 ms | 25.54 KB |
+| SaveAndGetBytes | 1 KB | 24.46 ms | 38.22 KB |
+| SaveAndCopyTo | 1 KB | 24.59 ms | 42.44 KB |
+| SaveAndGetStream | 1 KB | 24.05 ms | 40.73 KB |
+| SaveStream | 100 KB | 16.29 ms | 29.92 KB |
+| SaveBytes | 100 KB | 18.49 ms | 25.06 KB |
+| SaveViaPipe | 100 KB | 17.74 ms | 37.51 KB |
+| SaveAndGetBytes | 100 KB | 28.31 ms | 240.89 KB |
+| SaveAndCopyTo | 100 KB | 28.27 ms | 180.80 KB |
+| SaveAndGetStream | 100 KB | 27.14 ms | 46.06 KB |
+| SaveStream | 1 MB | 111.30 ms | 67.09 KB |
+| SaveBytes | 1 MB | 102.33 ms | 50.84 KB |
+| SaveViaPipe | 1 MB | 99.06 ms | 84.48 KB |
+| SaveAndGetBytes | 1 MB | 123.79 ms | 2120.69 KB |
+| SaveAndCopyTo | 1 MB | 126.35 ms | 149.90 KB |
+| SaveAndGetStream | 1 MB | 128.31 ms | - |
+| SaveStream | 10 MB | 936.74 ms | 409.04 KB |
+| SaveBytes | 10 MB | 1,060.74 ms | 307.00 KB |
+| SaveViaPipe | 10 MB | 981.66 ms | 593.67 KB |
+| SaveAndGetBytes | 10 MB | 1,094.22 ms | 21,260.14 KB |
+| SaveAndCopyTo | 10 MB | 1,169.28 ms | 1,066.77 KB |
+| SaveAndGetStream | 10 MB | 1,067.86 ms | 468.30 KB |
 
 
 ### FileShare Persister

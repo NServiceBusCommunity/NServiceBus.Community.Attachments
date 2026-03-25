@@ -1,3 +1,4 @@
+using System.IO.Pipelines;
 using BenchmarkDotNet.Attributes;
 using LocalDb;
 using Microsoft.Data.SqlClient;
@@ -80,6 +81,40 @@ public class PersisterBenchmarks
     public Task<Guid> SaveBytes() =>
         persister.SaveBytes(
             connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), data, null);
+
+    [Benchmark]
+    public async Task SaveViaPipe()
+    {
+        var pipe = new Pipe(new(pauseWriterThreshold: 65536, resumeWriterThreshold: 32768));
+        var capturedData = data;
+        var writerTask = Task.Run(async () =>
+        {
+            try
+            {
+                var memory = capturedData.AsMemory();
+                const int chunkSize = 8192;
+                for (var offset = 0; offset < memory.Length; offset += chunkSize)
+                {
+                    var chunk = memory.Slice(offset, Math.Min(chunkSize, memory.Length - offset));
+                    var buffer = pipe.Writer.GetMemory(chunk.Length);
+                    chunk.CopyTo(buffer);
+                    pipe.Writer.Advance(chunk.Length);
+                    await pipe.Writer.FlushAsync();
+                }
+            }
+            finally
+            {
+                await pipe.Writer.CompleteAsync();
+            }
+        });
+        var readerStream = pipe.Reader.AsStream();
+        await using (readerStream)
+        {
+            await persister.SaveStream(
+                connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), readerStream, null);
+            await writerTask;
+        }
+    }
 
     [Benchmark]
     public async Task SaveAndGetBytes()
