@@ -156,12 +156,12 @@ public class IntegrationTests
         var messageId = Guid.NewGuid().ToString();
         sendOptions.SetMessageId(messageId);
         var attachment = sendOptions.Attachments();
-        attachment.Add(GetStream);
-        attachment.Add("second", GetStream);
-        attachment.Add("dir/inDir", GetStream);
-        attachment.Add(
+        attachment.AddStreamWriter(async stream => await GetStream().CopyToAsync(stream));
+        attachment.AddStreamWriter("second", async stream => await GetStream().CopyToAsync(stream));
+        attachment.AddStreamWriter("dir/inDir", async stream => await GetStream().CopyToAsync(stream));
+        attachment.AddStreamWriter(
             "withMetadata",
-            GetStream,
+            async stream => await GetStream().CopyToAsync(stream),
             metadata: new Dictionary<string, string>
             {
                 {

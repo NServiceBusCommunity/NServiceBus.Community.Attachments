@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.Attachments
+namespace NServiceBus.Attachments
 #if FileShare
     .FileShare
 #elif Sql
@@ -22,51 +22,22 @@ public interface IOutgoingAttachments
     IReadOnlyList<OutgoingAttachment> Items { get; }
 
     /// <summary>
-    /// Add an attachment with <paramref name="name"/> to the current outgoing pipeline.
-    /// </summary>
-    void Add<T>(string name, Func<Task<T>> streamFactory, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null)
-        where T : Stream;
-
-    /// <summary>
-    /// Add attachments to the current outgoing pipeline.
+    /// Add attachments dynamically to the current outgoing pipeline.
+    /// Use when the number of attachments is not known at compile time.
     /// </summary>
     void Add(AttachmentFactory factory);
 
     /// <summary>
-    /// Add an attachment with <paramref name="name"/> to the current outgoing pipeline.
-    /// </summary>
-    void Add(string name, Func<Stream> streamFactory, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null);
-
-    /// <summary>
-    /// Add an attachment with <paramref name="name"/> to the current outgoing pipeline.
-    /// </summary>
-    void Add(string name, Stream stream, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null);
-
-    /// <summary>
-    /// Add an attachment with the default name of `default` to the current outgoing pipeline.
-    /// </summary>
-    void Add<T>(Func<Task<T>> streamFactory, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null)
-        where T : Stream;
-
-    /// <summary>
-    /// Add an attachment with the default name of `default` to the current outgoing pipeline.
-    /// </summary>
-    void Add(Func<Stream> streamFactory, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null);
-
-    /// <summary>
-    /// Add an attachment with the default name of `default` to the current outgoing pipeline.
-    /// </summary>
-    void Add(Stream stream, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null);
-
-    /// <summary>
-    /// Add an attachment with the default name of `default` to the current outgoing pipeline using a push-based stream writer delegate.
-    /// The delegate writes to a provided stream, and data is streamed directly to storage using System.IO.Pipelines without intermediate buffering.
+    /// Add an attachment with the default name using a push-based stream writer delegate.
+    /// Data is streamed directly to storage using System.IO.Pipelines without intermediate buffering.
+    /// Use for large payloads or when data is generated/read incrementally.
     /// </summary>
     void AddStreamWriter(Func<Stream, Task> streamWriter, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null);
 
     /// <summary>
-    /// Add an attachment with <paramref name="name"/> to the current outgoing pipeline using a push-based stream writer delegate.
-    /// The delegate writes to a provided stream, and data is streamed directly to storage using System.IO.Pipelines without intermediate buffering.
+    /// Add an attachment with <paramref name="name"/> using a push-based stream writer delegate.
+    /// Data is streamed directly to storage using System.IO.Pipelines without intermediate buffering.
+    /// Use for large payloads or when data is generated/read incrementally.
     /// </summary>
     void AddStreamWriter(string name, Func<Stream, Task> streamWriter, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null);
 
@@ -74,7 +45,7 @@ public interface IOutgoingAttachments
     /// Add an attachment with <paramref name="name"/> to the current outgoing pipeline.
     /// </summary>
     /// <remarks>
-    /// This should only be used when the data size is know to be small as it causes the full size of the attachment to be allocated in memory.
+    /// Use for small payloads where the full data is already in memory.
     /// </remarks>
     void AddBytes(string name, Func<byte[]> byteFactory, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null);
 
@@ -82,7 +53,7 @@ public interface IOutgoingAttachments
     /// Add an attachment with <paramref name="name"/> to the current outgoing pipeline.
     /// </summary>
     /// <remarks>
-    /// This should only be used when the data size is know to be small as it causes the full size of the attachment to be allocated in memory.
+    /// Use for small payloads where the full data is already in memory.
     /// </remarks>
     void AddBytes(string name, byte[] bytes, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null);
 
@@ -90,23 +61,15 @@ public interface IOutgoingAttachments
     /// Add an attachment with <paramref name="name"/> to the current outgoing pipeline.
     /// </summary>
     /// <remarks>
-    /// This should only be used when the data size is know to be small as it causes the full size of the attachment to be allocated in memory.
+    /// Use for small payloads where the full data is already in memory.
     /// </remarks>
     void AddString(string name, string value, Encoding? encoding = null, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null);
 
     /// <summary>
-    /// Add an attachment with the default name of `default` to the current outgoing pipeline.
+    /// Add an attachment with the default name to the current outgoing pipeline.
     /// </summary>
     /// <remarks>
-    /// This should only be used when the data size is know to be small as it causes the full size of the attachment to be allocated in memory.
-    /// </remarks>
-    void AddString(string value, Encoding? encoding = null, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null);
-
-    /// <summary>
-    /// Add an attachment with the default name of `default` to the current outgoing pipeline.
-    /// </summary>
-    /// <remarks>
-    /// This should only be used when the data size is know to be small as it causes the full size of the attachment to be allocated in memory.
+    /// Use for small payloads where the full data is already in memory.
     /// </remarks>
     void AddBytes(Func<Task<byte[]>> bytesFactory, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null);
 
@@ -114,25 +77,33 @@ public interface IOutgoingAttachments
     /// Add an attachment with <paramref name="name"/> to the current outgoing pipeline.
     /// </summary>
     /// <remarks>
-    /// This should only be used when the data size is know to be small as it causes the full size of the attachment to be allocated in memory.
+    /// Use for small payloads where the full data is already in memory.
     /// </remarks>
     void AddBytes(string name, Func<Task<byte[]>> bytesFactory, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null);
 
     /// <summary>
-    /// Add an attachment with the default name of `default` to the current outgoing pipeline.
+    /// Add an attachment with the default name to the current outgoing pipeline.
     /// </summary>
     /// <remarks>
-    /// This should only be used when the data size is know to be small as it causes the full size of the attachment to be allocated in memory.
+    /// Use for small payloads where the full data is already in memory.
     /// </remarks>
     void AddBytes(Func<byte[]> byteFactory, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null);
 
     /// <summary>
-    /// Save an attachment with the default name of `default`.
+    /// Add an attachment with the default name to the current outgoing pipeline.
     /// </summary>
     /// <remarks>
-    /// This should only be used when the data size is know to be small as it causes the full size of the attachment to be allocated in memory.
+    /// Use for small payloads where the full data is already in memory.
     /// </remarks>
     void AddBytes(byte[] bytes, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null);
+
+    /// <summary>
+    /// Add an attachment with the default name to the current outgoing pipeline.
+    /// </summary>
+    /// <remarks>
+    /// Use for small payloads where the full data is already in memory.
+    /// </remarks>
+    void AddString(string value, Encoding? encoding = null, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null);
 
     /// <summary>
     /// Duplicates the incoming attachments to the current outgoing pipeline.

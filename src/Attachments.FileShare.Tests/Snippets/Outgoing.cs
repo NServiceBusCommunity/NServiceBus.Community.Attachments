@@ -9,9 +9,13 @@
         {
             var sendOptions = new SendOptions();
             var attachments = sendOptions.Attachments();
-            attachments.Add(
+            attachments.AddStreamWriter(
                 name: "attachment1",
-                streamFactory: () => File.OpenRead("FilePath.txt"));
+                streamWriter: async stream =>
+                {
+                    await using var source = File.OpenRead("FilePath.txt");
+                    await source.CopyToAsync(stream);
+                });
             return context.Send(new OtherMessage(), sendOptions);
         }
     }
@@ -29,9 +33,14 @@
         {
             var sendOptions = new SendOptions();
             var attachments = sendOptions.Attachments();
-            attachments.Add(
+            attachments.AddStreamWriter(
                 name: "attachment1",
-                streamFactory: () => httpClient.GetStreamAsync("theUrl"));
+                streamWriter: async stream =>
+                {
+                    await using var source =
+                        await httpClient.GetStreamAsync("theUrl");
+                    await source.CopyToAsync(stream);
+                });
             return context.Send(new OtherMessage(), sendOptions);
         }
     }
@@ -47,13 +56,14 @@
         {
             var sendOptions = new SendOptions();
             var attachments = sendOptions.Attachments();
-            attachments.Add(
+            attachments.AddStreamWriter(
                 name: "attachment1",
-                streamFactory: () =>
+                streamWriter: async stream =>
                 {
                     // The FileStream is passed directly to storage
                     // without being buffered in a MemoryStream or byte[]
-                    return File.OpenRead("LargeFile.zip");
+                    await using var source = File.OpenRead("LargeFile.zip");
+                    await source.CopyToAsync(stream);
                 });
             return context.Send(new OtherMessage(), sendOptions);
         }
@@ -70,26 +80,12 @@
         {
             var sendOptions = new SendOptions();
             var attachments = sendOptions.Attachments();
-            string? tempFile = null;
-            attachments.Add(
+            var document = new Document();
+            attachments.AddStreamWriter(
                 name: "attachment1",
-                streamFactory: async () =>
+                streamWriter: async stream =>
                 {
-                    var document = new Document();
-                    tempFile = Path.GetTempFileName();
-                    await using (var writeStream = File.Create(tempFile))
-                    {
-                        await document.SaveAsync(writeStream);
-                    }
-
-                    return File.OpenRead(tempFile);
-                },
-                cleanup: () =>
-                {
-                    if (tempFile != null)
-                    {
-                        File.Delete(tempFile);
-                    }
+                    await document.SaveAsync(stream);
                 });
             return context.Send(new OtherMessage(), sendOptions);
         }
@@ -126,9 +122,9 @@
             var sendOptions = new SendOptions();
             var attachments = sendOptions.Attachments();
             var stream = File.OpenRead("FilePath.txt");
-            attachments.Add(
+            attachments.AddStreamWriter(
                 name: "attachment1",
-                stream: stream,
+                streamWriter: async target => await stream.CopyToAsync(target),
                 cleanup: () => File.Delete("FilePath.txt"));
             return context.Send(new OtherMessage(), sendOptions);
         }

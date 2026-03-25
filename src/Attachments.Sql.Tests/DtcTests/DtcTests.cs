@@ -243,10 +243,10 @@ public class DtcTests
         var sendOptions = new SendOptions();
         sendOptions.RouteToThisEndpoint();
         var attachment = sendOptions.Attachments();
-        attachment.Add(GetStream);
-        attachment.Add(
+        attachment.AddStreamWriter(async stream => await GetStream().CopyToAsync(stream));
+        attachment.AddStreamWriter(
             "withMetadata",
-            GetStream,
+            async stream => await GetStream().CopyToAsync(stream),
             metadata: new Dictionary<string, string>
             {
                 {

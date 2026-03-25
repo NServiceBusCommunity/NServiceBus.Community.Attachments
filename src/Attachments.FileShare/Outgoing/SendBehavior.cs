@@ -39,10 +39,11 @@ class SendBehavior(IPersister persister, GetTimeToKeep endpointTimeToKeep) :
         {
             await dynamic(async (name, stream, keep, cleanup, metadata) =>
             {
+                var capturedStream = stream;
                 var outgoing = new Outgoing
                 {
                     Cleanup = cleanup,
-                    StreamInstance = stream,
+                    StreamWriter = async target => await capturedStream.CopyToAsync(target),
                     Metadata = metadata,
                     TimeToKeep = keep,
                 };
@@ -95,14 +96,6 @@ class SendBehavior(IPersister persister, GetTimeToKeep endpointTimeToKeep) :
         }
     }
 
-    async Task ProcessStream(string messageId, string name, DateTime expiry, Stream stream, IReadOnlyDictionary<string, string>? metadata, Cancel cancel)
-    {
-        await using (stream)
-        {
-            await persister.SaveStream(messageId, name, expiry, stream, metadata, cancel);
-        }
-    }
-
     async Task ProcessAttachment(TimeSpan? timeToBeReceived, string messageId, Outgoing outgoing, string name)
     {
         var outgoingStreamTimeToKeep = outgoing.TimeToKeep ?? endpointTimeToKeep;
@@ -123,25 +116,6 @@ class SendBehavior(IPersister persister, GetTimeToKeep endpointTimeToKeep) :
         if (outgoing.StreamWriter is not null)
         {
             await ProcessStreamWriter(messageId, name, expiry, outgoing.StreamWriter, outgoing.Metadata, cancel);
-            return;
-        }
-
-        if (outgoing.AsyncStreamFactory is not null)
-        {
-            var stream = await outgoing.AsyncStreamFactory();
-            await ProcessStream(messageId, name, expiry, stream, outgoing.Metadata, cancel);
-            return;
-        }
-
-        if (outgoing.StreamFactory is not null)
-        {
-            await ProcessStream(messageId, name, expiry, outgoing.StreamFactory(), outgoing.Metadata, cancel);
-            return;
-        }
-
-        if (outgoing.StreamInstance is not null)
-        {
-            await ProcessStream(messageId, name, expiry, outgoing.StreamInstance, outgoing.Metadata, cancel);
             return;
         }
 

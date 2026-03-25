@@ -248,95 +248,135 @@ The method `TimeToKeep.Default` provides a recommended default for for attachmen
  * Else; keep for 10 days.
 
 
-## Streaming without intermediate buffering
-
-When using the Factory Approach or Instance Approach with a non-buffered stream (e.g. `FileStream`, `HttpClient.GetStreamAsync`), data is streamed directly to the underlying storage without being copied into a `MemoryStream` or `byte[]` first. This means attachments of any size can be sent without allocating equivalent memory.
-
-For example, when using the SQL implementation, the `Stream` is passed directly to the `SqlParameter`, and ADO.NET reads from it in chunks during command execution. Similarly, the FileShare implementation copies directly from the source stream to the target file.
-
-```
-Pull-based streaming (Factory/Instance Approach):
-
-┌──────────┐        ┌──────────────┐        ┌─────────┐
-│  Source   │─read──>│  Attachments │─read──>│ Storage │
-│ (Stream)  │       │   Library    │        │ (SQL/FS)│
-└──────────┘        └──────────────┘        └─────────┘
-
-Data flows directly from source to storage. No intermediate buffer.
-```
-
-To take advantage of this, use the Factory Approach with a stream that reads on demand:
-
-<!-- snippet: OutgoingFactoryStream -->
-<a id='snippet-OutgoingFactoryStream'></a>
-```cs
-class HandlerFactoryStream :
-    IHandleMessages<MyMessage>
-{
-    public Task Handle(MyMessage message, HandlerContext context)
-    {
-        var sendOptions = new SendOptions();
-        var attachments = sendOptions.Attachments();
-        attachments.Add(
-            name: "attachment1",
-            streamFactory: () =>
-            {
-                // The FileStream is passed directly to storage
-                // without being buffered in a MemoryStream or byte[]
-                return File.OpenRead("LargeFile.zip");
-            });
-        return context.Send(new OtherMessage(), sendOptions);
-    }
-}
-```
-<sup><a href='/src/Attachments.FileShare.Tests/Snippets/Outgoing.cs#L41-L62' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingFactoryStream' title='Start of snippet'>anchor</a></sup>
-<a id='snippet-OutgoingFactoryStream-1'></a>
-```cs
-class HandlerFactoryStream :
-    IHandleMessages<MyMessage>
-{
-    public Task Handle(MyMessage message, HandlerContext context)
-    {
-        var sendOptions = new SendOptions();
-        var attachments = sendOptions.Attachments();
-        attachments.Add(
-            name: "attachment1",
-            streamFactory: () =>
-            {
-                // The FileStream is passed directly to SQL Server
-                // without being buffered in a MemoryStream or byte[]
-                return File.OpenRead("LargeFile.zip");
-            });
-        return context.Send(new OtherMessage(), sendOptions);
-    }
-}
-```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L41-L62' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingFactoryStream-1' title='Start of snippet'>anchor</a></sup>
-<!-- endSnippet -->
-
-To avoid buffering, do not call methods like `Stream.CopyTo(memoryStream)` or `stream.ToArray()` before passing the stream. Instead, pass the original stream directly and let the library handle the transfer.
+## Reading and writing attachments
 
 
-### Push-based APIs (write-to-stream)
+### Choosing the right API for writing attachments
 
-Some 3rd party APIs use a push-based pattern where they write to a stream provided by the caller, e.g. `document.SaveAsync(Stream)`. There are two approaches to handle this without buffering the full content in memory.
-
-
-#### Stream Writer Approach (recommended)
-
-Use `AddStreamWriter` to provide a delegate that writes to a stream. Internally the library uses `System.IO.Pipelines.Pipe` to bridge the push-based writer with the pull-based storage, enabling true concurrent streaming with backpressure. No intermediate `MemoryStream`, `byte[]`, or temp file is needed.
+| API | Use when | Memory behavior |
+|---|---|---|
+| `AddStreamWriter` | Large payloads, files, HTTP responses, or any data generated incrementally | Streams via `System.IO.Pipelines` with backpressure. Memory stays bounded regardless of payload size. |
+| `AddBytes` / `AddString` | Small payloads already in memory (config, metadata, small documents) | Full payload allocated in memory. |
+| `Add(AttachmentFactory)` | Number of attachments not known at compile time | Dynamic. Each attachment uses the memory model of its content. |
+| `AddFile` | File on disk | Convenience wrapper over `AddStreamWriter`. |
 
 ```
-Stream Writer Approach (using System.IO.Pipelines):
+AddStreamWriter (using System.IO.Pipelines):
 
 ┌──────────┐        ┌───────────┐        ┌──────────────┐        ┌─────────┐
-│ 3rd Party│─write─>│   Pipe    │─read──>│  Attachments │─read──>│ Storage │
-│   API    │        │  (buffer) │        │   Library    │        │ (SQL/FS)│
+│  Writer  │─write─>│   Pipe    │─read──>│  Attachments │─read──>│ Storage │
+│  Code    │        │  (buffer) │        │   Library    │        │ (SQL/FS)│
 └──────────┘        └───────────┘        └──────────────┘        └─────────┘
 
 Writer and reader run concurrently. Pipe applies backpressure
 so the writer pauses if the reader falls behind.
 ```
+
+
+### Writing attachments to an outgoing message
+
+While the below examples illustrate adding an attachment to `SendOptions`, equivalent operations can be performed on `PublishOptions` and `ReplyOptions`
+
+
+#### Stream Writer Approach (recommended)
+
+Use `AddStreamWriter` to provide a delegate that writes to a stream. Internally the library uses `System.IO.Pipelines.Pipe` to bridge the writer with storage, enabling concurrent streaming with backpressure. No intermediate `MemoryStream`, `byte[]`, or temp file is needed.
+
+<!-- snippet: OutgoingFactory -->
+<a id='snippet-OutgoingFactory'></a>
+```cs
+class HandlerFactory :
+    IHandleMessages<MyMessage>
+{
+    public Task Handle(MyMessage message, HandlerContext context)
+    {
+        var sendOptions = new SendOptions();
+        var attachments = sendOptions.Attachments();
+        attachments.AddStreamWriter(
+            name: "attachment1",
+            streamWriter: async stream =>
+            {
+                await using var source = File.OpenRead("FilePath.txt");
+                await source.CopyToAsync(stream);
+            });
+        return context.Send(new OtherMessage(), sendOptions);
+    }
+}
+```
+<sup><a href='/src/Attachments.FileShare.Tests/Snippets/Outgoing.cs#L3-L23' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingFactory' title='Start of snippet'>anchor</a></sup>
+<a id='snippet-OutgoingFactory-1'></a>
+```cs
+class HandlerFactory :
+    IHandleMessages<MyMessage>
+{
+    public Task Handle(MyMessage message, HandlerContext context)
+    {
+        var sendOptions = new SendOptions();
+        var attachments = sendOptions.Attachments();
+        attachments.AddStreamWriter(
+            name: "attachment1",
+            streamWriter: async stream =>
+            {
+                await using var source = File.OpenRead("FilePath.txt");
+                await source.CopyToAsync(stream);
+            });
+        return context.Send(new OtherMessage(), sendOptions);
+    }
+}
+```
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L3-L23' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingFactory-1' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
+
+<!-- snippet: OutgoingFactoryAsync -->
+<a id='snippet-OutgoingFactoryAsync'></a>
+```cs
+class HandlerFactoryAsync :
+    IHandleMessages<MyMessage>
+{
+    static HttpClient httpClient = new();
+
+    public Task Handle(MyMessage message, HandlerContext context)
+    {
+        var sendOptions = new SendOptions();
+        var attachments = sendOptions.Attachments();
+        attachments.AddStreamWriter(
+            name: "attachment1",
+            streamWriter: async stream =>
+            {
+                await using var source =
+                    await httpClient.GetStreamAsync("theUrl");
+                await source.CopyToAsync(stream);
+            });
+        return context.Send(new OtherMessage(), sendOptions);
+    }
+}
+```
+<sup><a href='/src/Attachments.FileShare.Tests/Snippets/Outgoing.cs#L25-L48' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingFactoryAsync' title='Start of snippet'>anchor</a></sup>
+<a id='snippet-OutgoingFactoryAsync-1'></a>
+```cs
+class HandlerFactoryAsync :
+    IHandleMessages<MyMessage>
+{
+    static HttpClient httpClient = new();
+
+    public Task Handle(MyMessage message, HandlerContext context)
+    {
+        var sendOptions = new SendOptions();
+        var attachments = sendOptions.Attachments();
+        attachments.AddStreamWriter(
+            name: "attachment1",
+            streamWriter: async stream =>
+            {
+                await using var source =
+                    await httpClient.GetStreamAsync("theUrl");
+                await source.CopyToAsync(stream);
+            });
+        return context.Send(new OtherMessage(), sendOptions);
+    }
+}
+```
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L25-L48' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingFactoryAsync-1' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
 
 <!-- snippet: OutgoingStreamWriter -->
 <a id='snippet-OutgoingStreamWriter'></a>
@@ -356,7 +396,7 @@ class HandlerStreamWriter :
     }
 }
 ```
-<sup><a href='/src/Attachments.FileShare.Tests/Snippets/Outgoing.cs#L100-L117' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingStreamWriter' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.FileShare.Tests/Snippets/Outgoing.cs#L96-L113' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingStreamWriter' title='Start of snippet'>anchor</a></sup>
 <a id='snippet-OutgoingStreamWriter-1'></a>
 ```cs
 class HandlerStreamWriter :
@@ -374,201 +414,8 @@ class HandlerStreamWriter :
     }
 }
 ```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L100-L117' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingStreamWriter-1' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L96-L113' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingStreamWriter-1' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
-
-
-#### Temp File Approach
-
-Alternatively, use a temporary file combined with the async factory. This avoids memory buffering but requires disk I/O:
-
-```
-Temp File Approach:
-
-Step 1: Write               Step 2: Read
-┌──────────┐   ┌──────┐    ┌──────┐   ┌─────────┐
-│ 3rd Party│──>│ Temp │    │ Temp │──>│ Storage │
-│   API    │   │ File │    │ File │   │ (SQL/FS)│
-└──────────┘   └──────┘    └──────┘   └─────────┘
-
-Two-phase: write to disk first, then stream from disk to storage.
-Temp file is deleted after persistence via the cleanup delegate.
-```
-
-<!-- snippet: OutgoingFactoryPushBased -->
-<a id='snippet-OutgoingFactoryPushBased'></a>
-```cs
-class HandlerFactoryPushBased :
-    IHandleMessages<MyMessage>
-{
-    public Task Handle(MyMessage message, HandlerContext context)
-    {
-        var sendOptions = new SendOptions();
-        var attachments = sendOptions.Attachments();
-        string? tempFile = null;
-        attachments.Add(
-            name: "attachment1",
-            streamFactory: async () =>
-            {
-                var document = new Document();
-                tempFile = Path.GetTempFileName();
-                await using (var writeStream = File.Create(tempFile))
-                {
-                    await document.SaveAsync(writeStream);
-                }
-
-                return File.OpenRead(tempFile);
-            },
-            cleanup: () =>
-            {
-                if (tempFile != null)
-                {
-                    File.Delete(tempFile);
-                }
-            });
-        return context.Send(new OtherMessage(), sendOptions);
-    }
-}
-```
-<sup><a href='/src/Attachments.FileShare.Tests/Snippets/Outgoing.cs#L64-L98' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingFactoryPushBased' title='Start of snippet'>anchor</a></sup>
-<a id='snippet-OutgoingFactoryPushBased-1'></a>
-```cs
-class HandlerFactoryPushBased :
-    IHandleMessages<MyMessage>
-{
-    public Task Handle(MyMessage message, HandlerContext context)
-    {
-        var sendOptions = new SendOptions();
-        var attachments = sendOptions.Attachments();
-        string? tempFile = null;
-        attachments.Add(
-            name: "attachment1",
-            streamFactory: async () =>
-            {
-                var document = new Document();
-                tempFile = Path.GetTempFileName();
-                await using (var writeStream = File.Create(tempFile))
-                {
-                    await document.SaveAsync(writeStream);
-                }
-
-                return File.OpenRead(tempFile);
-            },
-            cleanup: () =>
-            {
-                if (tempFile != null)
-                {
-                    File.Delete(tempFile);
-                }
-            });
-        return context.Send(new OtherMessage(), sendOptions);
-    }
-}
-```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L64-L98' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingFactoryPushBased-1' title='Start of snippet'>anchor</a></sup>
-<!-- endSnippet -->
-
-
-## Reading and writing attachments
-
-
-### Writing attachments to an outgoing message
-
-Approaches to using attachments for an outgoing message.
-
-Note: [Stream.Dispose](https://msdn.microsoft.com/en-us/library/ms227422.aspx) is called after the data has been persisted. As such it is not necessary for any code using attachments to perform this cleanup.
-
-While the below examples illustrate adding an attachment to `SendOptions`, equivalent operations can be performed on `PublishOptions` and `ReplyOptions`
-
-
-#### Factory Approach
-
-The recommended approach for adding an attachment is by providing a delegate that constructs the stream. The execution of this delegate is then deferred until later in the outgoing pipeline, when the instance of the stream is required to be persisted.
-
-There are both async and sync variants.
-
-<!-- snippet: OutgoingFactory -->
-<a id='snippet-OutgoingFactory'></a>
-```cs
-class HandlerFactory :
-    IHandleMessages<MyMessage>
-{
-    public Task Handle(MyMessage message, HandlerContext context)
-    {
-        var sendOptions = new SendOptions();
-        var attachments = sendOptions.Attachments();
-        attachments.Add(
-            name: "attachment1",
-            streamFactory: () => File.OpenRead("FilePath.txt"));
-        return context.Send(new OtherMessage(), sendOptions);
-    }
-}
-```
-<sup><a href='/src/Attachments.FileShare.Tests/Snippets/Outgoing.cs#L3-L19' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingFactory' title='Start of snippet'>anchor</a></sup>
-<a id='snippet-OutgoingFactory-1'></a>
-```cs
-class HandlerFactory :
-    IHandleMessages<MyMessage>
-{
-    public Task Handle(MyMessage message, HandlerContext context)
-    {
-        var sendOptions = new SendOptions();
-        var attachments = sendOptions.Attachments();
-        attachments.Add(
-            name: "attachment1",
-            streamFactory: () => File.OpenRead("FilePath.txt"));
-        return context.Send(new OtherMessage(), sendOptions);
-    }
-}
-```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L3-L19' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingFactory-1' title='Start of snippet'>anchor</a></sup>
-<!-- endSnippet -->
-
-<!-- snippet: OutgoingFactoryAsync -->
-<a id='snippet-OutgoingFactoryAsync'></a>
-```cs
-class HandlerFactoryAsync :
-    IHandleMessages<MyMessage>
-{
-    static HttpClient httpClient = new();
-
-    public Task Handle(MyMessage message, HandlerContext context)
-    {
-        var sendOptions = new SendOptions();
-        var attachments = sendOptions.Attachments();
-        attachments.Add(
-            name: "attachment1",
-            streamFactory: () => httpClient.GetStreamAsync("theUrl"));
-        return context.Send(new OtherMessage(), sendOptions);
-    }
-}
-```
-<sup><a href='/src/Attachments.FileShare.Tests/Snippets/Outgoing.cs#L21-L39' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingFactoryAsync' title='Start of snippet'>anchor</a></sup>
-<a id='snippet-OutgoingFactoryAsync-1'></a>
-```cs
-class HandlerFactoryAsync :
-    IHandleMessages<MyMessage>
-{
-    static HttpClient httpClient = new();
-
-    public Task Handle(MyMessage message, HandlerContext context)
-    {
-        var sendOptions = new SendOptions();
-        var attachments = sendOptions.Attachments();
-        attachments.Add(
-            name: "attachment1",
-            streamFactory: () => httpClient.GetStreamAsync("theUrl"));
-        return context.Send(new OtherMessage(), sendOptions);
-    }
-}
-```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L21-L39' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingFactoryAsync-1' title='Start of snippet'>anchor</a></sup>
-<!-- endSnippet -->
-
-
-#### Instance Approach
-
-In some cases an instance of a stream is already available in scope and as such it can be passed directly.
 
 <!-- snippet: OutgoingInstance -->
 <a id='snippet-OutgoingInstance'></a>
@@ -581,15 +428,15 @@ class HandlerInstance :
         var sendOptions = new SendOptions();
         var attachments = sendOptions.Attachments();
         var stream = File.OpenRead("FilePath.txt");
-        attachments.Add(
+        attachments.AddStreamWriter(
             name: "attachment1",
-            stream: stream,
+            streamWriter: async target => await stream.CopyToAsync(target),
             cleanup: () => File.Delete("FilePath.txt"));
         return context.Send(new OtherMessage(), sendOptions);
     }
 }
 ```
-<sup><a href='/src/Attachments.FileShare.Tests/Snippets/Outgoing.cs#L119-L137' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingInstance' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.FileShare.Tests/Snippets/Outgoing.cs#L115-L133' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingInstance' title='Start of snippet'>anchor</a></sup>
 <a id='snippet-OutgoingInstance-1'></a>
 ```cs
 class HandlerInstance :
@@ -600,15 +447,15 @@ class HandlerInstance :
         var sendOptions = new SendOptions();
         var attachments = sendOptions.Attachments();
         var stream = File.OpenRead("FilePath.txt");
-        attachments.Add(
+        attachments.AddStreamWriter(
             name: "attachment1",
-            stream: stream,
+            streamWriter: async target => await stream.CopyToAsync(target),
             cleanup: () => File.Delete("FilePath.txt"));
         return context.Send(new OtherMessage(), sendOptions);
     }
 }
 ```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L119-L137' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingInstance-1' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L115-L133' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingInstance-1' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 
@@ -898,12 +745,18 @@ public class Handler :
     {
         var options = new SendOptions();
         var attachments = options.Attachments();
-        attachments.Add("theName", () => File.OpenRead("aFilePath"));
+        attachments.AddStreamWriter(
+            "theName",
+            async stream =>
+            {
+                await using var source = File.OpenRead("aFilePath");
+                await source.CopyToAsync(stream);
+            });
         return context.Send(new OtherMessage(), options);
     }
 }
 ```
-<sup><a href='/src/Attachments.FileShare.Tests/Snippets/TestingOutgoing.cs#L3-L17' title='Snippet source file'>snippet source</a> | <a href='#snippet-TestOutgoingHandler' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.FileShare.Tests/Snippets/TestingOutgoing.cs#L3-L23' title='Snippet source file'>snippet source</a> | <a href='#snippet-TestOutgoingHandler' title='Start of snippet'>anchor</a></sup>
 <a id='snippet-TestOutgoingHandler-1'></a>
 ```cs
 public class Handler :
@@ -913,12 +766,18 @@ public class Handler :
     {
         var options = new SendOptions();
         var attachments = options.Attachments();
-        attachments.Add("theName", () => File.OpenRead("aFilePath"));
+        attachments.AddStreamWriter(
+            "theName",
+            async stream =>
+            {
+                await using var source = File.OpenRead("aFilePath");
+                await source.CopyToAsync(stream);
+            });
         return context.Send(new OtherMessage(), options);
     }
 }
 ```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/TestingOutgoing.cs#L3-L17' title='Snippet source file'>snippet source</a> | <a href='#snippet-TestOutgoingHandler-1' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/TestingOutgoing.cs#L3-L23' title='Snippet source file'>snippet source</a> | <a href='#snippet-TestOutgoingHandler-1' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 <!-- snippet: TestOutgoing -->
@@ -942,7 +801,7 @@ public async Task TestOutgoingAttachments()
     await Assert.That(attachments.HasPendingAttachments).IsTrue();
 }
 ```
-<sup><a href='/src/Attachments.FileShare.Tests/Snippets/TestingOutgoing.cs#L19-L39' title='Snippet source file'>snippet source</a> | <a href='#snippet-TestOutgoing' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.FileShare.Tests/Snippets/TestingOutgoing.cs#L25-L45' title='Snippet source file'>snippet source</a> | <a href='#snippet-TestOutgoing' title='Start of snippet'>anchor</a></sup>
 <a id='snippet-TestOutgoing-1'></a>
 ```cs
 [Test]
@@ -963,7 +822,7 @@ public async Task TestOutgoingAttachments()
     await Assert.That(attachments.HasPendingAttachments).IsTrue();
 }
 ```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/TestingOutgoing.cs#L19-L39' title='Snippet source file'>snippet source</a> | <a href='#snippet-TestOutgoing-1' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/TestingOutgoing.cs#L25-L45' title='Snippet source file'>snippet source</a> | <a href='#snippet-TestOutgoing-1' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 

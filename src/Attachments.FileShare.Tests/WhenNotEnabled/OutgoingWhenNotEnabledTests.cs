@@ -27,7 +27,7 @@
         var sendOptions = new SendOptions();
         sendOptions.RouteToThisEndpoint();
         var attachment = sendOptions.Attachments();
-        attachment.Add(GetStream);
+        attachment.AddStreamWriter(async stream => await GetStream().CopyToAsync(stream));
         return endpoint.Send(new SendMessage(), sendOptions);
     }
 

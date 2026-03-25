@@ -91,10 +91,11 @@ class SendBehavior :
         {
             await dynamic(async (name, stream, keep, cleanup, metadata) =>
             {
+                var capturedStream = stream;
                 var outgoing = new Outgoing
                 {
                     Cleanup = cleanup,
-                    StreamInstance = stream,
+                    StreamWriter = async target => await capturedStream.CopyToAsync(target),
                     Metadata = metadata,
                     TimeToKeep = keep,
                 };
@@ -151,14 +152,6 @@ class SendBehavior :
         }
     }
 
-    async Task<Guid> ProcessStream(SqlConnection connection, SqlTransaction? transaction, string messageId, string name, DateTime expiry, Stream stream, IReadOnlyDictionary<string, string>? metadata)
-    {
-        await using (stream)
-        {
-            return await persister.SaveStream(connection, transaction, messageId, name, expiry, stream, metadata);
-        }
-    }
-
     async Task<Guid> ProcessAttachment(TimeSpan? timeToBeReceived, SqlConnection connection, SqlTransaction? transaction, string messageId, Outgoing outgoing, string name)
     {
         var outgoingStreamTimeToKeep = outgoing.TimeToKeep ?? endpointTimeToKeep;
@@ -180,22 +173,6 @@ class SendBehavior :
         if (outgoing.StreamWriter is not null)
         {
             return await ProcessStreamWriter(connection, transaction, messageId, name, expiry, outgoing.StreamWriter, metadata);
-        }
-
-        if (outgoing.AsyncStreamFactory is not null)
-        {
-            var stream = await outgoing.AsyncStreamFactory();
-            return await ProcessStream(connection, transaction, messageId, name, expiry, stream, metadata);
-        }
-
-        if (outgoing.StreamFactory is not null)
-        {
-            return await ProcessStream(connection, transaction, messageId, name, expiry, outgoing.StreamFactory(), metadata);
-        }
-
-        if (outgoing.StreamInstance is not null)
-        {
-            return await ProcessStream(connection, transaction, messageId, name, expiry, outgoing.StreamInstance, metadata);
         }
 
         if (outgoing.AsyncBytesFactory is not null)
