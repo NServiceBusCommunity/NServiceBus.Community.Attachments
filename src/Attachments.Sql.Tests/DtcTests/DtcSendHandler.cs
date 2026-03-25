@@ -1,5 +1,3 @@
-using NServiceBus.Persistence.Sql;
-
 class DtcSendHandler(DtcTestContext context) :
     IHandleMessages<DtcSendMessage>
 {
@@ -7,7 +5,7 @@ class DtcSendHandler(DtcTestContext context) :
     {
         try
         {
-            await HandleInner(message, handlerContext);
+            await HandleInner(handlerContext);
         }
         catch (Exception ex)
         {
@@ -17,7 +15,7 @@ class DtcSendHandler(DtcTestContext context) :
         }
     }
 
-    async Task HandleInner(DtcSendMessage message, HandlerContext handlerContext)
+    async Task HandleInner(HandlerContext handlerContext)
     {
         var session = handlerContext.SynchronizedStorageSession.SqlPersistenceSession();
         var connection = (SqlConnection) session.Connection;
@@ -51,7 +49,7 @@ class DtcSendHandler(DtcTestContext context) :
 
         await using (var dbContext = new BusinessDbContext(efOptions))
         {
-            dbContext.Database.UseTransaction((DbTransaction?) transaction);
+            await dbContext.Database.UseTransactionAsync(transaction, handlerContext.CancellationToken);
             dbContext.Entities.Add(new BusinessEntity
             {
                 Id = Guid.NewGuid(),
@@ -65,9 +63,9 @@ class DtcSendHandler(DtcTestContext context) :
         // EF Core read
         await using (var dbContext = new BusinessDbContext(efOptions))
         {
-            dbContext.Database.UseTransaction((DbTransaction?) transaction);
+            await dbContext.Database.UseTransactionAsync(transaction, handlerContext.CancellationToken);
             var entity = await dbContext.Entities.FirstOrDefaultAsync(
-                e => e.Value == "handler-ef-write",
+                _ => _.Value == "handler-ef-write",
                 handlerContext.CancellationToken);
             context.HandlerEfReadSucceeded = entity is not null;
         }

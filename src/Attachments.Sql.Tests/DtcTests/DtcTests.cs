@@ -41,7 +41,7 @@ public class DtcTests
                 }
 
                 // If we get here, DTC is available — verify promotion occurred
-                var distributedId = System.Transactions.Transaction.Current?.TransactionInformation.DistributedIdentifier;
+                var distributedId = Transaction.Current?.TransactionInformation.DistributedIdentifier;
                 dtcWasNeeded = distributedId is not null && distributedId.Value != Guid.Empty;
                 scope.Complete();
             }
@@ -97,7 +97,7 @@ public class DtcTests
             }
 
             // Verify NO DTC promotion
-            var distributedId = System.Transactions.Transaction.Current?.TransactionInformation.DistributedIdentifier;
+            var distributedId = Transaction.Current?.TransactionInformation.DistributedIdentifier;
             var isNotPromoted = distributedId is null || distributedId.Value == Guid.Empty;
             await Assert.That(isNotPromoted).IsTrue()
                 .Because("Using a single connection with 3-part names should not promote to DTC");
@@ -238,7 +238,7 @@ public class DtcTests
             cancellationToken: default);
     }
 
-    static async Task SendStartMessage(IEndpointInstance endpoint)
+    static Task SendStartMessage(IEndpointInstance endpoint)
     {
         var sendOptions = new SendOptions();
         sendOptions.RouteToThisEndpoint();
@@ -253,7 +253,7 @@ public class DtcTests
                     "key", "value"
                 }
             });
-        await endpoint.Send(new DtcSendMessage(), sendOptions);
+        return endpoint.Send(new DtcSendMessage(), sendOptions);
     }
 
     static Stream GetStream()
