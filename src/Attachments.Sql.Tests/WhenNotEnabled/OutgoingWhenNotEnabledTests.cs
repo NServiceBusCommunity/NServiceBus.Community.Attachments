@@ -1,8 +1,5 @@
 ﻿public class OutgoingWhenNotEnabledTests
 {
-    static OutgoingWhenNotEnabledTests() =>
-        DbSetup.Setup();
-
     [Test]
     public async Task Run()
     {

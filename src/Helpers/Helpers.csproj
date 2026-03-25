@@ -3,6 +3,7 @@
     <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="LocalDb" />
     <PackageReference Include="NServiceBus" />
     <PackageReference Include="Microsoft.Data.SqlClient" />
     <PackageReference Include="ProjectDefaults" PrivateAssets="all" />

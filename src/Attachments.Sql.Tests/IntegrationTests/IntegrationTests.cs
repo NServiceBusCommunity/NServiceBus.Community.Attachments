@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.DependencyInjection;
 using NServiceBus.Persistence.Sql;
 
@@ -7,9 +7,7 @@ public class IntegrationTests : IDisposable
     internal ManualResetEvent HandlerEvent = new(false);
     internal ManualResetEvent SagaEvent = new(false);
     internal bool shouldPerformNestedConnection;
-
-    static IntegrationTests() =>
-        DbSetup.Setup();
+    internal string connectionString = null!;
 
     [Test]
     public Task AdHoc() =>
@@ -58,9 +56,13 @@ public class IntegrationTests : IDisposable
             transactionMode == TransportTransactionMode.TransactionScope);
 #pragma warning restore TUnit0018
 
+        await using var database = await Connection.SqlInstance.Build();
+        connectionString = database.ConnectionString;
+
         var endpointName = "SqlIntegrationTests";
         var configuration = new EndpointConfiguration(endpointName);
-        var attachments = configuration.EnableAttachments(Connection.NewConnection, TimeToKeep.Default);
+        SqlConnection NewConnection() => new(connectionString);
+        var attachments = configuration.EnableAttachments(NewConnection, TimeToKeep.Default);
         configuration.UseSerialization<SystemJsonSerializer>();
         if (useStorageSession)
         {
@@ -81,8 +83,8 @@ public class IntegrationTests : IDisposable
         {
             var persistence = configuration.UsePersistence<SqlPersistence>();
 
-            static SqlConnection ConnectionBuilder() =>
-                new(Connection.ConnectionString);
+            SqlConnection ConnectionBuilder() =>
+                new(connectionString);
 
             await RunSqlScripts(endpointName, ConnectionBuilder);
             persistence.SqlDialect<SqlDialect.MsSqlServer>();
@@ -110,7 +112,7 @@ public class IntegrationTests : IDisposable
         if (useSqlTransport)
         {
             var transport = configuration.UseTransport<SqlServerTransport>();
-            transport.ConnectionString(Connection.ConnectionString);
+            transport.ConnectionString(connectionString);
             transport.Transactions(transactionMode);
         }
         else
@@ -138,7 +140,7 @@ public class IntegrationTests : IDisposable
             transactionMode != TransportTransactionMode.None &&
             runEarlyCleanup)
         {
-            await using var connection = new SqlConnection(Connection.ConnectionString);
+            await using var connection = new SqlConnection(connectionString);
             await connection.OpenAsync();
             var persister = new Persister("Attachments");
             await foreach (var _ in persister.ReadAllMessageInfo(connection, null, startMessageId))
@@ -172,7 +174,7 @@ public class IntegrationTests : IDisposable
     {
         if (shouldPerformNestedConnection)
         {
-            using var connection = new SqlConnection(Connection.ConnectionString);
+            using var connection = new SqlConnection(connectionString);
             connection.Open();
         }
     }

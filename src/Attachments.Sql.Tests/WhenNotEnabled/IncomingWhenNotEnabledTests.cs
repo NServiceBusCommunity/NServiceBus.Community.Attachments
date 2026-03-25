@@ -5,9 +5,6 @@ public class IncomingWhenNotEnabledTests : IDisposable
     public ManualResetEvent ResetEvent = new(false);
     public Exception? Exception;
 
-    static IncomingWhenNotEnabledTests() =>
-        DbSetup.Setup();
-
     [Test]
     public async Task Run()
     {
