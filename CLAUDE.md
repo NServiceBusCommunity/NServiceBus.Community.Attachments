@@ -29,7 +29,7 @@ dotnet test src/Attachments.Sql.Tests --filter "FullyQualifiedName~TestClassName
 
 **Prerequisites**:
 - .NET SDK 10.0.102 (preview) - specified in `src/global.json`
-- SQL Server for SQL tests (CI uses MSSQL$SQL2019)
+- SQL Server LocalDB for SQL tests (via [LocalDb](https://github.com/SimonCropp/LocalDb))
 
 ## Project Structure
 
@@ -68,7 +68,7 @@ Each implementation follows this structure:
 
 ## Testing
 
-- Framework: **xunit.v3** with **Verify** for snapshot testing
+- Framework: **TUnit** with **Verify** for snapshot testing
 - Integration tests (in `IntegrationTests/`) are excluded from Release builds
 - Documentation snippets use `// snippet:` comments and are extracted by MarkdownSnippets
 

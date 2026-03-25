@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
+﻿
 
 // ReSharper disable UnusedVariable
 // ReSharper disable RedundantArgumentDefaultValue
@@ -106,8 +106,8 @@ public class Usage
 
         var attachments = configuration.EnableAttachments(
             connectionFactory: OpenConnection,
-            timeToKeep: TimeToKeep.Default);
-        attachments.UseTable(new("CustomAttachmentsTableName", "dbo"));
+            timeToKeep: TimeToKeep.Default,
+            table: "CustomAttachmentsTableName");
 
         #endregion
     }

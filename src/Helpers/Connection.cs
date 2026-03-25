@@ -23,4 +23,19 @@ public static class Connection
                 """;
             await command.ExecuteNonQueryAsync();
         });
+
+    public static async Task CreateBusinessTable(string connectionString)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            create table [dbo].[BusinessEntities](
+                Id uniqueidentifier default newsequentialid() primary key not null,
+                Value nvarchar(max) not null
+            );
+            """;
+        await command.ExecuteNonQueryAsync();
+    }
 }

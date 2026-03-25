@@ -1,4 +1,12 @@
-﻿public class IntegrationTests :
+﻿using TUnit.Core.Interfaces;
+
+public class ParallelLimit4 : IParallelLimit
+{
+    public int Limit => 4;
+}
+
+[ParallelLimiter<ParallelLimit4>]
+public class IntegrationTests :
     IDisposable
 {
     static ManualResetEvent resetEvent = new(false);

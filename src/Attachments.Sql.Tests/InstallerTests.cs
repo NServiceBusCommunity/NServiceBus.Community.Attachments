@@ -1,5 +1,3 @@
-using Microsoft.Data.SqlClient;
-
 public class InstallerTests
 {
     [Test]

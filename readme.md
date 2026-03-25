@@ -103,9 +103,9 @@ Benchmark results for attachment persister operations at different data sizes. R
 
 ### Hardware
 
- * BenchmarkDotNet v0.15.8, Windows 11 (10.0.26200.8037)
- * 12th Gen Intel Core i5-12600 3.30GHz, 1 CPU, 12 logical and 6 physical cores
- * .NET SDK 10.0.201
+ * BenchmarkDotNet v0.15.8, Windows 10 (10.0.19045.7058/22H2/2022Update)
+ * Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
+ * .NET SDK 10.0.200
 
 
 ### SQL Persister
@@ -114,60 +114,60 @@ Uses [LocalDb](https://github.com/SimonCropp/LocalDb) with a per-benchmark isola
 
 | Method | DataSize | Mean | Allocated |
 |---|---|---:|---:|
-| SaveStream | 1 KB | 11.23 ms | 25.14 KB |
-| SaveBytes | 1 KB | 11.07 ms | 20.94 KB |
-| SaveAndGetBytes | 1 KB | 16.11 ms | 38.37 KB |
-| SaveAndCopyTo | 1 KB | 17.09 ms | 42.11 KB |
-| SaveAndGetStream | 1 KB | 17.14 ms | 40.85 KB |
-| SaveStream | 100 KB | 13.67 ms | 129.47 KB |
-| SaveBytes | 100 KB | 12.93 ms | 124.61 KB |
-| SaveAndGetBytes | 100 KB | 18.00 ms | 340.04 KB |
-| SaveAndCopyTo | 100 KB | 18.40 ms | 151.89 KB |
-| SaveAndGetStream | 100 KB | 17.71 ms | 145.18 KB |
-| SaveStream | 1 MB | 34.24 ms | 1099.01 KB |
-| SaveBytes | 1 MB | 38.82 ms | 1081.27 KB |
-| SaveAndGetBytes | 1 MB | 45.65 ms | 3145.98 KB |
-| SaveAndCopyTo | 1 MB | 43.54 ms | 1187.44 KB |
-| SaveAndGetStream | 1 MB | 42.48 ms | 1113.15 KB |
-| SaveStream | 10 MB | 247.39 ms | 10903.38 KB |
-| SaveBytes | 10 MB | 273.41 ms | 10729.63 KB |
-| SaveAndGetBytes | 10 MB | 283.44 ms | 31193.08 KB |
-| SaveAndCopyTo | 10 MB | 296.23 ms | 11559.48 KB |
-| SaveAndGetStream | 10 MB | 282.45 ms | 10902.93 KB |
+| SaveStream | 1 KB | 14.46 ms | 24.59 KB |
+| SaveBytes | 1 KB | 14.77 ms | 20.39 KB |
+| SaveAndGetBytes | 1 KB | 23.99 ms | 38.22 KB |
+| SaveAndCopyTo | 1 KB | 24.30 ms | 41.96 KB |
+| SaveAndGetStream | 1 KB | 27.17 ms | 40.03 KB |
+| SaveStream | 100 KB | 17.44 ms | 29.92 KB |
+| SaveBytes | 100 KB | 16.74 ms | 25.06 KB |
+| SaveAndGetBytes | 100 KB | 27.99 ms | 240.89 KB |
+| SaveAndCopyTo | 100 KB | 28.76 ms | 57.79 KB |
+| SaveAndGetStream | 100 KB | 28.00 ms | 45.36 KB |
+| SaveStream | 1 MB | 106.83 ms | 44.37 KB |
+| SaveBytes | 1 MB | 100.53 ms | 51.70 KB |
+| SaveAndGetBytes | 1 MB | 123.98 ms | 2119.16 KB |
+| SaveAndCopyTo | 1 MB | 125.54 ms | 143.88 KB |
+| SaveAndGetStream | 1 MB | 129.32 ms | - |
+| SaveStream | 10 MB | 931.08 ms | - |
+| SaveBytes | 10 MB | 943.99 ms | - |
+| SaveAndGetBytes | 10 MB | 1,105.97 ms | 20879.84 KB |
+| SaveAndCopyTo | 10 MB | 1,157.36 ms | 1263.38 KB |
+| SaveAndGetStream | 10 MB | 1,044.62 ms | 485.57 KB |
 
 
 ### FileShare Persister
 
 | Method | DataSize | Mean | Allocated |
 |---|---|---:|---:|
-| SaveStream | 1 KB | 0.75 ms | 68.76 KB |
-| SaveBytes | 1 KB | 0.75 ms | 68.70 KB |
-| SaveAndGetBytes | 1 KB | 0.98 ms | 71.39 KB |
-| SaveAndCopyTo | 1 KB | 1.07 ms | 70.63 KB |
-| SaveAndGetStream | 1 KB | 0.87 ms | 70.13 KB |
-| SaveStream | 100 KB | 0.71 ms | 103.47 KB |
-| SaveBytes | 100 KB | 0.67 ms | 103.41 KB |
-| SaveAndGetBytes | 100 KB | 0.95 ms | 205.10 KB |
-| SaveAndCopyTo | 100 KB | 1.09 ms | 105.34 KB |
-| SaveAndGetStream | 100 KB | 0.94 ms | 104.84 KB |
-| SaveStream | 1 MB | 1.23 ms | 1027.47 KB |
-| SaveBytes | 1 MB | 1.19 ms | 1027.41 KB |
-| SaveAndGetBytes | 1 MB | 1.73 ms | 2053.10 KB |
-| SaveAndCopyTo | 1 MB | 1.86 ms | 1029.34 KB |
-| SaveAndGetStream | 1 MB | 1.46 ms | 1028.84 KB |
-| SaveStream | 10 MB | 5.47 ms | 10243.47 KB |
-| SaveBytes | 10 MB | 5.70 ms | 10243.41 KB |
-| SaveAndGetBytes | 10 MB | 9.15 ms | 20485.10 KB |
-| SaveAndCopyTo | 10 MB | 9.03 ms | 10245.34 KB |
-| SaveAndGetStream | 10 MB | 5.87 ms | 10244.84 KB |
+| SaveStream | 1 KB | 0.75 ms | 67.73 KB |
+| SaveBytes | 1 KB | 0.63 ms | 67.67 KB |
+| SaveAndGetBytes | 1 KB | 0.90 ms | 70.37 KB |
+| SaveAndCopyTo | 1 KB | 0.88 ms | 69.61 KB |
+| SaveAndGetStream | 1 KB | 0.86 ms | 69.11 KB |
+| SaveStream | 100 KB | 0.68 ms | 3.45 KB |
+| SaveBytes | 100 KB | 0.66 ms | 3.38 KB |
+| SaveAndGetBytes | 100 KB | 0.93 ms | 105.08 KB |
+| SaveAndCopyTo | 100 KB | 0.87 ms | 5.31 KB |
+| SaveAndGetStream | 100 KB | 0.88 ms | 4.82 KB |
+| SaveStream | 1 MB | 0.89 ms | 3.45 KB |
+| SaveBytes | 1 MB | 0.88 ms | 3.38 KB |
+| SaveAndGetBytes | 1 MB | 1.25 ms | 1029.07 KB |
+| SaveAndCopyTo | 1 MB | 1.40 ms | 5.32 KB |
+| SaveAndGetStream | 1 MB | 1.07 ms | 4.82 KB |
+| SaveStream | 10 MB | 3.34 ms | 3.45 KB |
+| SaveBytes | 10 MB | 3.42 ms | 3.38 KB |
+| SaveAndGetBytes | 10 MB | 5.84 ms | 10245.08 KB |
+| SaveAndCopyTo | 10 MB | 6.46 ms | 5.31 KB |
+| SaveAndGetStream | 10 MB | 3.47 ms | 4.82 KB |
 
 
 ### Key Insights
 
- * **FileShare is ~15-50x faster than SQL** for raw operations, as expected for local file I/O vs database round-trips.
- * **Streaming avoids double allocation on read**: At 10 MB, `SaveAndGetStream` allocates ~10 MB (the data itself), while `SaveAndGetBytes` allocates ~20-31 MB (data copied into a byte array on top of the original).
- * **SQL save cost scales with data size**: ~11ms for 1 KB, ~13ms for 100 KB, ~36ms for 1 MB, ~260ms for 10 MB. FileShare stays under 6ms for all sizes up to 10 MB.
- * **`SaveStream` vs `SaveBytes`**: Nearly identical performance in both implementations.
+ * **FileShare is ~20-270x faster than SQL** for raw operations, as expected for local file I/O vs database round-trips.
+ * **Streaming keeps allocations flat**: At 10 MB, `SaveAndCopyTo` allocates 1.2 MB (SQL) / 5 KB (FileShare), while `SaveAndGetBytes` allocates 20.4 MB / 10 MB (the full data in a byte array).
+ * **SQL save cost scales with data size**: ~15ms for 1 KB, ~17ms for 100 KB, ~104ms for 1 MB, ~937ms for 10 MB. FileShare stays under 4ms for all sizes up to 10 MB.
+ * **`SaveStream` vs `SaveBytes`**: Nearly identical performance in both implementations. For SQL, the stream is passed directly to the `SqlParameter` with no intermediate copy.
 
 
 ## Icon

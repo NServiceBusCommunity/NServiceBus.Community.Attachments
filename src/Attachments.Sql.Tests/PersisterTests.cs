@@ -2,12 +2,19 @@ public class PersisterTests
 {
     DateTime defaultTestDate = new(2000, 1, 1, 1, 1, 1, DateTimeKind.Utc);
     Dictionary<string, string> metadata = new() {{"key", "value"}};
-    Persister persister = new("MessageAttachments");
+
+    static async Task<(SqlDatabase database, Persister persister)> BuildDb([CallerMemberName] string name = "")
+    {
+        var database = await Connection.SqlInstance.Build(name);
+        var dbName = new SqlConnectionStringBuilder(database.ConnectionString).InitialCatalog;
+        return (database, new(dbName));
+    }
 
     [Test]
     public async Task CopyTo()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         await persister.SaveStream(connection, null, "theMessageId", "theName", defaultTestDate, GetStream());
         var memoryStream = new MemoryStream();
@@ -20,7 +27,8 @@ public class PersisterTests
     [Test]
     public async Task GetBytes()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         await persister.SaveStream(connection, null, "theMessageId", "theName", defaultTestDate, GetStream(), metadata);
         byte[] bytes = await persister.GetBytes("theMessageId", "theName", connection, null);
@@ -30,7 +38,8 @@ public class PersisterTests
     [Test]
     public async Task GetMemoryStream()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         await persister.SaveStream(connection, null, "theMessageId", "theName", defaultTestDate, GetStream(), metadata);
         var bytes = await persister.GetMemoryStream("theMessageId", "theName", connection, null);
@@ -40,7 +49,8 @@ public class PersisterTests
     [Test]
     public async Task CaseInsensitiveRead()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         await persister.SaveStream(connection, null, "theMessageId", "theName", defaultTestDate, GetStream());
         byte[] bytes = await persister.GetBytes("themeSsageid", "Thename", connection, null);
@@ -50,7 +60,8 @@ public class PersisterTests
     [Test]
     public async Task LongName()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         var name = new string('a', 255);
         await persister.SaveStream(connection, null, "theMessageId", name, defaultTestDate, GetStream());
@@ -61,7 +72,8 @@ public class PersisterTests
     [Test]
     public async Task ProcessStream()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         var count = 0;
         await persister.SaveStream(connection, null, "theMessageId", "theName", defaultTestDate, GetStream(), metadata);
@@ -78,7 +90,8 @@ public class PersisterTests
     [Test]
     public async Task ProcessByteArray()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         var count = 0;
         await persister.SaveStream(connection, null, "theMessageId", "theName", defaultTestDate, GetStream(), metadata);
@@ -95,7 +108,8 @@ public class PersisterTests
     [Test]
     public async Task ProcessStreamMultiple()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         var count = 0;
         for (var i = 0; i < 10; i++)
@@ -120,7 +134,8 @@ public class PersisterTests
     [Test]
     public async Task GetMultipleStreams()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         await persister.SaveStream(connection, null, "theMessageId", "theName1", defaultTestDate, GetStream(1), metadata);
         await persister.SaveStream(connection, null, "theMessageId", "theName2", defaultTestDate, GetStream(2), metadata);
@@ -138,7 +153,8 @@ public class PersisterTests
     [Test]
     public async Task GetMultipleBytes()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         var names = new List<string>();
         await persister.SaveStream(connection, null, "theMessageId", "theName1", defaultTestDate, GetStream(1), metadata);
@@ -155,7 +171,8 @@ public class PersisterTests
     [Test]
     public async Task GetMultipleWithPause()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         var names = new List<string>();
         await persister.SaveStream(connection, null, "theMessageId", "theName1", defaultTestDate, GetStream(1), metadata);
@@ -172,7 +189,8 @@ public class PersisterTests
     [Test]
     public async Task GetMultipleStrings()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         var names = new List<string>();
         await persister.SaveString(connection, null, "theMessageId", "theName1", defaultTestDate, "a", null, metadata);
@@ -189,7 +207,8 @@ public class PersisterTests
     [Test]
     public async Task ProcessStreams()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         var count = 0;
         await persister.SaveStream(connection, null, "theMessageId", "theName1", defaultTestDate, GetStream(1), metadata);
@@ -217,7 +236,8 @@ public class PersisterTests
     [Test]
     public async Task ProcessByteArrays()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         var count = 0;
         await persister.SaveStream(connection, null, "theMessageId", "theName1", defaultTestDate, GetStream(1), metadata);
@@ -252,7 +272,8 @@ public class PersisterTests
     [Test]
     public async Task SaveStream()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         await persister.SaveStream(connection, null, "theMessageId", "theName", defaultTestDate, GetStream(), metadata);
         var result = persister.ReadAllInfo(connection, null);
@@ -262,7 +283,8 @@ public class PersisterTests
     [Test]
     public async Task SaveBytes()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         await persister.SaveBytes(connection, null, "theMessageId", "theName", defaultTestDate, [1], metadata);
         var result = persister.ReadAllInfo(connection, null);
@@ -272,7 +294,8 @@ public class PersisterTests
     [Test]
     public async Task SaveString()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         await persister.SaveString(connection, null, "theMessageId", "theName", defaultTestDate, "foo", null, metadata);
         var result = persister.ReadAllInfo(connection, null);
@@ -282,7 +305,8 @@ public class PersisterTests
     [Test]
     public async Task LargeString()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         var expected = new string('*', 100000);
         await persister.SaveString(connection, null, "theMessageId", "theName", defaultTestDate, expected, null, metadata);
@@ -293,7 +317,8 @@ public class PersisterTests
     [Test]
     public async Task DiffEncoding()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         var encoding = Encoding.BigEndianUnicode;
         await persister.SaveString(connection, null, "theMessageId", "theName", defaultTestDate, "Sample", encoding, metadata);
@@ -307,7 +332,8 @@ public class PersisterTests
     [Test]
     public async Task DiffEncodingOverride()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         var encoding = Encoding.BigEndianUnicode;
         await persister.SaveString(connection, null, "theMessageId", "theName", defaultTestDate, "Sample", encoding, metadata);
@@ -321,7 +347,8 @@ public class PersisterTests
     [Test]
     public async Task SaveStringEncoding()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         var expected = "¡™£¢∞§¶•ªº–≠";
         var encoding = new UTF8Encoding(true);
@@ -337,7 +364,8 @@ public class PersisterTests
     [Test]
     public async Task DuplicateAll()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         await persister.SaveBytes(connection, null, "theSourceMessageId", "theName1", defaultTestDate, [1], metadata);
         await persister.SaveBytes(connection, null, "theSourceMessageId", "theName2", defaultTestDate, [1], metadata);
@@ -355,7 +383,8 @@ public class PersisterTests
     [Test]
     public async Task Duplicate()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
 
         await persister.SaveBytes(connection, null, "theSourceMessageId", "sourceName", defaultTestDate, [1], metadata);
@@ -377,7 +406,8 @@ public class PersisterTests
     [Test]
     public async Task DuplicateWithRename()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         await persister.SaveBytes(connection, null, "theSourceMessageId", "theName1", defaultTestDate, [1], metadata);
         Thread.Sleep(1000); // Ensure different Created time
@@ -391,7 +421,8 @@ public class PersisterTests
     [Test]
     public async Task ReadAllMessageInfoAction()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         await persister.SaveBytes(connection, null, "theMessageId", "theName1", defaultTestDate, [1], metadata);
         await persister.SaveBytes(connection, null, "theMessageId", "theName2", defaultTestDate, [1], metadata);
@@ -409,7 +440,8 @@ public class PersisterTests
     [Test]
     public async Task ReadAllMessageInfo()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         await persister.SaveBytes(connection, null, "theMessageId", "theName1", defaultTestDate, [1], metadata);
         await persister.SaveBytes(connection, null, "theMessageId", "theName2", defaultTestDate, [1], metadata);
@@ -420,7 +452,8 @@ public class PersisterTests
     [Test]
     public async Task ReadAllMessageNames()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         await persister.SaveBytes(connection, null, "theMessageId", "theName1", defaultTestDate, [1], metadata);
         await persister.SaveBytes(connection, null, "theMessageId", "theName2", defaultTestDate, [1], metadata);
@@ -430,7 +463,8 @@ public class PersisterTests
     [Test]
     public async Task CleanupItemsOlderThan()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         await persister.SaveStream(connection, null, "theMessageId1", "theName", defaultTestDate, GetStream());
         await persister.SaveStream(connection, null, "theMessageId2", "theName", defaultTestDate.AddYears(2), GetStream());
@@ -442,7 +476,8 @@ public class PersisterTests
     [Test]
     public async Task PurgeItems()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         await persister.SaveStream(connection, null, "theMessageId1", "theName1", defaultTestDate, GetStream());
         await persister.SaveStream(connection, null, "theMessageId1", "theName2", defaultTestDate, GetStream());
@@ -460,7 +495,8 @@ public class PersisterTests
     [Test]
     public async Task DeleteAttachments()
     {
-        await using var database = await Connection.SqlInstance.Build();
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
         var connection = database.Connection;
         await persister.SaveStream(connection, null, "theMessageId1", "theName1", defaultTestDate, GetStream());
         await persister.SaveStream(connection, null, "theMessageId1", "theName2", defaultTestDate, GetStream());
