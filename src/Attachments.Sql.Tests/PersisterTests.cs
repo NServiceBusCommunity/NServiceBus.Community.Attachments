@@ -7,7 +7,7 @@ public class PersisterTests
     {
         var database = await Connection.SqlInstance.Build(name);
         var dbName = new SqlConnectionStringBuilder(database.ConnectionString).InitialCatalog;
-        return (database, new Persister(dbName));
+        return (database, new(dbName));
     }
 
     [Test]

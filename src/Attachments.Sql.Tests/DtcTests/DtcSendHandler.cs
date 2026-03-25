@@ -40,7 +40,7 @@ class DtcSendHandler(DtcTestContext context) :
         {
             command.Transaction = transaction;
             command.CommandText = $"select count(*) from [{businessDb}].[dbo].[BusinessEntities]";
-            var count = (int)(await command.ExecuteScalarAsync(handlerContext.CancellationToken))!;
+            var count = (int) (await command.ExecuteScalarAsync(handlerContext.CancellationToken))!;
             context.HandlerAdoReadSucceeded = count > 0;
         }
 
@@ -50,11 +50,12 @@ class DtcSendHandler(DtcTestContext context) :
         await using (var dbContext = new BusinessDbContext(efOptions))
         {
             await dbContext.Database.UseTransactionAsync(transaction, handlerContext.CancellationToken);
-            dbContext.Entities.Add(new BusinessEntity
-            {
-                Id = Guid.NewGuid(),
-                Value = "handler-ef-write"
-            });
+            dbContext.Entities.Add(
+                new()
+                {
+                    Id = Guid.NewGuid(),
+                    Value = "handler-ef-write"
+                });
             await dbContext.SaveChangesAsync(handlerContext.CancellationToken);
         }
 
