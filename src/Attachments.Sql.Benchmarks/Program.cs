@@ -1,3 +1,6 @@
+using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Running;
 
-BenchmarkSwitcher.FromAssembly(typeof(PersisterBenchmarks).Assembly).Run(args);
+var config = DefaultConfig.Instance
+    .WithArtifactsPath("BenchmarkDotNet.Artifacts.Sql");
+BenchmarkSwitcher.FromAssembly(typeof(PersisterBenchmarks).Assembly).Run(args, config);
