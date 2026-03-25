@@ -25,6 +25,74 @@ The method `TimeToKeep.Default` provides a recommended default for for attachmen
  * Else; keep for 10 days.
 
 
+## Streaming without intermediate buffering
+
+When using the Factory Approach or Instance Approach with a non-buffered stream (e.g. `FileStream`, `HttpClient.GetStreamAsync`), data is streamed directly to the underlying storage without being copied into a `MemoryStream` or `byte[]` first. This means attachments of any size can be sent without allocating equivalent memory.
+
+For example, when using the SQL implementation, the `Stream` is passed directly to the `SqlParameter`, and ADO.NET reads from it in chunks during command execution. Similarly, the FileShare implementation copies directly from the source stream to the target file.
+
+```
+Pull-based streaming (Factory/Instance Approach):
+
+┌──────────┐        ┌──────────────┐        ┌─────────┐
+│  Source   │─read──>│  Attachments │─read──>│ Storage │
+│ (Stream)  │       │   Library    │        │ (SQL/FS)│
+└──────────┘        └──────────────┘        └─────────┘
+
+Data flows directly from source to storage. No intermediate buffer.
+```
+
+To take advantage of this, use the Factory Approach with a stream that reads on demand:
+
+snippet: OutgoingFactoryStream
+
+To avoid buffering, do not call methods like `Stream.CopyTo(memoryStream)` or `stream.ToArray()` before passing the stream. Instead, pass the original stream directly and let the library handle the transfer.
+
+
+### Push-based APIs (write-to-stream)
+
+Some 3rd party APIs use a push-based pattern where they write to a stream provided by the caller, e.g. `document.SaveAsync(Stream)`. There are two approaches to handle this without buffering the full content in memory.
+
+
+#### Stream Writer Approach (recommended)
+
+Use `AddStreamWriter` to provide a delegate that writes to a stream. Internally the library uses `System.IO.Pipelines.Pipe` to bridge the push-based writer with the pull-based storage, enabling true concurrent streaming with backpressure. No intermediate `MemoryStream`, `byte[]`, or temp file is needed.
+
+```
+Stream Writer Approach (using System.IO.Pipelines):
+
+┌──────────┐        ┌───────────┐        ┌──────────────┐        ┌─────────┐
+│ 3rd Party│─write─>│   Pipe    │─read──>│  Attachments │─read──>│ Storage │
+│   API    │        │  (buffer) │        │   Library    │        │ (SQL/FS)│
+└──────────┘        └───────────┘        └──────────────┘        └─────────┘
+
+Writer and reader run concurrently. Pipe applies backpressure
+so the writer pauses if the reader falls behind.
+```
+
+snippet: OutgoingStreamWriter
+
+
+#### Temp File Approach
+
+Alternatively, use a temporary file combined with the async factory. This avoids memory buffering but requires disk I/O:
+
+```
+Temp File Approach:
+
+Step 1: Write               Step 2: Read
+┌──────────┐   ┌──────┐    ┌──────┐   ┌─────────┐
+│ 3rd Party│──>│ Temp │    │ Temp │──>│ Storage │
+│   API    │   │ File │    │ File │   │ (SQL/FS)│
+└──────────┘   └──────┘    └──────┘   └─────────┘
+
+Two-phase: write to disk first, then stream from disk to storage.
+Temp file is deleted after persistence via the cleanup delegate.
+```
+
+snippet: OutgoingFactoryPushBased
+
+
 ## Reading and writing attachments
 
 

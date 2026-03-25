@@ -1,4 +1,5 @@
-﻿using NServiceBus.Attachments.FileShare;
+﻿using System.IO.Pipelines;
+using NServiceBus.Attachments.FileShare;
 using NServiceBus.Pipeline;
 
 class SendBehavior(IPersister persister, GetTimeToKeep endpointTimeToKeep) :
@@ -71,6 +72,29 @@ class SendBehavior(IPersister persister, GetTimeToKeep endpointTimeToKeep) :
         context.Headers.Add("Attachments", string.Join(", ", attachmentNames));
     }
 
+    async Task ProcessStreamWriter(string messageId, string name, DateTime expiry, Func<Stream, Task> streamWriter, IReadOnlyDictionary<string, string>? metadata, Cancel cancel)
+    {
+        var pipe = new Pipe();
+        var writerTask = Task.Run(async () =>
+        {
+            try
+            {
+                await streamWriter(pipe.Writer.AsStream());
+            }
+            finally
+            {
+                await pipe.Writer.CompleteAsync();
+            }
+        });
+
+        var readerStream = pipe.Reader.AsStream();
+        await using (readerStream)
+        {
+            await persister.SaveStream(messageId, name, expiry, readerStream, metadata, cancel);
+            await writerTask;
+        }
+    }
+
     async Task ProcessStream(string messageId, string name, DateTime expiry, Stream stream, IReadOnlyDictionary<string, string>? metadata, Cancel cancel)
     {
         await using (stream)
@@ -96,6 +120,12 @@ class SendBehavior(IPersister persister, GetTimeToKeep endpointTimeToKeep) :
 
     async Task Process(string messageId, Outgoing outgoing, string name, DateTime expiry, Cancel cancel = default)
     {
+        if (outgoing.StreamWriter is not null)
+        {
+            await ProcessStreamWriter(messageId, name, expiry, outgoing.StreamWriter, outgoing.Metadata, cancel);
+            return;
+        }
+
         if (outgoing.AsyncStreamFactory is not null)
         {
             var stream = await outgoing.AsyncStreamFactory();

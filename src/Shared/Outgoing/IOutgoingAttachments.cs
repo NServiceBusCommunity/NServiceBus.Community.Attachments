@@ -59,6 +59,18 @@ public interface IOutgoingAttachments
     void Add(Stream stream, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null);
 
     /// <summary>
+    /// Add an attachment with the default name of `default` to the current outgoing pipeline using a push-based stream writer delegate.
+    /// The delegate writes to a provided stream, and data is streamed directly to storage using System.IO.Pipelines without intermediate buffering.
+    /// </summary>
+    void AddStreamWriter(Func<Stream, Task> streamWriter, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null);
+
+    /// <summary>
+    /// Add an attachment with <paramref name="name"/> to the current outgoing pipeline using a push-based stream writer delegate.
+    /// The delegate writes to a provided stream, and data is streamed directly to storage using System.IO.Pipelines without intermediate buffering.
+    /// </summary>
+    void AddStreamWriter(string name, Func<Stream, Task> streamWriter, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null);
+
+    /// <summary>
     /// Add an attachment with <paramref name="name"/> to the current outgoing pipeline.
     /// </summary>
     /// <remarks>

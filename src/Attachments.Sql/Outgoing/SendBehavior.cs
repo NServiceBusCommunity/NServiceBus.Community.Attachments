@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using System.IO.Pipelines;
+using Microsoft.Data.SqlClient;
 using NServiceBus.Attachments.Sql;
 using NServiceBus.Pipeline;
 
@@ -126,6 +127,30 @@ class SendBehavior :
         context.Headers.Add("Attachments", string.Join(", ", attachments.Select(_ => $"{_.Key}: {_.Value}")));
     }
 
+    async Task<Guid> ProcessStreamWriter(SqlConnection connection, SqlTransaction? transaction, string messageId, string name, DateTime expiry, Func<Stream, Task> streamWriter, IReadOnlyDictionary<string, string>? metadata)
+    {
+        var pipe = new Pipe();
+        var writerTask = Task.Run(async () =>
+        {
+            try
+            {
+                await streamWriter(pipe.Writer.AsStream());
+            }
+            finally
+            {
+                await pipe.Writer.CompleteAsync();
+            }
+        });
+
+        var readerStream = pipe.Reader.AsStream();
+        await using (readerStream)
+        {
+            var guid = await persister.SaveStream(connection, transaction, messageId, name, expiry, readerStream, metadata);
+            await writerTask;
+            return guid;
+        }
+    }
+
     async Task<Guid> ProcessStream(SqlConnection connection, SqlTransaction? transaction, string messageId, string name, DateTime expiry, Stream stream, IReadOnlyDictionary<string, string>? metadata)
     {
         await using (stream)
@@ -152,6 +177,11 @@ class SendBehavior :
     async Task<Guid> Process(SqlConnection connection, SqlTransaction? transaction, string messageId, Outgoing outgoing, string name, DateTime expiry)
     {
         var metadata = outgoing.Metadata;
+        if (outgoing.StreamWriter is not null)
+        {
+            return await ProcessStreamWriter(connection, transaction, messageId, name, expiry, outgoing.StreamWriter, metadata);
+        }
+
         if (outgoing.AsyncStreamFactory is not null)
         {
             var stream = await outgoing.AsyncStreamFactory();

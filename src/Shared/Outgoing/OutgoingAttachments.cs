@@ -80,6 +80,20 @@ class OutgoingAttachments :
                 StreamInstance = stream
             });
 
+    public void AddStreamWriter(Func<Stream, Task> streamWriter, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null) =>
+        AddStreamWriter("default", streamWriter, timeToKeep, cleanup, metadata);
+
+    public void AddStreamWriter(string name, Func<Stream, Task> streamWriter, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null) =>
+        Inner.Add(
+            name,
+            new()
+            {
+                Metadata = metadata,
+                TimeToKeep = timeToKeep,
+                Cleanup = cleanup.WrapCleanupInCheck(name),
+                StreamWriter = streamWriter.WrapStreamWriterInCheck(name)
+            });
+
     public void AddBytes(Func<byte[]> bytesFactory, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null) =>
         AddBytes("default", bytesFactory, timeToKeep, cleanup, metadata);
 
