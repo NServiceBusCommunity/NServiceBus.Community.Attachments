@@ -9,16 +9,21 @@ namespace NServiceBus.Attachments.Sql;
 public partial class AttachmentSettings
 {
     internal Func<Cancel, Task<SqlConnection>> ConnectionFactory;
-    internal Table Table = "MessageAttachments";
+    internal string Database;
+    internal string Schema;
+    internal string TableName;
     internal bool InstallerDisabled;
     internal bool RunEarlyCleanup = true;
     internal bool UseTransport;
     internal bool UseSynchronizedStorage;
 
-    internal AttachmentSettings(Func<Cancel, Task<SqlConnection>> connectionFactory, GetTimeToKeep timeToKeep)
+    internal AttachmentSettings(Func<Cancel, Task<SqlConnection>> connectionFactory, GetTimeToKeep timeToKeep, string database, string schema, string table)
     {
         TimeToKeep = timeToKeep;
         ConnectionFactory = connectionFactory;
+        Database = database;
+        Schema = schema;
+        TableName = table;
     }
 
     /// <summary>
@@ -32,12 +37,6 @@ public partial class AttachmentSettings
     /// </summary>
     public void UseSynchronizedStorageSessionConnectivity() =>
         UseSynchronizedStorage = true;
-
-    /// <summary>
-    /// Use a specific <paramref name="table" /> for attachments.
-    /// </summary>
-    public void UseTable(Table table) =>
-        Table = table;
 
     /// <summary>
     /// Disable the table creation installer.

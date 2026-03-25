@@ -11,6 +11,7 @@
     <PackageVersion Include="LocalDb" Version="24.0.0" />
     <PackageVersion Include="MarkdownSnippets.MsBuild" Version="28.0.1" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.5" />
     <PackageVersion Include="NServiceBus" Version="10.1.0" />
     <PackageVersion Include="NServiceBus.Persistence.Sql" Version="9.0.0" />
     <PackageVersion Include="NServiceBus.Transport.SqlServer" Version="9.0.0" />

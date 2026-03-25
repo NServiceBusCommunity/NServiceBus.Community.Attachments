@@ -1,4 +1,8 @@
-declare @fullName nvarchar(max) = @schema + '.' + @table;
+declare @fullName nvarchar(max) =
+    case when @database is not null and @database != ''
+        then @database + '.' + @schema + '.' + @table
+        else @schema + '.' + @table
+    end;
 if not exists (
     select * from sys.objects
     where

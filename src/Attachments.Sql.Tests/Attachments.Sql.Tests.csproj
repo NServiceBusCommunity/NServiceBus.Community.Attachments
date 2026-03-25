@@ -3,12 +3,13 @@
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
-    <NoWarn>CA2022</NoWarn>
+    <NoWarn>CA2022;CA1416</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="MarkdownSnippets.MsBuild" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Data.SqlClient" />
     <PackageReference Include="Argon" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
     <PackageReference Include="NServiceBus" />
     <PackageReference Include="NServiceBus.Persistence.Sql" />
     <PackageReference Include="NServiceBus.Transport.SqlServer" />
@@ -23,6 +24,7 @@
     <ProjectReference Include="..\Helpers\Helpers.csproj" />
     <PackageReference Include="ProjectDefaults" PrivateAssets="all" />
     <Compile Remove="IntegrationTests\**" Condition=" '$(Configuration)' == 'Release' " />
+    <Compile Remove="DtcTests\**" Condition=" '$(Configuration)' == 'Release' " />
     <Using Include="NServiceBus.IMessageHandlerContext" Alias="HandlerContext" />
     <PackageReference Include="TUnit" />
   </ItemGroup>
