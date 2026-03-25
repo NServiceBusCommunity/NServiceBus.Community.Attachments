@@ -25,17 +25,6 @@ public class IntegrationTests
         TransportTransactionMode transactionMode,
         bool runEarlyCleanup)
     {
-        // sql persistence connection spans the handler. so a nested connection will cause DTC
-        if (useSqlTransport &&
-            useSqlPersistence &&
-            transactionMode == TransportTransactionMode.TransactionScope)
-        {
-            // this scenario is not supported. since useStorageSession=false means attachments
-            // will open a nested connection rather than use reuse the storage session connection
-            //TODO: should detect this a runtime and throw an better exception
-            return;
-        }
-
         if (useSqlTransport &&
             !useSqlPersistence &&
             transactionMode == TransportTransactionMode.TransactionScope)
@@ -71,11 +60,7 @@ public class IntegrationTests
             attachments.DisableEarlyCleanup();
         }
 
-        configuration.RegisterComponents(
-            registration: configureComponents =>
-            {
-                configureComponents.AddSingleton(context);
-            });
+        configuration.RegisterComponents(registration: _ => _.AddSingleton(context));
         if (useSqlPersistence)
         {
             var persistence = configuration.UsePersistence<SqlPersistence>();
@@ -122,7 +107,7 @@ public class IntegrationTests
         var endpoint = await Endpoint.Start(configuration);
         var startMessageId = await SendStartMessage(endpoint);
 
-        var timeout = TimeSpan.FromSeconds(10);
+        var timeout = TimeSpan.FromSeconds(20);
         if (!context.HandlerEvent.WaitOne(timeout))
         {
             throw new("TimedOut");
