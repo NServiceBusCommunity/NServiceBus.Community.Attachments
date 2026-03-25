@@ -2,14 +2,10 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.DependencyInjection;
 using NServiceBus.Persistence.Sql;
 
-public class IntegrationTests : IDisposable
+public class IntegrationTests
 {
-    internal ManualResetEvent HandlerEvent = new(false);
-    internal ManualResetEvent SagaEvent = new(false);
-    internal bool shouldPerformNestedConnection;
-    internal string connectionString = null!;
-
     [Test]
+    [Explicit]
     public Task AdHoc() =>
         RunSql(
             useSqlTransport: false,
@@ -50,14 +46,15 @@ public class IntegrationTests : IDisposable
             return;
         }
 
+        await using var context = new IntegrationTestContext();
         // so a nested connection will cause DTC
-#pragma warning disable TUnit0018
-        shouldPerformNestedConnection = !(useSqlPersistence &&
+        context.ShouldPerformNestedConnection = !(useSqlPersistence &&
             transactionMode == TransportTransactionMode.TransactionScope);
-#pragma warning restore TUnit0018
 
-        await using var database = await Connection.SqlInstance.Build();
-        connectionString = database.ConnectionString;
+        var dbName = $"Int_{useSqlTransport}_{useSqlTransportConnection}_{useSqlPersistence}_{useStorageSession}_{transactionMode}_{runEarlyCleanup}";
+        context.Database = await Connection.SqlInstance.Build(dbName);
+        context.ConnectionString = context.Database.ConnectionString;
+        var connectionString = context.ConnectionString;
 
         var endpointName = "SqlIntegrationTests";
         var configuration = new EndpointConfiguration(endpointName);
@@ -77,7 +74,7 @@ public class IntegrationTests : IDisposable
         configuration.RegisterComponents(
             registration: configureComponents =>
             {
-                configureComponents.AddSingleton(this);
+                configureComponents.AddSingleton(context);
             });
         if (useSqlPersistence)
         {
@@ -118,6 +115,7 @@ public class IntegrationTests : IDisposable
         else
         {
             var transport = configuration.UseTransport<LearningTransport>();
+            transport.StorageDirectory($"Int_{useSqlTransportConnection}_{useSqlPersistence}_{useStorageSession}_{transactionMode}_{runEarlyCleanup}");
             transport.Transactions(transactionMode);
         }
 
@@ -125,12 +123,12 @@ public class IntegrationTests : IDisposable
         var startMessageId = await SendStartMessage(endpoint);
 
         var timeout = TimeSpan.FromSeconds(10);
-        if (!HandlerEvent.WaitOne(timeout))
+        if (!context.HandlerEvent.WaitOne(timeout))
         {
             throw new("TimedOut");
         }
 
-        if (!SagaEvent.WaitOne(timeout))
+        if (!context.SagaEvent.WaitOne(timeout))
         {
             throw new("TimedOut");
         }
@@ -170,15 +168,6 @@ public class IntegrationTests : IDisposable
             cancellationToken: default);
     }
 
-    internal void PerformNestedConnection()
-    {
-        if (shouldPerformNestedConnection)
-        {
-            using var connection = new SqlConnection(connectionString);
-            connection.Open();
-        }
-    }
-
     static async Task<string> SendStartMessage(IEndpointInstance endpoint)
     {
         var sendOptions = new SendOptions();
@@ -215,11 +204,5 @@ public class IntegrationTests : IDisposable
         streamWriter.Flush();
         stream.Position = 0;
         return stream;
-    }
-
-    public void Dispose()
-    {
-        HandlerEvent.Dispose();
-        SagaEvent.Dispose();
     }
 }
