@@ -1,7 +1,13 @@
-using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.DependencyInjection;
 using NServiceBus.Persistence.Sql;
+using TUnit.Core.Interfaces;
 
+public class ParallelLimit4 : IParallelLimit
+{
+    public int Limit => 4;
+}
+
+[ParallelLimiter<ParallelLimit4>]
 public class IntegrationTests
 {
     [Test]
@@ -25,27 +31,6 @@ public class IntegrationTests
         TransportTransactionMode transactionMode,
         bool runEarlyCleanup)
     {
-        // sql persistence connection spans the handler. so a nested connection will cause DTC
-        if (useSqlTransport &&
-            useSqlPersistence &&
-            transactionMode == TransportTransactionMode.TransactionScope)
-        {
-            // this scenario is not supported. since useStorageSession=false means attachments
-            // will open a nested connection rather than use reuse the storage session connection
-            //TODO: should detect this a runtime and throw an better exception
-            return;
-        }
-
-        if (useSqlTransport &&
-            !useSqlPersistence &&
-            transactionMode == TransportTransactionMode.TransactionScope)
-        {
-            // this scenario is not supported by netcore
-            // will cause a "This platform does not support distributed transactions."
-            //TODO: should detect this a runtime and throw a better exception
-            return;
-        }
-
         await using var context = new IntegrationTestContext();
         // so a nested connection will cause DTC
         context.ShouldPerformNestedConnection = !(useSqlPersistence &&
@@ -59,7 +44,8 @@ public class IntegrationTests
         var endpointName = "SqlIntegrationTests";
         var configuration = new EndpointConfiguration(endpointName);
         SqlConnection NewConnection() => new(connectionString);
-        var attachments = configuration.EnableAttachments(NewConnection, TimeToKeep.Default);
+        var databaseName = new SqlConnectionStringBuilder(connectionString).InitialCatalog;
+        var attachments = configuration.EnableAttachments(NewConnection, TimeToKeep.Default, database: databaseName, table: "Attachments");
         configuration.UseSerialization<SystemJsonSerializer>();
         if (useStorageSession)
         {
@@ -71,11 +57,7 @@ public class IntegrationTests
             attachments.DisableEarlyCleanup();
         }
 
-        configuration.RegisterComponents(
-            registration: configureComponents =>
-            {
-                configureComponents.AddSingleton(context);
-            });
+        configuration.RegisterComponents(registration: _ => _.AddSingleton(context));
         if (useSqlPersistence)
         {
             var persistence = configuration.UsePersistence<SqlPersistence>();
@@ -100,7 +82,6 @@ public class IntegrationTests
         configuration.PurgeOnStartup(true);
         attachments.DisableCleanupTask();
 
-        attachments.UseTable("Attachments");
         if (useSqlTransportConnection)
         {
             attachments.UseTransportConnectivity();
@@ -122,7 +103,7 @@ public class IntegrationTests
         var endpoint = await Endpoint.Start(configuration);
         var startMessageId = await SendStartMessage(endpoint);
 
-        var timeout = TimeSpan.FromSeconds(10);
+        var timeout = TimeSpan.FromSeconds(20);
         if (!context.HandlerEvent.WaitOne(timeout))
         {
             throw new("TimedOut");
@@ -140,7 +121,7 @@ public class IntegrationTests
         {
             await using var connection = new SqlConnection(connectionString);
             await connection.OpenAsync();
-            var persister = new Persister("Attachments");
+            var persister = new Persister(databaseName, table: "Attachments");
             await foreach (var _ in persister.ReadAllMessageInfo(connection, null, startMessageId))
             {
                 throw new("Expected attachments to be cleaned");

@@ -19,6 +19,6 @@ class NeedToInstallSomething :
         }
 
         await using var connection = await settings.ConnectionFactory(cancel);
-        await Installer.CreateTable(connection, settings.Table, cancel);
+        await Installer.CreateTable(connection, settings.Database, settings.Schema, settings.TableName, cancel);
     }
 }

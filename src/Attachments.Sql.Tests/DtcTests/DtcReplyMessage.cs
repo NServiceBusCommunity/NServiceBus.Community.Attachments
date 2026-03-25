@@ -1,0 +1,1 @@
+class DtcReplyMessage : IMessage;

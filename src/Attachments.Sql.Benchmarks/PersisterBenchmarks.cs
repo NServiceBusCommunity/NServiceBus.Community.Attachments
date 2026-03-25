@@ -44,7 +44,6 @@ public class PersisterBenchmarks
                 await command.ExecuteNonQueryAsync();
             });
 
-        persister = new("MessageAttachments");
         data = new byte[DataSize];
         Random.Shared.NextBytes(data);
     }
@@ -54,6 +53,8 @@ public class PersisterBenchmarks
     {
         database = sqlInstance.Build($"Bench{Interlocked.Increment(ref counter)}").GetAwaiter().GetResult();
         connection = database.Connection;
+        var dbName = new SqlConnectionStringBuilder(database.ConnectionString).InitialCatalog;
+        persister = new(dbName);
     }
 
     [IterationCleanup]

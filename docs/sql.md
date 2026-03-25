@@ -197,8 +197,8 @@ The default table name and schema is `dbo.MessageAttachments`. It can be changed
 ```cs
 var attachments = configuration.EnableAttachments(
     connectionFactory: OpenConnection,
-    timeToKeep: TimeToKeep.Default);
-attachments.UseTable(new("CustomAttachmentsTableName", "dbo"));
+    timeToKeep: TimeToKeep.Default,
+    table: "CustomAttachmentsTableName");
 ```
 <sup><a href='/src/Attachments.Sql.Tests/Snippets/Usage.cs#L105-L112' title='Snippet source file'>snippet source</a> | <a href='#snippet-UseTableName' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->

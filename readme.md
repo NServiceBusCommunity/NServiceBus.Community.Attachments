@@ -103,9 +103,9 @@ Benchmark results for attachment persister operations at different data sizes. R
 
 ### Hardware
 
- * BenchmarkDotNet v0.15.8, Windows 11 (10.0.26200.8037)
- * 12th Gen Intel Core i5-12600 3.30GHz, 1 CPU, 12 logical and 6 physical cores
- * .NET SDK 10.0.201
+ * BenchmarkDotNet v0.15.8, Windows 10 (10.0.19045.7058/22H2/2022Update)
+ * Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
+ * .NET SDK 10.0.200
 
 
 ### SQL Persister
@@ -114,26 +114,26 @@ Uses [LocalDb](https://github.com/SimonCropp/LocalDb) with a per-benchmark isola
 
 | Method | DataSize | Mean | Allocated |
 |---|---|---:|---:|
-| SaveStream | 1 KB | 11.09 ms | 24.12 KB |
-| SaveBytes | 1 KB | 10.93 ms | 19.91 KB |
-| SaveAndGetBytes | 1 KB | 16.31 ms | 37.34 KB |
-| SaveAndCopyTo | 1 KB | 16.02 ms | 41.09 KB |
-| SaveAndGetStream | 1 KB | 15.16 ms | 39.83 KB |
-| SaveStream | 100 KB | 12.11 ms | 29.45 KB |
-| SaveBytes | 100 KB | 13.33 ms | 26.60 KB |
-| SaveAndGetBytes | 100 KB | 17.91 ms | 240.02 KB |
-| SaveAndCopyTo | 100 KB | 18.12 ms | 51.87 KB |
-| SaveAndGetStream | 100 KB | 18.33 ms | 45.16 KB |
-| SaveStream | 1 MB | 34.81 ms | 73.41 KB |
-| SaveBytes | 1 MB | 33.94 ms | 58.53 KB |
-| SaveAndGetBytes | 1 MB | 41.26 ms | 2119.81 KB |
-| SaveAndCopyTo | 1 MB | 42.15 ms | 174.93 KB |
-| SaveAndGetStream | 1 MB | 41.53 ms | 90.70 KB |
-| SaveStream | 10 MB | 229.09 ms | 647.60 KB |
-| SaveBytes | 10 MB | 226.96 ms | 544.12 KB |
-| SaveAndGetBytes | 10 MB | 247.24 ms | 21023.27 KB |
-| SaveAndCopyTo | 10 MB | 253.22 ms | 1328.35 KB |
-| SaveAndGetStream | 10 MB | 249.76 ms | 710.08 KB |
+| SaveStream | 1 KB | 14.46 ms | 24.59 KB |
+| SaveBytes | 1 KB | 14.77 ms | 20.39 KB |
+| SaveAndGetBytes | 1 KB | 23.99 ms | 38.22 KB |
+| SaveAndCopyTo | 1 KB | 24.30 ms | 41.96 KB |
+| SaveAndGetStream | 1 KB | 27.17 ms | 40.03 KB |
+| SaveStream | 100 KB | 17.44 ms | 29.92 KB |
+| SaveBytes | 100 KB | 16.74 ms | 25.06 KB |
+| SaveAndGetBytes | 100 KB | 27.99 ms | 240.89 KB |
+| SaveAndCopyTo | 100 KB | 28.76 ms | 57.79 KB |
+| SaveAndGetStream | 100 KB | 28.00 ms | 45.36 KB |
+| SaveStream | 1 MB | 106.83 ms | 44.37 KB |
+| SaveBytes | 1 MB | 100.53 ms | 51.70 KB |
+| SaveAndGetBytes | 1 MB | 123.98 ms | 2119.16 KB |
+| SaveAndCopyTo | 1 MB | 125.54 ms | 143.88 KB |
+| SaveAndGetStream | 1 MB | 129.32 ms | - |
+| SaveStream | 10 MB | 931.08 ms | - |
+| SaveBytes | 10 MB | 943.99 ms | - |
+| SaveAndGetBytes | 10 MB | 1,105.97 ms | 20879.84 KB |
+| SaveAndCopyTo | 10 MB | 1,157.36 ms | 1263.38 KB |
+| SaveAndGetStream | 10 MB | 1,044.62 ms | 485.57 KB |
 
 
 ### FileShare Persister
@@ -164,9 +164,9 @@ Uses [LocalDb](https://github.com/SimonCropp/LocalDb) with a per-benchmark isola
 
 ### Key Insights
 
- * **FileShare is ~15-70x faster than SQL** for raw operations, as expected for local file I/O vs database round-trips.
- * **Streaming keeps allocations flat**: At 10 MB, `SaveAndCopyTo` allocates 1.3 MB (SQL) / 5 KB (FileShare), while `SaveAndGetBytes` allocates 21 MB / 10 MB (the full data in a byte array).
- * **SQL save cost scales with data size**: ~11ms for 1 KB, ~13ms for 100 KB, ~34ms for 1 MB, ~228ms for 10 MB. FileShare stays under 4ms for all sizes up to 10 MB.
+ * **FileShare is ~20-270x faster than SQL** for raw operations, as expected for local file I/O vs database round-trips.
+ * **Streaming keeps allocations flat**: At 10 MB, `SaveAndCopyTo` allocates 1.2 MB (SQL) / 5 KB (FileShare), while `SaveAndGetBytes` allocates 20.4 MB / 10 MB (the full data in a byte array).
+ * **SQL save cost scales with data size**: ~15ms for 1 KB, ~17ms for 100 KB, ~104ms for 1 MB, ~937ms for 10 MB. FileShare stays under 4ms for all sizes up to 10 MB.
  * **`SaveStream` vs `SaveBytes`**: Nearly identical performance in both implementations. For SQL, the stream is passed directly to the `SqlParameter` with no intermediate copy.
 
 
