@@ -1,7 +1,14 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.DependencyInjection;
 using NServiceBus.Persistence.Sql;
+using TUnit.Core.Interfaces;
 
+public class ParallelLimit4 : IParallelLimit
+{
+    public int Limit => 4;
+}
+
+[ParallelLimiter<ParallelLimit4>]
 public class IntegrationTests
 {
     [Test]

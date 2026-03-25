@@ -26,6 +26,7 @@ public static class Installer
         command.CommandText = GetTableSql();
         command.AddParameter("schema", table.Schema);
         command.AddParameter("table", table.TableName);
+        command.AddParameter("database", table.Database);
         await command.ExecuteNonQueryAsync(cancel);
     }
 
