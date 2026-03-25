@@ -15,3 +15,4 @@ TestResults
 */PersisterBenchmarks-*.*
 /BenchmarkDotNet.Artifacts/results
 /BenchmarkDotNet.Artifacts.FileShare/results
+/BenchmarkDotNet.Artifacts.Sql/results

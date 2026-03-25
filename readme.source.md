@@ -94,60 +94,60 @@ Uses [LocalDb](https://github.com/SimonCropp/LocalDb) with a per-benchmark isola
 
 | Method | DataSize | Mean | Allocated |
 |---|---|---:|---:|
-| SaveStream | 1 KB | 11.09 ms | 24.12 KB |
-| SaveBytes | 1 KB | 10.93 ms | 19.91 KB |
-| SaveAndGetBytes | 1 KB | 16.31 ms | 37.34 KB |
-| SaveAndCopyTo | 1 KB | 16.02 ms | 41.09 KB |
-| SaveAndGetStream | 1 KB | 15.16 ms | 39.83 KB |
-| SaveStream | 100 KB | 12.11 ms | 29.45 KB |
-| SaveBytes | 100 KB | 13.33 ms | 26.60 KB |
-| SaveAndGetBytes | 100 KB | 17.91 ms | 240.02 KB |
-| SaveAndCopyTo | 100 KB | 18.12 ms | 51.87 KB |
-| SaveAndGetStream | 100 KB | 18.33 ms | 45.16 KB |
-| SaveStream | 1 MB | 34.81 ms | 73.41 KB |
-| SaveBytes | 1 MB | 33.94 ms | 58.53 KB |
-| SaveAndGetBytes | 1 MB | 41.26 ms | 2119.81 KB |
-| SaveAndCopyTo | 1 MB | 42.15 ms | 174.93 KB |
-| SaveAndGetStream | 1 MB | 41.53 ms | 90.70 KB |
-| SaveStream | 10 MB | 229.09 ms | 647.60 KB |
-| SaveBytes | 10 MB | 226.96 ms | 544.12 KB |
-| SaveAndGetBytes | 10 MB | 247.24 ms | 21023.27 KB |
-| SaveAndCopyTo | 10 MB | 253.22 ms | 1328.35 KB |
-| SaveAndGetStream | 10 MB | 249.76 ms | 710.08 KB |
+| SaveStream | 1 KB | 11.23 ms | 25.14 KB |
+| SaveBytes | 1 KB | 11.07 ms | 20.94 KB |
+| SaveAndGetBytes | 1 KB | 16.11 ms | 38.37 KB |
+| SaveAndCopyTo | 1 KB | 17.09 ms | 42.11 KB |
+| SaveAndGetStream | 1 KB | 17.14 ms | 40.85 KB |
+| SaveStream | 100 KB | 13.67 ms | 129.47 KB |
+| SaveBytes | 100 KB | 12.93 ms | 124.61 KB |
+| SaveAndGetBytes | 100 KB | 18.00 ms | 340.04 KB |
+| SaveAndCopyTo | 100 KB | 18.40 ms | 151.89 KB |
+| SaveAndGetStream | 100 KB | 17.71 ms | 145.18 KB |
+| SaveStream | 1 MB | 34.24 ms | 1099.01 KB |
+| SaveBytes | 1 MB | 38.82 ms | 1081.27 KB |
+| SaveAndGetBytes | 1 MB | 45.65 ms | 3145.98 KB |
+| SaveAndCopyTo | 1 MB | 43.54 ms | 1187.44 KB |
+| SaveAndGetStream | 1 MB | 42.48 ms | 1113.15 KB |
+| SaveStream | 10 MB | 247.39 ms | 10903.38 KB |
+| SaveBytes | 10 MB | 273.41 ms | 10729.63 KB |
+| SaveAndGetBytes | 10 MB | 283.44 ms | 31193.08 KB |
+| SaveAndCopyTo | 10 MB | 296.23 ms | 11559.48 KB |
+| SaveAndGetStream | 10 MB | 282.45 ms | 10902.93 KB |
 
 
 ### FileShare Persister
 
 | Method | DataSize | Mean | Allocated |
 |---|---|---:|---:|
-| SaveStream | 1 KB | 0.75 ms | 67.73 KB |
-| SaveBytes | 1 KB | 0.63 ms | 67.67 KB |
-| SaveAndGetBytes | 1 KB | 0.90 ms | 70.37 KB |
-| SaveAndCopyTo | 1 KB | 0.88 ms | 69.61 KB |
-| SaveAndGetStream | 1 KB | 0.86 ms | 69.11 KB |
-| SaveStream | 100 KB | 0.68 ms | 3.45 KB |
-| SaveBytes | 100 KB | 0.66 ms | 3.38 KB |
-| SaveAndGetBytes | 100 KB | 0.93 ms | 105.08 KB |
-| SaveAndCopyTo | 100 KB | 0.87 ms | 5.31 KB |
-| SaveAndGetStream | 100 KB | 0.88 ms | 4.82 KB |
-| SaveStream | 1 MB | 0.89 ms | 3.45 KB |
-| SaveBytes | 1 MB | 0.88 ms | 3.38 KB |
-| SaveAndGetBytes | 1 MB | 1.25 ms | 1029.07 KB |
-| SaveAndCopyTo | 1 MB | 1.40 ms | 5.32 KB |
-| SaveAndGetStream | 1 MB | 1.07 ms | 4.82 KB |
-| SaveStream | 10 MB | 3.34 ms | 3.45 KB |
-| SaveBytes | 10 MB | 3.42 ms | 3.38 KB |
-| SaveAndGetBytes | 10 MB | 5.84 ms | 10245.08 KB |
-| SaveAndCopyTo | 10 MB | 6.46 ms | 5.31 KB |
-| SaveAndGetStream | 10 MB | 3.47 ms | 4.82 KB |
+| SaveStream | 1 KB | 0.75 ms | 68.76 KB |
+| SaveBytes | 1 KB | 0.75 ms | 68.70 KB |
+| SaveAndGetBytes | 1 KB | 0.98 ms | 71.39 KB |
+| SaveAndCopyTo | 1 KB | 1.07 ms | 70.63 KB |
+| SaveAndGetStream | 1 KB | 0.87 ms | 70.13 KB |
+| SaveStream | 100 KB | 0.71 ms | 103.47 KB |
+| SaveBytes | 100 KB | 0.67 ms | 103.41 KB |
+| SaveAndGetBytes | 100 KB | 0.95 ms | 205.10 KB |
+| SaveAndCopyTo | 100 KB | 1.09 ms | 105.34 KB |
+| SaveAndGetStream | 100 KB | 0.94 ms | 104.84 KB |
+| SaveStream | 1 MB | 1.23 ms | 1027.47 KB |
+| SaveBytes | 1 MB | 1.19 ms | 1027.41 KB |
+| SaveAndGetBytes | 1 MB | 1.73 ms | 2053.10 KB |
+| SaveAndCopyTo | 1 MB | 1.86 ms | 1029.34 KB |
+| SaveAndGetStream | 1 MB | 1.46 ms | 1028.84 KB |
+| SaveStream | 10 MB | 5.47 ms | 10243.47 KB |
+| SaveBytes | 10 MB | 5.70 ms | 10243.41 KB |
+| SaveAndGetBytes | 10 MB | 9.15 ms | 20485.10 KB |
+| SaveAndCopyTo | 10 MB | 9.03 ms | 10245.34 KB |
+| SaveAndGetStream | 10 MB | 5.87 ms | 10244.84 KB |
 
 
 ### Key Insights
 
- * **FileShare is ~15-70x faster than SQL** for raw operations, as expected for local file I/O vs database round-trips.
- * **Streaming keeps allocations flat**: At 10 MB, `SaveAndCopyTo` allocates 1.3 MB (SQL) / 5 KB (FileShare), while `SaveAndGetBytes` allocates 21 MB / 10 MB (the full data in a byte array).
- * **SQL save cost scales with data size**: ~11ms for 1 KB, ~13ms for 100 KB, ~34ms for 1 MB, ~228ms for 10 MB. FileShare stays under 4ms for all sizes up to 10 MB.
- * **`SaveStream` vs `SaveBytes`**: Nearly identical performance in both implementations. For SQL, the stream is passed directly to the `SqlParameter` with no intermediate copy.
+ * **FileShare is ~15-50x faster than SQL** for raw operations, as expected for local file I/O vs database round-trips.
+ * **Streaming avoids double allocation on read**: At 10 MB, `SaveAndGetStream` allocates ~10 MB (the data itself), while `SaveAndGetBytes` allocates ~20-31 MB (data copied into a byte array on top of the original).
+ * **SQL save cost scales with data size**: ~11ms for 1 KB, ~13ms for 100 KB, ~36ms for 1 MB, ~260ms for 10 MB. FileShare stays under 6ms for all sizes up to 10 MB.
+ * **`SaveStream` vs `SaveBytes`**: Nearly identical performance in both implementations.
 
 
 ## Icon

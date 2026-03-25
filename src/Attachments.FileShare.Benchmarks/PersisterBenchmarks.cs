@@ -7,7 +7,6 @@ public class PersisterBenchmarks
 {
     string directory = null!;
     Persister persister = null!;
-    byte[] data = null!;
     int counter;
 
     [Params(1024, 1024 * 100, 1024 * 1024, 1024 * 1024 * 10)]
@@ -19,8 +18,13 @@ public class PersisterBenchmarks
         directory = Path.Combine(Path.GetTempPath(), "AttachmentsBenchmark");
         Directory.CreateDirectory(directory);
         persister = new(directory);
-        data = new byte[DataSize];
+    }
+
+    byte[] NewData()
+    {
+        var data = new byte[DataSize];
         Random.Shared.NextBytes(data);
+        return data;
     }
 
     [IterationSetup]
@@ -45,19 +49,24 @@ public class PersisterBenchmarks
     [Benchmark]
     public Task SaveStream()
     {
+        var data = NewData();
         var stream = new MemoryStream(data);
         return persister.SaveStream(
             "msg1", "attachment", DateTime.UtcNow.AddDays(1), stream, null);
     }
 
     [Benchmark]
-    public Task SaveBytes() =>
-        persister.SaveBytes(
+    public Task SaveBytes()
+    {
+        var data = NewData();
+        return persister.SaveBytes(
             "msg1", "attachment", DateTime.UtcNow.AddDays(1), data, null);
+    }
 
     [Benchmark]
     public async Task SaveAndGetBytes()
     {
+        var data = NewData();
         await persister.SaveBytes(
             "msg1", "attachment", DateTime.UtcNow.AddDays(1), data, null);
         await persister.GetBytes("msg1", "attachment");
@@ -66,6 +75,7 @@ public class PersisterBenchmarks
     [Benchmark]
     public async Task SaveAndCopyTo()
     {
+        var data = NewData();
         var stream = new MemoryStream(data);
         await persister.SaveStream(
             "msg1", "attachment", DateTime.UtcNow.AddDays(1), stream, null);
@@ -75,6 +85,7 @@ public class PersisterBenchmarks
     [Benchmark]
     public async Task SaveAndGetStream()
     {
+        var data = NewData();
         var stream = new MemoryStream(data);
         await persister.SaveStream(
             "msg1", "attachment", DateTime.UtcNow.AddDays(1), stream, null);
