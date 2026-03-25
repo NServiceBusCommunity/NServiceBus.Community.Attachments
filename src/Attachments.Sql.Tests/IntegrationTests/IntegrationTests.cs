@@ -25,16 +25,6 @@ public class IntegrationTests
         TransportTransactionMode transactionMode,
         bool runEarlyCleanup)
     {
-        if (useSqlTransport &&
-            !useSqlPersistence &&
-            transactionMode == TransportTransactionMode.TransactionScope)
-        {
-            // this scenario is not supported by netcore
-            // will cause a "This platform does not support distributed transactions."
-            //TODO: should detect this a runtime and throw a better exception
-            return;
-        }
-
         await using var context = new IntegrationTestContext();
         // so a nested connection will cause DTC
         context.ShouldPerformNestedConnection = !(useSqlPersistence &&
