@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-
 class BusinessDbContext(DbContextOptions<BusinessDbContext> options) : DbContext(options)
 {
     public DbSet<BusinessEntity> Entities { get; set; }

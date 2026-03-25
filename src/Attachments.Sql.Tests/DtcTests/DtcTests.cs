@@ -1,5 +1,4 @@
 using System.Transactions;
-using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.DependencyInjection;
 using NServiceBus.Persistence.Sql;
 
@@ -141,9 +140,9 @@ public class DtcTests
         SqlConnection NewConnection() => new(connectionString);
 
         // Attachments in the NSB DB, using synchronized storage session connectivity
-        var attachments = configuration.EnableAttachments(NewConnection, TimeToKeep.Default);
+        var nsbDatabaseName = new SqlConnectionStringBuilder(connectionString).InitialCatalog;
+        var attachments = configuration.EnableAttachments(NewConnection, TimeToKeep.Default, database: nsbDatabaseName, table: "Attachments");
         attachments.UseSynchronizedStorageSessionConnectivity();
-        attachments.UseTable("Attachments");
         attachments.DisableCleanupTask();
 
         configuration.UseSerialization<SystemJsonSerializer>();

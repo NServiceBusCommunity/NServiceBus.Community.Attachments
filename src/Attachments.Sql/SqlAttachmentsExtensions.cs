@@ -17,7 +17,10 @@ public static class SqlAttachmentsExtensions
     public static AttachmentSettings EnableAttachments(
         this EndpointConfiguration configuration,
         Func<SqlConnection> connectionFactory,
-        GetTimeToKeep? timeToKeep = null)
+        GetTimeToKeep? timeToKeep = null,
+        string database = "nservicebus",
+        string schema = "dbo",
+        string table = "MessageAttachments")
     {
         var dbConnection = connectionFactory();
         if (dbConnection.State == ConnectionState.Open)
@@ -41,7 +44,10 @@ public static class SqlAttachmentsExtensions
                     throw;
                 }
             },
-            timeToKeep);
+            timeToKeep,
+            database,
+            schema,
+            table);
     }
 
     /// <summary>
@@ -50,7 +56,10 @@ public static class SqlAttachmentsExtensions
     public static AttachmentSettings EnableAttachments(
         this EndpointConfiguration configuration,
         string connection,
-        GetTimeToKeep? timeToKeep = null) =>
+        GetTimeToKeep? timeToKeep = null,
+        string database = "nservicebus",
+        string schema = "dbo",
+        string table = "MessageAttachments") =>
         EnableAttachments(
             configuration,
             connectionFactory: async cancel =>
@@ -59,7 +68,10 @@ public static class SqlAttachmentsExtensions
                 await sqlConnection.OpenAsync(cancel);
                 return sqlConnection;
             },
-            timeToKeep);
+            timeToKeep,
+            database,
+            schema,
+            table);
 
     /// <summary>
     /// Enable SQL attachments for this endpoint.
@@ -67,10 +79,13 @@ public static class SqlAttachmentsExtensions
     public static AttachmentSettings EnableAttachments(
         this EndpointConfiguration configuration,
         Func<Cancel, Task<SqlConnection>> connectionFactory,
-        GetTimeToKeep? timeToKeep = null)
+        GetTimeToKeep? timeToKeep = null,
+        string database = "nservicebus",
+        string schema = "dbo",
+        string table = "MessageAttachments")
     {
         var settings = configuration.GetSettings();
-        var attachments = new AttachmentSettings(connectionFactory, timeToKeep ?? TimeToKeep.Default);
+        var attachments = new AttachmentSettings(connectionFactory, timeToKeep ?? TimeToKeep.Default, database, schema, table);
         return SetAttachments(configuration, settings, attachments);
     }
 

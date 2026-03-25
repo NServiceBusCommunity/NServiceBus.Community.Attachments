@@ -1,5 +1,3 @@
-using Microsoft.Data.SqlClient;
-
 class IntegrationTestContext : IAsyncDisposable
 {
     public ManualResetEvent HandlerEvent = new(false);

@@ -15,7 +15,6 @@
     <Compile Include="..\Attachments.Sql\Persister\*.cs" />
     <Compile Include="..\Attachments.Sql\Install\Installer.cs" />
     <Compile Include="..\Attachments.Sql\SqlSanitizer.cs" />
-    <Compile Include="..\Attachments.Sql\Table.cs" />
     <Compile Include="..\Shared\AssemblyHelper.cs" />
     <Compile Include="..\Shared\AttachmentInfo.cs" />
     <Compile Include="..\Shared\MetadataSerializer.cs" />

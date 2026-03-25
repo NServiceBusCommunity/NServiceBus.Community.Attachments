@@ -45,7 +45,8 @@ public class IntegrationTests
         var endpointName = "SqlIntegrationTests";
         var configuration = new EndpointConfiguration(endpointName);
         SqlConnection NewConnection() => new(connectionString);
-        var attachments = configuration.EnableAttachments(NewConnection, TimeToKeep.Default);
+        var databaseName = new SqlConnectionStringBuilder(connectionString).InitialCatalog;
+        var attachments = configuration.EnableAttachments(NewConnection, TimeToKeep.Default, database: databaseName, table: "Attachments");
         configuration.UseSerialization<SystemJsonSerializer>();
         if (useStorageSession)
         {
@@ -82,7 +83,6 @@ public class IntegrationTests
         configuration.PurgeOnStartup(true);
         attachments.DisableCleanupTask();
 
-        attachments.UseTable("Attachments");
         if (useSqlTransportConnection)
         {
             attachments.UseTransportConnectivity();
@@ -122,7 +122,7 @@ public class IntegrationTests
         {
             await using var connection = new SqlConnection(connectionString);
             await connection.OpenAsync();
-            var persister = new Persister("Attachments");
+            var persister = new Persister(databaseName, table: "Attachments");
             await foreach (var _ in persister.ReadAllMessageInfo(connection, null, startMessageId))
             {
                 throw new("Expected attachments to be cleaned");

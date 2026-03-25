@@ -1,6 +1,3 @@
-using System.Data.Common;
-using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
 using NServiceBus.Persistence.Sql;
 
 class DtcSendHandler(DtcTestContext context) :
