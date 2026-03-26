@@ -16,14 +16,6 @@ public partial class Persister
     }
 
     /// <inheritdoc />
-    public virtual Task SaveBytes(string messageId, string name, DateTime expiry, byte[] bytes, IReadOnlyDictionary<string, string>? metadata = null, Cancel cancel = default)
-    {
-        Guard.AgainstNullOrEmpty(messageId);
-        Guard.AgainstNullOrEmpty(name);
-        return Save(messageId, name, expiry, metadata, (fileStream, cancel)  => fileStream.WriteAsync(bytes, 0, bytes.Length, cancel), cancel);
-    }
-
-    /// <inheritdoc />
     public virtual Task SaveString(string messageId, string name, DateTime expiry, string value, Encoding? encoding = null, IReadOnlyDictionary<string, string>? metadata = null, Cancel cancel = default)
     {
         Guard.AgainstNullOrEmpty(messageId);

@@ -16,12 +16,6 @@ public interface IPersister
     Task SaveStream(string messageId, string name, DateTime expiry, Stream stream, IReadOnlyDictionary<string, string>? metadata, Cancel cancel = default);
 
     /// <summary>
-    /// Saves <paramref name="bytes" /> as an attachment.
-    /// </summary>
-    /// <exception cref="TaskCanceledException">If <paramref name="cancel" /> is <see cref="Cancel.IsCancellationRequested" />.</exception>
-    Task SaveBytes(string messageId, string name, DateTime expiry, byte[] bytes, IReadOnlyDictionary<string, string>? metadata, Cancel cancel = default);
-
-    /// <summary>
     /// Saves <paramref name="value" /> as an attachment.
     /// </summary>
     /// <exception cref="TaskCanceledException">If <paramref name="cancel" /> is <see cref="Cancel.IsCancellationRequested" />.</exception>

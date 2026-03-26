@@ -186,10 +186,10 @@
     }
 
     [Test]
-    public async Task SaveBytes()
+    public async Task SaveStreamFromBytes()
     {
         var persister = GetPersister();
-        await persister.SaveBytes("theMessageId", "theName", defaultTestDate, [1], metadata);
+        await persister.SaveStream("theMessageId", "theName", defaultTestDate, new MemoryStream([1]), metadata);
         await Verify(persister.ReadAllInfo());
     }
 

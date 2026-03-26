@@ -30,7 +30,7 @@ static class SqlExtensions
         command.Parameters.Add(parameter);
     }
 
-    public static void AddBinary(this SqlCommand command, string name, object value)
+    public static void AddBinary(this SqlCommand command, string name, Stream value)
     {
         var parameter = command.CreateParameter();
         parameter.ParameterName = name;

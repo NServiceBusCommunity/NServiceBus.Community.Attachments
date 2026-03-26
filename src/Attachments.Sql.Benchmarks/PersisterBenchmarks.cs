@@ -99,14 +99,14 @@ public class PersisterBenchmarks
 
     [Benchmark]
     public Task<Guid> SaveBytes() =>
-        persister.SaveBytes(
-            connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), data);
+        persister.SaveStream(
+            connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), new MemoryStream(data));
 
     [Benchmark]
     public async Task SaveAndGetBytes()
     {
-        await persister.SaveBytes(
-            connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), data);
+        await persister.SaveStream(
+            connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), new MemoryStream(data));
         await persister.GetBytes("msg1", "attachment", connection, null);
     }
 

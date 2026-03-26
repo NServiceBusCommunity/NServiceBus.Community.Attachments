@@ -68,6 +68,21 @@ attachments.AddBytes("name", data);
 ```
 
 
+## `SaveBytes` removed from `IPersister`
+
+`IPersister.SaveBytes` has been removed from both the SQL and FileShare implementations. Use `SaveStream` with a `MemoryStream` wrapper instead:
+
+```cs
+// Before
+await persister.SaveBytes(connection, null, messageId, name, expiry, bytes);
+
+// After
+await persister.SaveStream(connection, null, messageId, name, expiry, new MemoryStream(bytes));
+```
+
+For the SQL implementation, this avoids an extra full-copy allocation in the ADO.NET TDS buffer, roughly halving memory usage for save operations with byte arrays.
+
+
 ## SQL EnableAttachments: database parameter
 
 The `database` parameter on `EnableAttachments` is now derived from the connection for the `string connection` and `Func<SqlConnection>` overloads. It defaults to `null` on those overloads and is resolved automatically from the connection string.

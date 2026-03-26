@@ -107,19 +107,19 @@ class SendBehavior(IPersister persister, GetTimeToKeep endpointTimeToKeep) :
         if (outgoing.AsyncBytesFactory is not null)
         {
             var bytes = await outgoing.AsyncBytesFactory();
-            await persister.SaveBytes(messageId, name, expiry, bytes, outgoing.Metadata, cancel);
+            await persister.SaveStream(messageId, name, expiry, new MemoryStream(bytes), outgoing.Metadata, cancel);
             return;
         }
 
         if (outgoing.BytesFactory is not null)
         {
-            await persister.SaveBytes(messageId, name, expiry, outgoing.BytesFactory(), outgoing.Metadata, cancel);
+            await persister.SaveStream(messageId, name, expiry, new MemoryStream(outgoing.BytesFactory()), outgoing.Metadata, cancel);
             return;
         }
 
         if (outgoing.BytesInstance is not null)
         {
-            await persister.SaveBytes(messageId, name, expiry, outgoing.BytesInstance, outgoing.Metadata, cancel);
+            await persister.SaveStream(messageId, name, expiry, new MemoryStream(outgoing.BytesInstance), outgoing.Metadata, cancel);
             return;
         }
 

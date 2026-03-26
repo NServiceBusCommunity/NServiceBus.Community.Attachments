@@ -154,17 +154,17 @@ class SendBehavior(Func<Cancel, Task<SqlConnection>> connectionFactory, IPersist
         if (outgoing.AsyncBytesFactory is not null)
         {
             var bytes = await outgoing.AsyncBytesFactory();
-            return await persister.SaveBytes(connection, transaction, messageId, name, expiry, bytes, metadata, cancel);
+            return await persister.SaveStream(connection, transaction, messageId, name, expiry, new MemoryStream(bytes), metadata, cancel);
         }
 
         if (outgoing.BytesFactory is not null)
         {
-            return await persister.SaveBytes(connection, transaction, messageId, name, expiry, outgoing.BytesFactory(), metadata, cancel);
+            return await persister.SaveStream(connection, transaction, messageId, name, expiry, new MemoryStream(outgoing.BytesFactory()), metadata, cancel);
         }
 
         if (outgoing.BytesInstance is not null)
         {
-            return await persister.SaveBytes(connection, transaction, messageId, name, expiry, outgoing.BytesInstance, metadata, cancel);
+            return await persister.SaveStream(connection, transaction, messageId, name, expiry, new MemoryStream(outgoing.BytesInstance), metadata, cancel);
         }
 
         if (outgoing.StringInstance is not null)

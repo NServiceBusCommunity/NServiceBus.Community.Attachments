@@ -19,15 +19,6 @@ public partial class Persister
     }
 
     /// <inheritdoc />
-    public virtual Task<Guid> SaveBytes(SqlConnection connection, SqlTransaction? transaction, string messageId, string name, DateTime expiry, byte[] bytes, IReadOnlyDictionary<string, string>? metadata = null, Cancel cancel = default)
-    {
-        Guard.AgainstNullOrEmpty(messageId);
-        Guard.AgainstNullOrEmpty(name);
-        Guard.AgainstLongAttachmentName(name);
-        return Save(connection, transaction, messageId, name, expiry, bytes, metadata, cancel);
-    }
-
-    /// <inheritdoc />
     public virtual Task<Guid> SaveString(SqlConnection connection, SqlTransaction? transaction, string messageId, string name, DateTime expiry, string value, Encoding? encoding = null, IReadOnlyDictionary<string, string>? metadata = null, Cancel cancel = default)
     {
         Guard.AgainstNullOrEmpty(messageId);
@@ -35,10 +26,11 @@ public partial class Persister
         Guard.AgainstLongAttachmentName(name);
         encoding = encoding.Default();
         var dictionary = MetadataSerializer.AppendEncoding(encoding, metadata);
-        return Save(connection, transaction, messageId, name, expiry, value.ToBytes(encoding), dictionary, cancel);
+        var bytes = value.ToBytes(encoding);
+        return Save(connection, transaction, messageId, name, expiry, new MemoryStream(bytes), dictionary, cancel);
     }
 
-    async Task<Guid> Save(SqlConnection connection, SqlTransaction? transaction, string messageId, string name, DateTime expiry, object stream, IReadOnlyDictionary<string, string>? metadata = null, Cancel cancel = default)
+    async Task<Guid> Save(SqlConnection connection, SqlTransaction? transaction, string messageId, string name, DateTime expiry, Stream stream, IReadOnlyDictionary<string, string>? metadata = null, Cancel cancel = default)
     {
         await using var command = connection.CreateCommand();
         command.Transaction = transaction;

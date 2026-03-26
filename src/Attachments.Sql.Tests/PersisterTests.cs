@@ -281,12 +281,12 @@ public class PersisterTests
     }
 
     [Test]
-    public async Task SaveBytes()
+    public async Task SaveStreamFromBytes()
     {
         var (database, persister) = await BuildDb();
         await using var _ = database;
         var connection = database.Connection;
-        await persister.SaveBytes(connection, null, "theMessageId", "theName", defaultTestDate, [1], metadata);
+        await persister.SaveStream(connection, null, "theMessageId", "theName", defaultTestDate, new MemoryStream([1]), metadata);
         var result = persister.ReadAllInfo(connection, null);
         await Verify(result);
     }
@@ -367,8 +367,8 @@ public class PersisterTests
         var (database, persister) = await BuildDb();
         await using var _ = database;
         var connection = database.Connection;
-        await persister.SaveBytes(connection, null, "theSourceMessageId", "theName1", defaultTestDate, [1], metadata);
-        await persister.SaveBytes(connection, null, "theSourceMessageId", "theName2", defaultTestDate, [1], metadata);
+        await persister.SaveStream(connection, null, "theSourceMessageId", "theName1", defaultTestDate, new MemoryStream([1]), metadata);
+        await persister.SaveStream(connection, null, "theSourceMessageId", "theName2", defaultTestDate, new MemoryStream([1]), metadata);
         var names = await persister.Duplicate("theSourceMessageId", connection, null, "theTargetMessageId");
         var info = await persister.ReadAllInfo(connection, null);
         await Verify(
@@ -387,12 +387,12 @@ public class PersisterTests
         await using var _ = database;
         var connection = database.Connection;
 
-        await persister.SaveBytes(connection, null, "theSourceMessageId", "sourceName", defaultTestDate, [1], metadata);
+        await persister.SaveStream(connection, null, "theSourceMessageId", "sourceName", defaultTestDate, new MemoryStream([1]), metadata);
         Thread.Sleep(1000); // Ensure different Created time
         await persister.Duplicate("theSourceMessageId", "sourceName", connection, null, "theTargetMessageId");
 
         // Add a second attachment for the same message
-        await persister.SaveBytes(connection, null, "theSourceMessageId", "otherName", defaultTestDate, [1], metadata);
+        await persister.SaveStream(connection, null, "theSourceMessageId", "otherName", defaultTestDate, new MemoryStream([1]), metadata);
 
         var info = await persister.ReadAllInfo(connection, null);
         var sourceInfo = info.Single(_ => _ is { Name: "sourceName", MessageId: "theSourceMessageId" });
@@ -409,7 +409,7 @@ public class PersisterTests
         var (database, persister) = await BuildDb();
         await using var _ = database;
         var connection = database.Connection;
-        await persister.SaveBytes(connection, null, "theSourceMessageId", "theName1", defaultTestDate, [1], metadata);
+        await persister.SaveStream(connection, null, "theSourceMessageId", "theName1", defaultTestDate, new MemoryStream([1]), metadata);
         Thread.Sleep(1000); // Ensure different Created time
         await persister.Duplicate("theSourceMessageId", "theName1", connection, null, "theTargetMessageId", "theName2");
         var info = await persister.ReadAllInfo(connection, null);
@@ -424,8 +424,8 @@ public class PersisterTests
         var (database, persister) = await BuildDb();
         await using var _ = database;
         var connection = database.Connection;
-        await persister.SaveBytes(connection, null, "theMessageId", "theName1", defaultTestDate, [1], metadata);
-        await persister.SaveBytes(connection, null, "theMessageId", "theName2", defaultTestDate, [1], metadata);
+        await persister.SaveStream(connection, null, "theMessageId", "theName1", defaultTestDate, new MemoryStream([1]), metadata);
+        await persister.SaveStream(connection, null, "theMessageId", "theName2", defaultTestDate, new MemoryStream([1]), metadata);
         var list = new List<AttachmentInfo>();
         await persister.ReadAllMessageInfo(connection, null, "theMessageId",
             (info, _) =>
@@ -443,8 +443,8 @@ public class PersisterTests
         var (database, persister) = await BuildDb();
         await using var _ = database;
         var connection = database.Connection;
-        await persister.SaveBytes(connection, null, "theMessageId", "theName1", defaultTestDate, [1], metadata);
-        await persister.SaveBytes(connection, null, "theMessageId", "theName2", defaultTestDate, [1], metadata);
+        await persister.SaveStream(connection, null, "theMessageId", "theName1", defaultTestDate, new MemoryStream([1]), metadata);
+        await persister.SaveStream(connection, null, "theMessageId", "theName2", defaultTestDate, new MemoryStream([1]), metadata);
         await Verify(persister.ReadAllMessageInfo(connection, null, "theMessageId"))
             .IgnoreMember("Created");
     }
@@ -455,8 +455,8 @@ public class PersisterTests
         var (database, persister) = await BuildDb();
         await using var _ = database;
         var connection = database.Connection;
-        await persister.SaveBytes(connection, null, "theMessageId", "theName1", defaultTestDate, [1], metadata);
-        await persister.SaveBytes(connection, null, "theMessageId", "theName2", defaultTestDate, [1], metadata);
+        await persister.SaveStream(connection, null, "theMessageId", "theName1", defaultTestDate, new MemoryStream([1]), metadata);
+        await persister.SaveStream(connection, null, "theMessageId", "theName2", defaultTestDate, new MemoryStream([1]), metadata);
         await Verify(persister.ReadAllMessageNames(connection, null, "theMessageId"));
     }
 
