@@ -12,15 +12,14 @@ public class PersisterBenchmarks
     SqlDatabase database = null!;
     SqlConnection connection = null!;
     Persister persister = null!;
-    byte[] data = null!;
     int counter;
 
     [Params(1024, 1024 * 100, 1024 * 1024, 1024 * 1024 * 10)]
     public int DataSize { get; set; }
 
     [GlobalSetup]
-    public void GlobalSetup()
-    {
+    #pragma warning disable CA1822
+    public void GlobalSetup() =>
         sqlInstance = new(
             "AttachmentsBenchmark",
             async connection =>
@@ -44,9 +43,13 @@ public class PersisterBenchmarks
                     """;
                 await command.ExecuteNonQueryAsync();
             });
+    #pragma warning restore CA1822
 
-        data = new byte[DataSize];
+    byte[] NewData()
+    {
+        var data = new byte[DataSize];
         Random.Shared.NextBytes(data);
+        return data;
     }
 
     [IterationSetup]
@@ -72,15 +75,19 @@ public class PersisterBenchmarks
     [Benchmark]
     public Task<Guid> SaveStream()
     {
+        var data = NewData();
         var stream = new MemoryStream(data);
         return persister.SaveStream(
             connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), stream, null);
     }
 
     [Benchmark]
-    public Task<Guid> SaveBytes() =>
-        persister.SaveBytes(
+    public Task<Guid> SaveBytes()
+    {
+        var data = NewData();
+        return persister.SaveBytes(
             connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), data, null);
+    }
 
     [Benchmark]
     public async Task SaveViaPipe()
@@ -119,6 +126,7 @@ public class PersisterBenchmarks
     [Benchmark]
     public async Task SaveAndGetBytes()
     {
+        var data = NewData();
         await persister.SaveBytes(
             connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), data, null);
         await persister.GetBytes("msg1", "attachment", connection, null);
@@ -127,6 +135,7 @@ public class PersisterBenchmarks
     [Benchmark]
     public async Task SaveAndCopyTo()
     {
+        var data = NewData();
         var stream = new MemoryStream(data);
         await persister.SaveStream(
             connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), stream, null);
@@ -136,6 +145,7 @@ public class PersisterBenchmarks
     [Benchmark]
     public async Task SaveAndGetStream()
     {
+        var data = NewData();
         var stream = new MemoryStream(data);
         await persister.SaveStream(
             connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), stream, null);
