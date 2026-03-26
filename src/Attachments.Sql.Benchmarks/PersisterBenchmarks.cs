@@ -93,7 +93,7 @@ public class PersisterBenchmarks
     public async Task SaveViaPipe()
     {
         var pipe = new Pipe(new(pauseWriterThreshold: 65536, resumeWriterThreshold: 32768));
-        var capturedData = data;
+        var capturedData = NewData();
         var writerTask = Task.Run(async () =>
         {
             try
