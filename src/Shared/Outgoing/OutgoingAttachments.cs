@@ -36,10 +36,10 @@ class OutgoingAttachments :
     public void Add(AttachmentFactory factory) =>
         Dynamic.Add(factory);
 
-    public void AddStreamWriter(Func<Stream, Task> streamWriter, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null) =>
-        AddStreamWriter("default", streamWriter, timeToKeep, cleanup, metadata);
+    public void AddStream(Func<Stream, Task> writer, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null) =>
+        AddStream("default", writer, timeToKeep, cleanup, metadata);
 
-    public void AddStreamWriter(string name, Func<Stream, Task> streamWriter, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null) =>
+    public void AddStream(string name, Func<Stream, Task> writer, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null) =>
         Inner.Add(
             name,
             new()
@@ -47,14 +47,14 @@ class OutgoingAttachments :
                 Metadata = metadata,
                 TimeToKeep = timeToKeep,
                 Cleanup = cleanup.WrapCleanupInCheck(name),
-                StreamWriter = streamWriter.WrapStreamWriterInCheck(name)
+                StreamWriter = writer.WrapStreamWriterInCheck(name)
             });
 
     public void Add(Stream stream, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null) =>
         Add("default", stream, timeToKeep, cleanup, metadata);
 
     public void Add(string name, Stream stream, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null) =>
-        AddStreamWriter(name, target => stream.CopyToAsync(target), timeToKeep, cleanup, metadata);
+        AddStream(name, target => stream.CopyToAsync(target), timeToKeep, cleanup, metadata);
 
     public void AddBytes(Func<byte[]> bytesFactory, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null) =>
         AddBytes("default", bytesFactory, timeToKeep, cleanup, metadata);

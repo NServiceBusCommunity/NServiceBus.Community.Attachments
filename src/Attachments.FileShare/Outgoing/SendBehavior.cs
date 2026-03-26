@@ -73,14 +73,14 @@ class SendBehavior(IPersister persister, GetTimeToKeep endpointTimeToKeep) :
         context.Headers.Add("Attachments", string.Join(", ", attachmentNames));
     }
 
-    async Task ProcessStreamWriter(string messageId, string name, DateTime expiry, Func<Stream, Task> streamWriter, IReadOnlyDictionary<string, string>? metadata, Cancel cancel)
+    async Task ProcessWriter(string messageId, string name, DateTime expiry, Func<Stream, Task> writer, IReadOnlyDictionary<string, string>? metadata, Cancel cancel)
     {
         var pipe = new Pipe();
         var writerTask = Task.Run(async () =>
         {
             try
             {
-                await streamWriter(pipe.Writer.AsStream());
+                await writer(pipe.Writer.AsStream());
             }
             finally
             {
@@ -115,7 +115,7 @@ class SendBehavior(IPersister persister, GetTimeToKeep endpointTimeToKeep) :
     {
         if (outgoing.StreamWriter is not null)
         {
-            await ProcessStreamWriter(messageId, name, expiry, outgoing.StreamWriter, outgoing.Metadata, cancel);
+            await ProcessWriter(messageId, name, expiry, outgoing.StreamWriter, outgoing.Metadata, cancel);
             return;
         }
 

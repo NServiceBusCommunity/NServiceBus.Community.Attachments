@@ -26,7 +26,7 @@ public static class OutgoingAttachmentsExtensions
         Guard.FileExists(file);
         Guard.AgainstEmpty(name);
 
-        attachments.AddStreamWriter(
+        attachments.AddStream(
             name ?? "default",
             async stream =>
             {

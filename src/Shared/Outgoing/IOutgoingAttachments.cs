@@ -32,14 +32,14 @@ public interface IOutgoingAttachments
     /// Data is streamed directly to storage using System.IO.Pipelines without intermediate buffering.
     /// Use for large payloads or when data is generated/read incrementally.
     /// </summary>
-    void AddStreamWriter(Func<Stream, Task> streamWriter, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null);
+    void AddStream(Func<Stream, Task> writer, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null);
 
     /// <summary>
     /// Add an attachment with <paramref name="name"/> using a push-based stream writer delegate.
     /// Data is streamed directly to storage using System.IO.Pipelines without intermediate buffering.
     /// Use for large payloads or when data is generated/read incrementally.
     /// </summary>
-    void AddStreamWriter(string name, Func<Stream, Task> streamWriter, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null);
+    void AddStream(string name, Func<Stream, Task> writer, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null);
 
     /// <summary>
     /// Add an attachment with <paramref name="name"/> to the current outgoing pipeline.

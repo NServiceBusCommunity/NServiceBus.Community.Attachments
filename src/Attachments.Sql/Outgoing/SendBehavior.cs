@@ -128,14 +128,14 @@ class SendBehavior :
         context.Headers.Add("Attachments", string.Join(", ", attachments.Select(_ => $"{_.Key}: {_.Value}")));
     }
 
-    async Task<Guid> ProcessStreamWriter(SqlConnection connection, SqlTransaction? transaction, string messageId, string name, DateTime expiry, Func<Stream, Task> streamWriter, IReadOnlyDictionary<string, string>? metadata)
+    async Task<Guid> ProcessWriter(SqlConnection connection, SqlTransaction? transaction, string messageId, string name, DateTime expiry, Func<Stream, Task> writer, IReadOnlyDictionary<string, string>? metadata)
     {
         var pipe = new Pipe();
         var writerTask = Task.Run(async () =>
         {
             try
             {
-                await streamWriter(pipe.Writer.AsStream());
+                await writer(pipe.Writer.AsStream());
             }
             finally
             {
@@ -172,7 +172,7 @@ class SendBehavior :
         var metadata = outgoing.Metadata;
         if (outgoing.StreamWriter is not null)
         {
-            return await ProcessStreamWriter(connection, transaction, messageId, name, expiry, outgoing.StreamWriter, metadata);
+            return await ProcessWriter(connection, transaction, messageId, name, expiry, outgoing.StreamWriter, metadata);
         }
 
         if (outgoing.AsyncBytesFactory is not null)

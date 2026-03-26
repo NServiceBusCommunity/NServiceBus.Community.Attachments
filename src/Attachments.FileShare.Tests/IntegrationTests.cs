@@ -34,8 +34,8 @@ public class IntegrationTests :
         var sendOptions = new SendOptions();
         sendOptions.RouteToThisEndpoint();
         var attachment = sendOptions.Attachments();
-        attachment.AddStreamWriter(async stream => await GetStream().CopyToAsync(stream));
-        attachment.AddStreamWriter(
+        attachment.AddStream(async stream => await GetStream().CopyToAsync(stream));
+        attachment.AddStream(
             "withMetadata",
             async stream => await GetStream().CopyToAsync(stream),
             metadata: new Dictionary<string, string>
@@ -55,9 +55,9 @@ public class IntegrationTests :
     static Stream GetStream()
     {
         var stream = new MemoryStream();
-        var streamWriter = new StreamWriter(stream);
-        streamWriter.Write("content");
-        streamWriter.Flush();
+        var writer = new StreamWriter(stream);
+        writer.Write("content");
+        writer.Flush();
         stream.Position = 0;
         return stream;
     }
@@ -72,7 +72,7 @@ public class IntegrationTests :
             await Assert.That(withAttachment.Metadata["key"]).IsEqualTo("value");
             var replyOptions = new ReplyOptions();
             var outgoingAttachment = replyOptions.Attachments();
-            outgoingAttachment.AddStreamWriter(async stream => { await using var source = await incomingAttachments.GetStream(); await source.CopyToAsync(stream); });
+            outgoingAttachment.AddStream(async stream => { await using var source = await incomingAttachments.GetStream(); await source.CopyToAsync(stream); });
             await context.Reply(new ReplyMessage(), replyOptions);
             var attachmentInfos = await incomingAttachments.GetMetadata(context.CancellationToken).ToAsyncList();
             await Assert.That(attachmentInfos.Count).IsEqualTo(4);

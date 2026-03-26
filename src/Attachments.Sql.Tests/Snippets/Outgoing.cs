@@ -9,9 +9,9 @@
         {
             var sendOptions = new SendOptions();
             var attachments = sendOptions.Attachments();
-            attachments.AddStreamWriter(
+            attachments.AddStream(
                 name: "attachment1",
-                streamWriter: async stream =>
+                writer: async stream =>
                 {
                     await using var source = File.OpenRead("FilePath.txt");
                     await source.CopyToAsync(stream);
@@ -33,9 +33,9 @@
         {
             var sendOptions = new SendOptions();
             var attachments = sendOptions.Attachments();
-            attachments.AddStreamWriter(
+            attachments.AddStream(
                 name: "attachment1",
-                streamWriter: async stream =>
+                writer: async stream =>
                 {
                     await using var source =
                         await httpClient.GetStreamAsync("theUrl");
@@ -56,9 +56,9 @@
         {
             var sendOptions = new SendOptions();
             var attachments = sendOptions.Attachments();
-            attachments.AddStreamWriter(
+            attachments.AddStream(
                 name: "attachment1",
-                streamWriter: async stream =>
+                writer: async stream =>
                 {
                     // The FileStream is passed directly to SQL Server
                     // without being buffered in a MemoryStream or byte[]
@@ -81,9 +81,9 @@
             var sendOptions = new SendOptions();
             var attachments = sendOptions.Attachments();
             var document = new Document();
-            attachments.AddStreamWriter(
+            attachments.AddStream(
                 name: "attachment1",
-                streamWriter: async stream =>
+                writer: async stream =>
                 {
                     await document.SaveAsync(stream);
                 });
@@ -103,9 +103,9 @@
             var document = new Document();
             var sendOptions = new SendOptions();
             var attachments = sendOptions.Attachments();
-            attachments.AddStreamWriter(
+            attachments.AddStream(
                 name: "attachment1",
-                streamWriter: stream => document.SaveAsync(stream));
+                writer: stream => document.SaveAsync(stream));
             return context.Send(new OtherMessage(), sendOptions);
         }
     }

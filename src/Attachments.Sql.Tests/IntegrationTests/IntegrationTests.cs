@@ -156,10 +156,10 @@ public class IntegrationTests
         var messageId = Guid.NewGuid().ToString();
         sendOptions.SetMessageId(messageId);
         var attachment = sendOptions.Attachments();
-        attachment.AddStreamWriter(async stream => await GetStream().CopyToAsync(stream));
-        attachment.AddStreamWriter("second", async stream => await GetStream().CopyToAsync(stream));
-        attachment.AddStreamWriter("dir/inDir", async stream => await GetStream().CopyToAsync(stream));
-        attachment.AddStreamWriter(
+        attachment.AddStream(async stream => await GetStream().CopyToAsync(stream));
+        attachment.AddStream("second", async stream => await GetStream().CopyToAsync(stream));
+        attachment.AddStream("dir/inDir", async stream => await GetStream().CopyToAsync(stream));
+        attachment.AddStream(
             "withMetadata",
             async stream => await GetStream().CopyToAsync(stream),
             metadata: new Dictionary<string, string>
@@ -180,9 +180,9 @@ public class IntegrationTests
     static Stream GetStream()
     {
         var stream = new MemoryStream();
-        var streamWriter = new StreamWriter(stream);
-        streamWriter.Write("content");
-        streamWriter.Flush();
+        var writer = new StreamWriter(stream);
+        writer.Write("content");
+        writer.Flush();
         stream.Position = 0;
         return stream;
     }

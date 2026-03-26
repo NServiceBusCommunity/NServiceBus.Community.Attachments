@@ -10,7 +10,7 @@ The following `Add` overloads on `IOutgoingAttachments` have been removed:
  * `Add<T>(Func<Task<T>> streamFactory, ...)` where T : Stream
  * `Add<T>(string name, Func<Task<T>> streamFactory, ...)` where T : Stream
 
-These methods buffered the entire stream content through `CopyToAsync`, providing no memory advantage over `AddBytes` for small payloads and no streaming advantage over `AddStreamWriter` for large payloads.
+These methods buffered the entire stream content through `CopyToAsync`, providing no memory advantage over `AddBytes` for small payloads and no streaming advantage over `AddStream` for large payloads.
 
 
 ### Migration paths
@@ -31,21 +31,21 @@ attachments.Add("name", myStream);
 
 #### Async stream source (file, HTTP, database)
 
-Use `AddStreamWriter` to stream data directly to storage with bounded memory:
+Use `AddStream` to stream data directly to storage with bounded memory:
 
 ```cs
 // Before
 attachments.Add<FileStream>("name", () => Task.FromResult(File.OpenRead("path.txt")));
 
 // After
-attachments.AddStreamWriter("name", async stream =>
+attachments.AddStream("name", async stream =>
 {
     await using var source = File.OpenRead("path.txt");
     await source.CopyToAsync(stream);
 });
 ```
 
-`AddStreamWriter` uses `System.IO.Pipelines` internally so the full payload is never buffered in memory.
+`AddStream` uses `System.IO.Pipelines` internally so the full payload is never buffered in memory.
 
 
 #### Small data already in memory

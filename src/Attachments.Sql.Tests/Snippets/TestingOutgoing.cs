@@ -9,7 +9,7 @@
         {
             var options = new SendOptions();
             var attachments = options.Attachments();
-            attachments.AddStreamWriter(
+            attachments.AddStream(
                 "theName",
                 async stream =>
                 {

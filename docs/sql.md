@@ -255,14 +255,14 @@ The method `TimeToKeep.Default` provides a recommended default for for attachmen
 
 | API | Use when | Memory behavior |
 |---|---|---|
-| `AddStreamWriter` | Large payloads or data generated incrementally (recommended for large data) | Streams via `System.IO.Pipelines` with backpressure. Memory stays bounded regardless of payload size. |
-| `Add(Stream)` | An existing `Stream` instance is available | Bridges to `AddStreamWriter` internally via `CopyToAsync`. |
+| `AddStream` | Large payloads or data generated incrementally (recommended for large data) | Streams via `System.IO.Pipelines` with backpressure. Memory stays bounded regardless of payload size. |
+| `Add(Stream)` | An existing `Stream` instance is available | Bridges to `AddStream` internally via `CopyToAsync`. |
 | `AddBytes` / `AddString` | Small payloads already in memory (config, metadata, small documents) | Full payload allocated in memory. |
 | `Add(AttachmentFactory)` | Number of attachments not known at compile time | Dynamic. Each attachment uses the memory model of its content. |
-| `AddFile` | File on disk | Convenience wrapper over `AddStreamWriter`. |
+| `AddFile` | File on disk | Convenience wrapper over `AddStream`. |
 
 ```
-AddStreamWriter (using System.IO.Pipelines):
+AddStream (using System.IO.Pipelines):
 
 ┌──────────┐        ┌───────────┐        ┌──────────────┐        ┌─────────┐
 │  Writer  │─write─>│   Pipe    │─read──>│  Attachments │─read──>│ Storage │
@@ -281,7 +281,7 @@ While the below examples illustrate adding an attachment to `SendOptions`, equiv
 
 #### Stream Writer Approach (recommended)
 
-Use `AddStreamWriter` to provide a delegate that writes to a stream. Internally the library uses `System.IO.Pipelines.Pipe` to bridge the writer with storage, enabling concurrent streaming with backpressure. No intermediate `MemoryStream`, `byte[]`, or temp file is needed.
+Use `AddStream` to provide a delegate that writes to a stream. Internally the library uses `System.IO.Pipelines.Pipe` to bridge the writer with storage, enabling concurrent streaming with backpressure. No intermediate `MemoryStream`, `byte[]`, or temp file is needed.
 
 <!-- snippet: OutgoingFactory -->
 <a id='snippet-OutgoingFactory'></a>
@@ -293,9 +293,9 @@ class HandlerFactory :
     {
         var sendOptions = new SendOptions();
         var attachments = sendOptions.Attachments();
-        attachments.AddStreamWriter(
+        attachments.AddStream(
             name: "attachment1",
-            streamWriter: async stream =>
+            writer: async stream =>
             {
                 await using var source = File.OpenRead("FilePath.txt");
                 await source.CopyToAsync(stream);
@@ -314,9 +314,9 @@ class HandlerFactory :
     {
         var sendOptions = new SendOptions();
         var attachments = sendOptions.Attachments();
-        attachments.AddStreamWriter(
+        attachments.AddStream(
             name: "attachment1",
-            streamWriter: async stream =>
+            writer: async stream =>
             {
                 await using var source = File.OpenRead("FilePath.txt");
                 await source.CopyToAsync(stream);
@@ -340,9 +340,9 @@ class HandlerFactoryAsync :
     {
         var sendOptions = new SendOptions();
         var attachments = sendOptions.Attachments();
-        attachments.AddStreamWriter(
+        attachments.AddStream(
             name: "attachment1",
-            streamWriter: async stream =>
+            writer: async stream =>
             {
                 await using var source =
                     await httpClient.GetStreamAsync("theUrl");
@@ -364,9 +364,9 @@ class HandlerFactoryAsync :
     {
         var sendOptions = new SendOptions();
         var attachments = sendOptions.Attachments();
-        attachments.AddStreamWriter(
+        attachments.AddStream(
             name: "attachment1",
-            streamWriter: async stream =>
+            writer: async stream =>
             {
                 await using var source =
                     await httpClient.GetStreamAsync("theUrl");
@@ -390,9 +390,9 @@ class HandlerStreamWriter :
         var document = new Document();
         var sendOptions = new SendOptions();
         var attachments = sendOptions.Attachments();
-        attachments.AddStreamWriter(
+        attachments.AddStream(
             name: "attachment1",
-            streamWriter: stream => document.SaveAsync(stream));
+            writer: stream => document.SaveAsync(stream));
         return context.Send(new OtherMessage(), sendOptions);
     }
 }
@@ -408,9 +408,9 @@ class HandlerStreamWriter :
         var document = new Document();
         var sendOptions = new SendOptions();
         var attachments = sendOptions.Attachments();
-        attachments.AddStreamWriter(
+        attachments.AddStream(
             name: "attachment1",
-            streamWriter: stream => document.SaveAsync(stream));
+            writer: stream => document.SaveAsync(stream));
         return context.Send(new OtherMessage(), sendOptions);
     }
 }
@@ -746,7 +746,7 @@ public class Handler :
     {
         var options = new SendOptions();
         var attachments = options.Attachments();
-        attachments.AddStreamWriter(
+        attachments.AddStream(
             "theName",
             async stream =>
             {
@@ -767,7 +767,7 @@ public class Handler :
     {
         var options = new SendOptions();
         var attachments = options.Attachments();
-        attachments.AddStreamWriter(
+        attachments.AddStream(
             "theName",
             async stream =>
             {

@@ -27,16 +27,16 @@
         var sendOptions = new SendOptions();
         sendOptions.RouteToThisEndpoint();
         var attachment = sendOptions.Attachments();
-        attachment.AddStreamWriter(async stream => await GetStream().CopyToAsync(stream));
+        attachment.AddStream(async stream => await GetStream().CopyToAsync(stream));
         return endpoint.Send(new SendMessage(), sendOptions);
     }
 
     static Stream GetStream()
     {
         var stream = new MemoryStream();
-        var streamWriter = new StreamWriter(stream);
-        streamWriter.Write("content");
-        streamWriter.Flush();
+        var writer = new StreamWriter(stream);
+        writer.Write("content");
+        writer.Flush();
         stream.Position = 0;
         return stream;
     }
