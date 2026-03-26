@@ -1,10 +1,12 @@
 [MemoryDiagnoser]
 [GcServer(true)]
+[SimpleJob(warmupCount: 2, iterationCount: 5)]
 public class PersisterBenchmarks
 {
     string directory = null!;
     Persister persister = null!;
     byte[] data = null!;
+    string stringData = null!;
     int counter;
 
     [Params(1024, 1024 * 100, 1024 * 1024, 1024 * 1024 * 10)]
@@ -27,6 +29,7 @@ public class PersisterBenchmarks
         persister = new(iterDir);
         data = new byte[DataSize];
         Random.Shared.NextBytes(data);
+        stringData = new('x', DataSize);
     }
 
     [GlobalCleanup]
@@ -58,6 +61,19 @@ public class PersisterBenchmarks
         await persister.SaveStream(
             "msg1", "attachment", DateTime.UtcNow.AddDays(1), new MemoryStream(data));
         await persister.GetBytes("msg1", "attachment");
+    }
+
+    [Benchmark]
+    public Task SaveString() =>
+        persister.SaveString(
+            "msg1", "attachment", DateTime.UtcNow.AddDays(1), stringData);
+
+    [Benchmark]
+    public async Task SaveAndGetString()
+    {
+        await persister.SaveString(
+            "msg1", "attachment", DateTime.UtcNow.AddDays(1), stringData);
+        await persister.GetString("msg1", "attachment", null);
     }
 
     [Benchmark]
