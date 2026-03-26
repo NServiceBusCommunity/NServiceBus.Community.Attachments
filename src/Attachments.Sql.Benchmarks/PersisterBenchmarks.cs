@@ -93,20 +93,21 @@ public class PersisterBenchmarks
     public async Task SaveViaPipe()
     {
         var pipe = new Pipe(new(pauseWriterThreshold: 65536, resumeWriterThreshold: 32768));
-        var capturedData = NewData();
+        var dataSize = DataSize;
         var writerTask = Task.Run(async () =>
         {
             try
             {
-                var memory = capturedData.AsMemory();
                 const int chunkSize = 8192;
-                for (var offset = 0; offset < memory.Length; offset += chunkSize)
+                var remaining = dataSize;
+                while (remaining > 0)
                 {
-                    var chunk = memory.Slice(offset, Math.Min(chunkSize, memory.Length - offset));
-                    var buffer = pipe.Writer.GetMemory(chunk.Length);
-                    chunk.CopyTo(buffer);
-                    pipe.Writer.Advance(chunk.Length);
+                    var size = Math.Min(chunkSize, remaining);
+                    var buffer = pipe.Writer.GetMemory(size);
+                    Random.Shared.NextBytes(buffer.Span[..size]);
+                    pipe.Writer.Advance(size);
                     await pipe.Writer.FlushAsync();
+                    remaining -= size;
                 }
             }
             finally
