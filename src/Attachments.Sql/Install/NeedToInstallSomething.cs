@@ -3,13 +3,10 @@ using NServiceBus.Installation;
 using NServiceBus.Settings;
 using Installer = NServiceBus.Attachments.Sql.Installer;
 
-class NeedToInstallSomething :
+class NeedToInstallSomething(IReadOnlySettings settings) :
     INeedToInstallSomething
 {
-    AttachmentSettings? settings;
-
-    public NeedToInstallSomething(IReadOnlySettings settings) =>
-        this.settings = settings.GetOrDefault<AttachmentSettings?>();
+    AttachmentSettings? settings = settings.GetOrDefault<AttachmentSettings?>();
 
     public async Task Install(string identity, Cancel cancel = default)
     {
