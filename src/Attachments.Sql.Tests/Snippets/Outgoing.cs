@@ -1,6 +1,6 @@
 ﻿public class Outgoing
 {
-    #region OutgoingFactory
+    #region OutgoingWithStreamInstance
 
     class HandlerFactory :
         IHandleMessages<MyMessage>
@@ -22,78 +22,7 @@
 
     #endregion
 
-    #region OutgoingFactoryAsync
-
-    class HandlerFactoryAsync :
-        IHandleMessages<MyMessage>
-    {
-        static HttpClient httpClient = new();
-
-        public Task Handle(MyMessage message, HandlerContext context)
-        {
-            var sendOptions = new SendOptions();
-            var attachments = sendOptions.Attachments();
-            attachments.AddStream(
-                name: "attachment1",
-                writer: async stream =>
-                {
-                    await using var source =
-                        await httpClient.GetStreamAsync("theUrl");
-                    await source.CopyToAsync(stream);
-                });
-            return context.Send(new OtherMessage(), sendOptions);
-        }
-    }
-
-    #endregion
-
-    #region OutgoingFactoryStream
-
-    class HandlerFactoryStream :
-        IHandleMessages<MyMessage>
-    {
-        public Task Handle(MyMessage message, HandlerContext context)
-        {
-            var sendOptions = new SendOptions();
-            var attachments = sendOptions.Attachments();
-            attachments.AddStream(
-                name: "attachment1",
-                writer: async stream =>
-                {
-                    // The FileStream is passed directly to SQL Server
-                    // without being buffered in a MemoryStream or byte[]
-                    await using var source = File.OpenRead("LargeFile.zip");
-                    await source.CopyToAsync(stream);
-                });
-            return context.Send(new OtherMessage(), sendOptions);
-        }
-    }
-
-    #endregion
-
-    #region OutgoingFactoryPushBased
-
-    class HandlerFactoryPushBased :
-        IHandleMessages<MyMessage>
-    {
-        public Task Handle(MyMessage message, HandlerContext context)
-        {
-            var sendOptions = new SendOptions();
-            var attachments = sendOptions.Attachments();
-            var document = new Document();
-            attachments.AddStream(
-                name: "attachment1",
-                writer: async stream =>
-                {
-                    await document.SaveAsync(stream);
-                });
-            return context.Send(new OtherMessage(), sendOptions);
-        }
-    }
-
-    #endregion
-
-    #region OutgoingStreamWriter
+    #region OutgoingWithSavePattern
 
     class HandlerStreamWriter :
         IHandleMessages<MyMessage>
@@ -105,7 +34,7 @@
             var attachments = sendOptions.Attachments();
             attachments.AddStream(
                 name: "attachment1",
-                writer: stream => document.SaveAsync(stream));
+                writer: document.SaveAsync);
             return context.Send(new OtherMessage(), sendOptions);
         }
     }

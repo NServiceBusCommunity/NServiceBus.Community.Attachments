@@ -17,6 +17,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		mdsnippets.json = mdsnippets.json
 		../global.json = ../global.json
 		..\.editorconfig = ..\.editorconfig
+		..\docs\mdsource\attachments.include.md = ..\docs\mdsource\attachments.include.md
+		..\docs\mdsource\fileshare.source.md = ..\docs\mdsource\fileshare.source.md
+		..\docs\mdsource\sql.source.md = ..\docs\mdsource\sql.source.md
+		..\docs\mdsource\upgrade-v18.source.md = ..\docs\mdsource\upgrade-v18.source.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared.Tests", "Shared.Tests\Shared.Tests.csproj", "{F1B0F321-D07B-4035-9E42-C7770DE5BA07}"

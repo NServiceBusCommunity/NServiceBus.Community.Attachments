@@ -56,15 +56,17 @@ so the writer pauses if the reader falls behind.
 While the below examples illustrate adding an attachment to `SendOptions`, equivalent operations can be performed on `PublishOptions` and `ReplyOptions`
 
 
-#### Stream Writer Approach (recommended)
+#### AddStream (recommended)
 
 Use `AddStream` to provide a delegate that writes to a stream. Internally the library uses `System.IO.Pipelines.Pipe` to bridge the writer with storage, enabling concurrent streaming with backpressure. No intermediate `MemoryStream`, `byte[]`, or temp file is needed.
 
-snippet: OutgoingFactory
+snippet: OutgoingWithStreamInstance
 
-snippet: OutgoingFactoryAsync
+snippet: OutgoingWithSavePattern
 
-snippet: OutgoingStreamWriter
+#### Add with an existing Stream
+
+Use `Add` when a `Stream` instance is already available. Internally bridges to `AddStream` via `CopyToAsync`.
 
 snippet: OutgoingInstance
 

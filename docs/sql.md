@@ -279,12 +279,12 @@ so the writer pauses if the reader falls behind.
 While the below examples illustrate adding an attachment to `SendOptions`, equivalent operations can be performed on `PublishOptions` and `ReplyOptions`
 
 
-#### Stream Writer Approach (recommended)
+#### AddStream (recommended)
 
 Use `AddStream` to provide a delegate that writes to a stream. Internally the library uses `System.IO.Pipelines.Pipe` to bridge the writer with storage, enabling concurrent streaming with backpressure. No intermediate `MemoryStream`, `byte[]`, or temp file is needed.
 
-<!-- snippet: OutgoingFactory -->
-<a id='snippet-OutgoingFactory'></a>
+<!-- snippet: OutgoingWithStreamInstance -->
+<a id='snippet-OutgoingWithStreamInstance'></a>
 ```cs
 class HandlerFactory :
     IHandleMessages<MyMessage>
@@ -304,8 +304,8 @@ class HandlerFactory :
     }
 }
 ```
-<sup><a href='/src/Attachments.FileShare.Tests/Snippets/Outgoing.cs#L3-L23' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingFactory' title='Start of snippet'>anchor</a></sup>
-<a id='snippet-OutgoingFactory-1'></a>
+<sup><a href='/src/Attachments.FileShare.Tests/Snippets/Outgoing.cs#L3-L23' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingWithStreamInstance' title='Start of snippet'>anchor</a></sup>
+<a id='snippet-OutgoingWithStreamInstance-1'></a>
 ```cs
 class HandlerFactory :
     IHandleMessages<MyMessage>
@@ -325,62 +325,11 @@ class HandlerFactory :
     }
 }
 ```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L3-L23' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingFactory-1' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L3-L23' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingWithStreamInstance-1' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
-<!-- snippet: OutgoingFactoryAsync -->
-<a id='snippet-OutgoingFactoryAsync'></a>
-```cs
-class HandlerFactoryAsync :
-    IHandleMessages<MyMessage>
-{
-    static HttpClient httpClient = new();
-
-    public Task Handle(MyMessage message, HandlerContext context)
-    {
-        var sendOptions = new SendOptions();
-        var attachments = sendOptions.Attachments();
-        attachments.AddStream(
-            name: "attachment1",
-            writer: async stream =>
-            {
-                await using var source =
-                    await httpClient.GetStreamAsync("theUrl");
-                await source.CopyToAsync(stream);
-            });
-        return context.Send(new OtherMessage(), sendOptions);
-    }
-}
-```
-<sup><a href='/src/Attachments.FileShare.Tests/Snippets/Outgoing.cs#L25-L48' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingFactoryAsync' title='Start of snippet'>anchor</a></sup>
-<a id='snippet-OutgoingFactoryAsync-1'></a>
-```cs
-class HandlerFactoryAsync :
-    IHandleMessages<MyMessage>
-{
-    static HttpClient httpClient = new();
-
-    public Task Handle(MyMessage message, HandlerContext context)
-    {
-        var sendOptions = new SendOptions();
-        var attachments = sendOptions.Attachments();
-        attachments.AddStream(
-            name: "attachment1",
-            writer: async stream =>
-            {
-                await using var source =
-                    await httpClient.GetStreamAsync("theUrl");
-                await source.CopyToAsync(stream);
-            });
-        return context.Send(new OtherMessage(), sendOptions);
-    }
-}
-```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L25-L48' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingFactoryAsync-1' title='Start of snippet'>anchor</a></sup>
-<!-- endSnippet -->
-
-<!-- snippet: OutgoingStreamWriter -->
-<a id='snippet-OutgoingStreamWriter'></a>
+<!-- snippet: OutgoingWithSavePattern -->
+<a id='snippet-OutgoingWithSavePattern'></a>
 ```cs
 class HandlerStreamWriter :
     IHandleMessages<MyMessage>
@@ -392,13 +341,13 @@ class HandlerStreamWriter :
         var attachments = sendOptions.Attachments();
         attachments.AddStream(
             name: "attachment1",
-            writer: stream => document.SaveAsync(stream));
+            writer: document.SaveAsync);
         return context.Send(new OtherMessage(), sendOptions);
     }
 }
 ```
-<sup><a href='/src/Attachments.FileShare.Tests/Snippets/Outgoing.cs#L96-L113' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingStreamWriter' title='Start of snippet'>anchor</a></sup>
-<a id='snippet-OutgoingStreamWriter-1'></a>
+<sup><a href='/src/Attachments.FileShare.Tests/Snippets/Outgoing.cs#L26-L43' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingWithSavePattern' title='Start of snippet'>anchor</a></sup>
+<a id='snippet-OutgoingWithSavePattern-1'></a>
 ```cs
 class HandlerStreamWriter :
     IHandleMessages<MyMessage>
@@ -410,13 +359,17 @@ class HandlerStreamWriter :
         var attachments = sendOptions.Attachments();
         attachments.AddStream(
             name: "attachment1",
-            writer: stream => document.SaveAsync(stream));
+            writer: document.SaveAsync);
         return context.Send(new OtherMessage(), sendOptions);
     }
 }
 ```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L96-L113' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingStreamWriter-1' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L25-L42' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingWithSavePattern-1' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
+
+#### Add with an existing Stream
+
+Use `Add` when a `Stream` instance is already available. Internally bridges to `AddStream` via `CopyToAsync`.
 
 <!-- snippet: OutgoingInstance -->
 <a id='snippet-OutgoingInstance'></a>
@@ -437,7 +390,7 @@ class HandlerInstance :
     }
 }
 ```
-<sup><a href='/src/Attachments.FileShare.Tests/Snippets/Outgoing.cs#L115-L133' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingInstance' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.FileShare.Tests/Snippets/Outgoing.cs#L45-L63' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingInstance' title='Start of snippet'>anchor</a></sup>
 <a id='snippet-OutgoingInstance-1'></a>
 ```cs
 class HandlerInstance :
@@ -456,7 +409,7 @@ class HandlerInstance :
     }
 }
 ```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L115-L133' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingInstance-1' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L44-L62' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingInstance-1' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 
