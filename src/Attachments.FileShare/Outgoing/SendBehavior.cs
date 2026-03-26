@@ -1,5 +1,4 @@
-﻿using System.IO.Pipelines;
-using NServiceBus.Attachments.FileShare;
+﻿using NServiceBus.Attachments.FileShare;
 using NServiceBus.Pipeline;
 
 class SendBehavior(IPersister persister, GetTimeToKeep endpointTimeToKeep) :
@@ -74,13 +73,7 @@ class SendBehavior(IPersister persister, GetTimeToKeep endpointTimeToKeep) :
 
     async Task ProcessWriter(string messageId, string name, DateTime expiry, Func<Stream, Task> writer, IReadOnlyDictionary<string, string>? metadata, Cancel cancel)
     {
-        var pipe = new Pipe();
-        // Task.Run ensures the writer runs on a separate thread so the
-        // reader (SaveStream) can start immediately, even if the writer
-        // does synchronous work before its first await.
-        var writerTask = Task.Run(() => PipeHelper.WriteToPipe(writer, pipe), cancel);
-
-        var readerStream = pipe.Reader.AsStream();
+        var (writerTask, readerStream) = PipeHelper.StartWriter(writer, cancel);
         await using (readerStream)
         {
             await persister.SaveStream(messageId, name, expiry, readerStream, metadata, cancel);

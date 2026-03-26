@@ -1,16 +1,11 @@
-using System.IO.Pipelines;
-
 public class PipeHelperTests
 {
     [Test]
     public async Task WriterException_PropagatedToReader()
     {
-        var pipe = new Pipe();
-        var writerTask = Task.Run(() => PipeHelper.WriteToPipe(
-            _ => throw new InvalidOperationException("writer failed"),
-            pipe));
+        var (_, readerStream) = PipeHelper.StartWriter(
+            _ => throw new InvalidOperationException("writer failed"));
 
-        var readerStream = pipe.Reader.AsStream();
         await using (readerStream)
         {
             var readException = await Assert.ThrowsAsync<InvalidOperationException>(

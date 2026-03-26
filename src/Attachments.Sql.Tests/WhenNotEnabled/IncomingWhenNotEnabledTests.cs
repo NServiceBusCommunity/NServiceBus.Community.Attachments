@@ -22,14 +22,9 @@ public class IncomingWhenNotEnabledTests : IDisposable
         await Verify(Exception!.Message);
     }
 
-    class Handler :
+    class Handler(IncomingWhenNotEnabledTests incomingWhenNotEnabledTests) :
         IHandleMessages<SendMessage>
     {
-        IncomingWhenNotEnabledTests incomingWhenNotEnabledTests;
-
-        public Handler(IncomingWhenNotEnabledTests incomingWhenNotEnabledTests) =>
-            this.incomingWhenNotEnabledTests = incomingWhenNotEnabledTests;
-
         public Task Handle(SendMessage message, HandlerContext context)
         {
             try
