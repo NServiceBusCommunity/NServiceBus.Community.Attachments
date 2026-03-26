@@ -94,60 +94,77 @@ Uses [LocalDb](https://github.com/SimonCropp/LocalDb) with a per-benchmark isola
 
 | Method | DataSize | Mean | Allocated |
 |---|---|---:|---:|
-| SaveStream | 1 KB | 11.16 ms | 27.93 KB |
-| SaveBytes | 1 KB | 10.65 ms | 20.08 KB |
-| SaveAndGetBytes | 1 KB | 16.23 ms | 37.65 KB |
-| SaveAndCopyTo | 1 KB | 15.95 ms | 41.39 KB |
-| SaveAndGetStream | 1 KB | 16.08 ms | 40.13 KB |
-| SaveStream | 100 KB | 12.45 ms | 29.76 KB |
-| SaveBytes | 100 KB | 12.92 ms | 26.77 KB |
-| SaveAndGetBytes | 100 KB | 17.92 ms | 240.32 KB |
-| SaveAndCopyTo | 100 KB | 17.98 ms | 52.17 KB |
-| SaveAndGetStream | 100 KB | 17.89 ms | 47.76 KB |
-| SaveStream | 1 MB | 35.21 ms | 91.52 KB |
-| SaveBytes | 1 MB | 32.59 ms | 54.73 KB |
-| SaveAndGetBytes | 1 MB | 40.55 ms | 2127.00 KB |
-| SaveAndCopyTo | 1 MB | 41.99 ms | 155.87 KB |
-| SaveAndGetStream | 1 MB | 42.28 ms | 91.00 KB |
-| SaveStream | 10 MB | 228.43 ms | 821.36 KB |
-| SaveBytes | 10 MB | 227.29 ms | 517.84 KB |
-| SaveAndGetBytes | 10 MB | 245.30 ms | 21044.09 KB |
-| SaveAndCopyTo | 10 MB | 255.95 ms | 1330.73 KB |
-| SaveAndGetStream | 10 MB | 250.83 ms | 711.31 KB |
+| SaveStream | 1 KB | 15.83 ms | 25.47 KB |
+| SaveBytes | 1 KB | 12.16 ms | 24.22 KB |
+| SaveAndGetBytes | 1 KB | 15.73 ms | 42.42 KB |
+| SaveString | 1 KB | 12.20 ms | 31.27 KB |
+| SaveAndGetString | 1 KB | 17.12 ms | 54.88 KB |
+| SaveAndCopyTo | 1 KB | 15.96 ms | 169.28 KB |
+| SaveAndGetStream | 1 KB | 16.80 ms | 40.73 KB |
+| SaveStream | 100 KB | 14.66 ms | 33.52 KB |
+| SaveBytes | 100 KB | 13.10 ms | 31.50 KB |
+| SaveAndGetBytes | 100 KB | 16.46 ms | 245.75 KB |
+| SaveString | 100 KB | 12.32 ms | 42.34 KB |
+| SaveAndGetString | 100 KB | 17.44 ms | 465.50 KB |
+| SaveAndCopyTo | 100 KB | 18.85 ms | 52.74 KB |
+| SaveAndGetStream | 100 KB | 16.63 ms | 45.36 KB |
+| SaveStream | 1 MB | 34.87 ms | 83.88 KB |
+| SaveBytes | 1 MB | 36.09 ms | 75.03 KB |
+| SaveAndGetBytes | 1 MB | 39.83 ms | 2131.96 KB |
+| SaveString | 1 MB | 33.46 ms | 94.23 KB |
+| SaveAndGetString | 1 MB | 41.83 ms | 4242.59 KB |
+| SaveAndCopyTo | 1 MB | 43.12 ms | 162.23 KB |
+| SaveAndGetStream | 1 MB | 40.57 ms | 98.41 KB |
+| SaveStream | 10 MB | 228.46 ms | 855.34 KB |
+| SaveBytes | 10 MB | 233.89 ms | 681.26 KB |
+| SaveAndGetBytes | 10 MB | 251.26 ms | 21172.63 KB |
+| SaveString | 10 MB | 232.86 ms | 922.85 KB |
+| SaveAndGetString | 10 MB | 263.46 ms | 42007.71 KB |
+| SaveAndCopyTo | 10 MB | 258.50 ms | 1342.72 KB |
+| SaveAndGetStream | 10 MB | 250.11 ms | 685.62 KB |
 
 
 ### FileShare Persister
 
 | Method | DataSize | Mean | Allocated |
 |---|---|---:|---:|
-| SaveStream | 1 KB | 0.62 ms | 67.73 KB |
-| SaveBytes | 1 KB | 0.57 ms | 67.67 KB |
-| SaveAndGetBytes | 1 KB | 0.90 ms | 70.37 KB |
-| SaveAndCopyTo | 1 KB | 0.89 ms | 69.61 KB |
-| SaveAndGetStream | 1 KB | 0.77 ms | 69.11 KB |
-| SaveStream | 100 KB | 0.63 ms | 3.45 KB |
-| SaveBytes | 100 KB | 0.58 ms | 4.30 KB |
-| SaveAndGetBytes | 100 KB | 0.88 ms | 105.08 KB |
-| SaveAndCopyTo | 100 KB | 0.89 ms | 5.32 KB |
-| SaveAndGetStream | 100 KB | 0.80 ms | 4.82 KB |
-| SaveStream | 1 MB | 0.78 ms | 3.45 KB |
-| SaveBytes | 1 MB | 0.87 ms | 3.38 KB |
-| SaveAndGetBytes | 1 MB | 1.16 ms | 1029.08 KB |
-| SaveAndCopyTo | 1 MB | 1.28 ms | 5.32 KB |
-| SaveAndGetStream | 1 MB | 1.00 ms | 4.82 KB |
-| SaveStream | 10 MB | 3.03 ms | 3.45 KB |
-| SaveBytes | 10 MB | 2.96 ms | 3.38 KB |
-| SaveAndGetBytes | 10 MB | 5.57 ms | 10245.08 KB |
-| SaveAndCopyTo | 10 MB | 5.75 ms | 5.32 KB |
-| SaveAndGetStream | 10 MB | 3.29 ms | 4.82 KB |
+| SaveStream | 1 KB | 0.61 ms | 67.70 KB |
+| SaveBytes | 1 KB | 0.64 ms | 67.70 KB |
+| SaveAndGetBytes | 1 KB | 0.81 ms | 70.39 KB |
+| SaveString | 1 KB | 1.09 ms | 138.86 KB |
+| SaveAndGetString | 1 KB | 1.56 ms | 218.89 KB |
+| SaveAndCopyTo | 1 KB | 1.07 ms | 69.57 KB |
+| SaveAndGetStream | 1 KB | 0.74 ms | 69.07 KB |
+| SaveStream | 100 KB | 0.63 ms | 3.41 KB |
+| SaveBytes | 100 KB | 0.63 ms | 3.41 KB |
+| SaveAndGetBytes | 100 KB | 0.87 ms | 105.10 KB |
+| SaveString | 100 KB | 0.93 ms | 139.13 KB |
+| SaveAndGetString | 100 KB | 1.80 ms | 627.05 KB |
+| SaveAndCopyTo | 100 KB | 1.02 ms | 5.28 KB |
+| SaveAndGetStream | 100 KB | 0.82 ms | 4.78 KB |
+| SaveStream | 1 MB | 1.04 ms | 3.41 KB |
+| SaveBytes | 1 MB | 0.91 ms | 3.41 KB |
+| SaveAndGetBytes | 1 MB | 1.19 ms | 1029.10 KB |
+| SaveString | 1 MB | 1.50 ms | 141.00 KB |
+| SaveAndGetString | 1 MB | 6.00 ms | 4361.76 KB |
+| SaveAndCopyTo | 1 MB | 1.34 ms | 5.28 KB |
+| SaveAndGetStream | 1 MB | 1.13 ms | 4.81 KB |
+| SaveStream | 10 MB | 2.86 ms | 3.41 KB |
+| SaveBytes | 10 MB | 2.82 ms | 3.41 KB |
+| SaveAndGetBytes | 10 MB | 5.90 ms | 10245.10 KB |
+| SaveString | 10 MB | 7.82 ms | 160.12 KB |
+| SaveAndGetString | 10 MB | 49.35 ms | 41705.30 KB |
+| SaveAndCopyTo | 10 MB | 5.84 ms | 5.28 KB |
+| SaveAndGetStream | 10 MB | 3.07 ms | 4.78 KB |
 
 
 ### Key Insights
 
- * **FileShare is ~15-75x faster than SQL** for raw operations, as expected for local file I/O vs database round-trips.
- * **Streaming avoids double allocation on read**: At 10 MB, `SaveAndGetStream` allocates ~711 KB (SQL) / ~5 KB (FileShare), while `SaveAndGetBytes` allocates ~21 MB / ~10 MB (data copied into a byte array on top of the original).
- * **`SaveStream` keeps memory bounded**: At 10 MB, `SaveStream` allocates ~821 KB (SQL) / ~3.5 KB (FileShare), because data is streamed incrementally via `System.IO.Pipelines` with backpressure — never buffering the full payload.
- * **`SaveStream` vs `SaveBytes`**: Nearly identical wall-clock time, but `SaveBytes` allocates the full payload in memory while `SaveStream` stays bounded.
+ * **FileShare is ~15-80x faster than SQL** for raw operations, as expected for local file I/O vs database round-trips.
+ * **Streaming avoids double allocation on read**: At 10 MB, `SaveAndGetStream` allocates ~686 KB (SQL) / ~5 KB (FileShare), while `SaveAndGetBytes` allocates ~21 MB / ~10 MB (data copied into a byte array on top of the original).
+ * **`SaveStream` keeps memory bounded**: At 10 MB, `SaveStream` allocates ~855 KB (SQL) / ~3.4 KB (FileShare), because data is streamed incrementally via `System.IO.Pipelines` with backpressure — never buffering the full payload.
+ * **String round-trips are expensive**: `SaveAndGetString` at 10 MB allocates ~42 MB (SQL) / ~41 MB (FileShare) due to encoding/decoding overhead.
+ * **`SaveStream` vs `SaveBytes`**: Nearly identical wall-clock time, but `SaveStream` memory stays bounded regardless of payload size.
 
 
 ## Icon
