@@ -91,11 +91,10 @@ class SendBehavior :
         {
             await dynamic(async (name, stream, keep, cleanup, metadata) =>
             {
-                var capturedStream = stream;
                 var outgoing = new Outgoing
                 {
                     Cleanup = cleanup,
-                    StreamWriter = async target => await capturedStream.CopyToAsync(target),
+                    StreamWriter = stream.CopyToAsync,
                     Metadata = metadata,
                     TimeToKeep = keep,
                 };
@@ -131,6 +130,8 @@ class SendBehavior :
     async Task<Guid> ProcessWriter(SqlConnection connection, SqlTransaction? transaction, string messageId, string name, DateTime expiry, Func<Stream, Task> writer, IReadOnlyDictionary<string, string>? metadata)
     {
         var pipe = new Pipe();
+        // Writer must run on a separate thread so it can produce data
+        // concurrently while the reader (SaveStream) consumes it.
         var writerTask = Task.Run(async () =>
         {
             try

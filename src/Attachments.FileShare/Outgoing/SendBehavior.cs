@@ -39,11 +39,10 @@ class SendBehavior(IPersister persister, GetTimeToKeep endpointTimeToKeep) :
         {
             await dynamic(async (name, stream, keep, cleanup, metadata) =>
             {
-                var capturedStream = stream;
                 var outgoing = new Outgoing
                 {
                     Cleanup = cleanup,
-                    StreamWriter = async target => await capturedStream.CopyToAsync(target),
+                    StreamWriter = stream.CopyToAsync,
                     Metadata = metadata,
                     TimeToKeep = keep,
                 };
@@ -76,6 +75,8 @@ class SendBehavior(IPersister persister, GetTimeToKeep endpointTimeToKeep) :
     async Task ProcessWriter(string messageId, string name, DateTime expiry, Func<Stream, Task> writer, IReadOnlyDictionary<string, string>? metadata, Cancel cancel)
     {
         var pipe = new Pipe();
+        // Writer must run on a separate thread so it can produce data
+        // concurrently while the reader (SaveStream) consumes it.
         var writerTask = Task.Run(async () =>
         {
             try
@@ -86,7 +87,7 @@ class SendBehavior(IPersister persister, GetTimeToKeep endpointTimeToKeep) :
             {
                 await pipe.Writer.CompleteAsync();
             }
-        });
+        }, cancel);
 
         var readerStream = pipe.Reader.AsStream();
         await using (readerStream)

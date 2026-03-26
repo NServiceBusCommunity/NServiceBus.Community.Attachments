@@ -78,7 +78,11 @@ public class IntegrationTests :
             await Assert.That(withAttachment.Metadata["key"]).IsEqualTo("value");
             var replyOptions = new ReplyOptions();
             var outgoingAttachment = replyOptions.Attachments();
-            outgoingAttachment.AddStream(async stream => { await using var source = await incomingAttachments.GetStream(); await source.CopyToAsync(stream); });
+            outgoingAttachment.AddStream(async stream =>
+            {
+                await using var source = await incomingAttachments.GetStream();
+                await source.CopyToAsync(stream);
+            });
             await context.Reply(new ReplyMessage(), replyOptions);
             var attachmentInfos = await incomingAttachments.GetMetadata(context.CancellationToken).ToAsyncList();
             await Assert.That(attachmentInfos.Count).IsEqualTo(4);
