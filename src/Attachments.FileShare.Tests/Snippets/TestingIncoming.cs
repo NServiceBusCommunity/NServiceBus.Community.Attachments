@@ -18,8 +18,6 @@ class IncomingAttachment
 
 public class TestingIncoming
 {
-    #region CustomMockMessageAttachments
-
     public class CustomMockMessageAttachments :
         MockMessageAttachments
     {
@@ -32,10 +30,6 @@ public class TestingIncoming
         public bool GetBytesWasCalled { get; private set; }
     }
 
-    #endregion
-
-    #region TestIncomingHandler
-
     public class Handler :
         IHandleMessages<MyMessage>
     {
@@ -45,10 +39,6 @@ public class TestingIncoming
             var bytes = await attachment.GetBytes(context.CancellationToken);
         }
     }
-
-    #endregion
-
-    #region TestIncoming
 
     [Test]
     public async Task TestIncomingAttachment()
@@ -65,8 +55,6 @@ public class TestingIncoming
         //Assert
         await Assert.That(mockMessageAttachments.GetBytesWasCalled).IsTrue();
     }
-
-    #endregion
 }
 
 class MyMessageAttachments :

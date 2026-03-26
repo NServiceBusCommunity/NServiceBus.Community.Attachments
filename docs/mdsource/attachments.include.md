@@ -4,7 +4,15 @@
 
 Attachment cleanup is enabled by default. It can be disabled using the following:
 
-snippet: DisableCleanupTask
+
+### FileShare
+
+snippet: FileShareDisableCleanupTask
+
+
+### Sql
+
+snippet: SqlDisableCleanupTask
 
 
 ## Controlling attachment lifetime

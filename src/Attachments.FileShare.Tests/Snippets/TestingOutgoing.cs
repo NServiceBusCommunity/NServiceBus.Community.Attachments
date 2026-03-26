@@ -1,7 +1,5 @@
 ﻿public class TestingOutgoing
 {
-    #region TestOutgoingHandler
-
     public class Handler :
         IHandleMessages<MyMessage>
     {
@@ -20,10 +18,6 @@
         }
     }
 
-    #endregion
-
-    #region TestOutgoing
-
     [Test]
     public async Task TestOutgoingAttachments()
     {
@@ -41,6 +35,4 @@
         await Assert.That(attachment.Name).Contains("theName");
         await Assert.That(attachments.HasPendingAttachments).IsTrue();
     }
-
-    #endregion
 }

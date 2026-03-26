@@ -2,7 +2,7 @@
 {
     Usage(EndpointConfiguration configuration)
     {
-        #region EnableAttachments
+        #region FileShareEnableAttachments
 
         configuration.EnableAttachments(
             fileShare: "networkSharePath",
@@ -10,7 +10,7 @@
 
         #endregion
 
-        #region EnableAttachmentsRecommended
+        #region FileShareEnableAttachmentsRecommended
 
         configuration.EnableAttachments(
             fileShare: "networkSharePath",
@@ -21,7 +21,7 @@
 
     static void DisableCleanupTask(EndpointConfiguration configuration)
     {
-        #region DisableCleanupTask
+        #region FileShareDisableCleanupTask
 
         var attachments = configuration.EnableAttachments(
             fileShare: "networkSharePath",
