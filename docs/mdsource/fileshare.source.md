@@ -10,7 +10,7 @@ Two settings are required as part of the default usage:
  * A file share or directory location.
  * A default time to keep for attachments.
 
-snippet: EnableAttachments
+snippet: FileShareEnableAttachments
 
 
 ### Recommended Usage
@@ -19,7 +19,7 @@ Uses the `NServiceBus.Attachments.FileShare.TimeToKeep.Default` method for attac
 
 This usage results in the following:
 
-snippet: EnableAttachmentsRecommended
+snippet: FileShareEnableAttachmentsRecommended
 
 
 include: attachments

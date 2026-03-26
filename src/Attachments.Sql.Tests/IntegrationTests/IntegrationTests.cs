@@ -156,12 +156,12 @@ public class IntegrationTests
         var messageId = Guid.NewGuid().ToString();
         sendOptions.SetMessageId(messageId);
         var attachment = sendOptions.Attachments();
-        attachment.Add(GetStream);
-        attachment.Add("second", GetStream);
-        attachment.Add("dir/inDir", GetStream);
-        attachment.Add(
+        attachment.AddStream(WriteContent);
+        attachment.AddStream("second", WriteContent);
+        attachment.AddStream("dir/inDir", WriteContent);
+        attachment.AddStream(
             "withMetadata",
-            GetStream,
+            WriteContent,
             metadata: new Dictionary<string, string>
             {
                 {
@@ -177,12 +177,18 @@ public class IntegrationTests
         return messageId;
     }
 
+    static async Task WriteContent(Stream stream)
+    {
+        await using var writer = new StreamWriter(stream, leaveOpen: true);
+        await writer.WriteAsync("content");
+    }
+
     static Stream GetStream()
     {
         var stream = new MemoryStream();
-        var streamWriter = new StreamWriter(stream);
-        streamWriter.Write("content");
-        streamWriter.Flush();
+        var writer = new StreamWriter(stream);
+        writer.Write("content");
+        writer.Flush();
         stream.Position = 0;
         return stream;
     }

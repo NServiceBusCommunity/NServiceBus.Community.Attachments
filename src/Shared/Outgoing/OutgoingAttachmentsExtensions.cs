@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.Attachments
+namespace NServiceBus.Attachments
 #if FileShare
 .FileShare
 #endif
@@ -26,11 +26,12 @@ public static class OutgoingAttachmentsExtensions
         Guard.FileExists(file);
         Guard.AgainstEmpty(name);
 
-        if (name is null)
-        {
-            attachments.Add(() => File.OpenRead(file));
-            return;
-        }
-        attachments.Add(name, () => File.OpenRead(file));
+        attachments.AddStream(
+            name ?? "default",
+            async stream =>
+            {
+                await using var fileStream = File.OpenRead(file);
+                await fileStream.CopyToAsync(stream);
+            });
     }
 }

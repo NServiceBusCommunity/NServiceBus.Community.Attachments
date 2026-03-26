@@ -1,7 +1,5 @@
 ﻿public class TestingOutgoing
 {
-    #region TestOutgoingHandler
-
     public class Handler :
         IHandleMessages<MyMessage>
     {
@@ -9,14 +7,16 @@
         {
             var options = new SendOptions();
             var attachments = options.Attachments();
-            attachments.Add("theName", () => File.OpenRead("aFilePath"));
+            attachments.AddStream(
+                "theName",
+                async stream =>
+                {
+                    await using var source = File.OpenRead("aFilePath");
+                    await source.CopyToAsync(stream);
+                });
             return context.Send(new OtherMessage(), options);
         }
     }
-
-    #endregion
-
-    #region TestOutgoing
 
     [Test]
     public async Task TestOutgoingAttachments()
@@ -35,6 +35,4 @@
         await Assert.That(attachment.Name).Contains("theName");
         await Assert.That(attachments.HasPendingAttachments).IsTrue();
     }
-
-    #endregion
 }

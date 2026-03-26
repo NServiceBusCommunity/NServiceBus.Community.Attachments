@@ -1,8 +1,3 @@
-using BenchmarkDotNet.Attributes;
-using LocalDb;
-using Microsoft.Data.SqlClient;
-using NServiceBus.Attachments.Sql;
-
 [MemoryDiagnoser]
 [GcServer(true)]
 public class PersisterBenchmarks
@@ -11,6 +6,7 @@ public class PersisterBenchmarks
     SqlDatabase database = null!;
     SqlConnection connection = null!;
     Persister persister = null!;
+    byte[] data = null!;
     int counter;
 
     [Params(1024, 1024 * 100, 1024 * 1024, 1024 * 1024 * 10)]
@@ -44,13 +40,6 @@ public class PersisterBenchmarks
             });
     #pragma warning restore CA1822
 
-    byte[] NewData()
-    {
-        var data = new byte[DataSize];
-        Random.Shared.NextBytes(data);
-        return data;
-    }
-
     [IterationSetup]
     public void IterationSetup()
     {
@@ -58,6 +47,8 @@ public class PersisterBenchmarks
         connection = database.Connection;
         var dbName = new SqlConnectionStringBuilder(database.ConnectionString).InitialCatalog;
         persister = new(dbName);
+        data = new byte[DataSize];
+        Random.Shared.NextBytes(data);
     }
 
     [IterationCleanup]
@@ -72,48 +63,68 @@ public class PersisterBenchmarks
     }
 
     [Benchmark]
-    public Task<Guid> SaveStream()
+    public async Task SaveStream()
     {
-        var data = NewData();
-        var stream = new MemoryStream(data);
-        return persister.SaveStream(
-            connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), stream, null);
+        var dataSize = DataSize;
+        var pipe = new Pipe();
+        var writerTask = Task.Run(async () =>
+        {
+            try
+            {
+                const int chunkSize = 8192;
+                var remaining = dataSize;
+                while (remaining > 0)
+                {
+                    var size = Math.Min(chunkSize, remaining);
+                    var buffer = pipe.Writer.GetMemory(size);
+                    Random.Shared.NextBytes(buffer.Span[..size]);
+                    pipe.Writer.Advance(size);
+                    await pipe.Writer.FlushAsync();
+                    remaining -= size;
+                }
+            }
+            finally
+            {
+                await pipe.Writer.CompleteAsync();
+            }
+        });
+        var readerStream = pipe.Reader.AsStream();
+        await using (readerStream)
+        {
+            await persister.SaveStream(
+                connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), readerStream);
+            await writerTask;
+        }
     }
 
     [Benchmark]
-    public Task<Guid> SaveBytes()
-    {
-        var data = NewData();
-        return persister.SaveBytes(
-            connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), data, null);
-    }
+    public Task<Guid> SaveBytes() =>
+        persister.SaveBytes(
+            connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), data);
 
     [Benchmark]
     public async Task SaveAndGetBytes()
     {
-        var data = NewData();
         await persister.SaveBytes(
-            connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), data, null);
+            connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), data);
         await persister.GetBytes("msg1", "attachment", connection, null);
     }
 
     [Benchmark]
     public async Task SaveAndCopyTo()
     {
-        var data = NewData();
         var stream = new MemoryStream(data);
         await persister.SaveStream(
-            connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), stream, null);
+            connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), stream);
         await persister.CopyTo("msg1", "attachment", connection, null, Stream.Null);
     }
 
     [Benchmark]
     public async Task SaveAndGetStream()
     {
-        var data = NewData();
         var stream = new MemoryStream(data);
         await persister.SaveStream(
-            connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), stream, null);
+            connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), stream);
         await using var result = await persister.GetStream("msg1", "attachment", connection, null, false);
     }
 }

@@ -22,7 +22,12 @@
         {
             var options = new SendOptions();
             var attachments = options.Attachments();
-            attachments.Add("theName", () => File.OpenRead(""));
+            attachments.AddStream("theName",
+                async stream =>
+                {
+                    await using var source = File.OpenRead("");
+                    await source.CopyToAsync(stream);
+                });
             return context.Send(new AMessage(), options);
         }
     }

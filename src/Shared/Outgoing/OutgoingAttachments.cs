@@ -36,12 +36,10 @@ class OutgoingAttachments :
     public void Add(AttachmentFactory factory) =>
         Dynamic.Add(factory);
 
-    public void Add<T>(Func<Task<T>> streamFactory, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null)
-        where T : Stream =>
-        Add("default", streamFactory, timeToKeep, cleanup, metadata);
+    public void AddStream(Func<Stream, Task> writer, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null) =>
+        AddStream("default", writer, timeToKeep, cleanup, metadata);
 
-    public void Add<T>(string name, Func<Task<T>> streamFactory, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null)
-        where T : Stream =>
+    public void AddStream(string name, Func<Stream, Task> writer, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null) =>
         Inner.Add(
             name,
             new()
@@ -49,36 +47,14 @@ class OutgoingAttachments :
                 Metadata = metadata,
                 TimeToKeep = timeToKeep,
                 Cleanup = cleanup.WrapCleanupInCheck(name),
-                AsyncStreamFactory = streamFactory.WrapStreamFuncTaskInCheck(name)
+                StreamWriter = writer.WrapStreamWriterInCheck(name)
             });
-
-    public void Add(Func<Stream> streamFactory, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null) =>
-        Add("default", streamFactory, timeToKeep, cleanup, metadata);
 
     public void Add(Stream stream, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null) =>
         Add("default", stream, timeToKeep, cleanup, metadata);
 
-    public void Add(string name, Func<Stream> streamFactory, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null) =>
-        Inner.Add(
-            name,
-            new()
-            {
-                Metadata = metadata,
-                TimeToKeep = timeToKeep,
-                Cleanup = cleanup.WrapCleanupInCheck(name),
-                StreamFactory = streamFactory.WrapFuncInCheck(name),
-            });
-
     public void Add(string name, Stream stream, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null) =>
-        Inner.Add(
-            name,
-            new()
-            {
-                Metadata = metadata,
-                TimeToKeep = timeToKeep,
-                Cleanup = cleanup.WrapCleanupInCheck(name),
-                StreamInstance = stream
-            });
+        AddStream(name, stream.CopyToAsync, timeToKeep, cleanup, metadata);
 
     public void AddBytes(Func<byte[]> bytesFactory, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null) =>
         AddBytes("default", bytesFactory, timeToKeep, cleanup, metadata);

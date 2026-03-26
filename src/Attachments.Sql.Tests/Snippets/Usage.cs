@@ -9,7 +9,7 @@ public class Usage
 
     Usage(EndpointConfiguration configuration)
     {
-        #region EnableAttachments
+        #region SqlEnableAttachments
 
         configuration.EnableAttachments(
             connectionFactory: async cancel =>
@@ -30,7 +30,7 @@ public class Usage
 
         #endregion
 
-        #region EnableAttachmentsRecommended
+        #region SqlEnableAttachmentsRecommended
 
         configuration.EnableAttachments(
             connectionFactory: OpenConnection,
@@ -41,7 +41,7 @@ public class Usage
 
     void DisableCleanupTask(EndpointConfiguration configuration)
     {
-        #region DisableCleanupTask
+        #region SqlDisableCleanupTask
 
         var attachments = configuration.EnableAttachments(
             connectionFactory: OpenConnection,

@@ -53,7 +53,7 @@ Both implementations integrate with NServiceBus via pipeline behaviors:
 
 ### Key Patterns
 - **Partial classes**: Persister logic is split across files (e.g., `Persister_Save.cs`, `Persister_Get.cs`)
-- **Deferred stream execution**: Attachments use factory delegates; streams are created when needed in the pipeline
+- **Pipe-based streaming**: `AddStream` uses `System.IO.Pipelines` to stream data to storage with backpressure. Writer runs on a background thread via `Task.Run`; shared setup is in `PipeHelper.StartWriter` (`Shared/PipeHelper.cs`)
 - **Automatic cleanup**: `AsyncTimer` runs periodic cleanup based on `Expiry` column/metadata
 
 ### Internal Organization

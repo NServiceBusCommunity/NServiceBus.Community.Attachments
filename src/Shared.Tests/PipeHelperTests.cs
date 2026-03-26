@@ -1,0 +1,16 @@
+public class PipeHelperTests
+{
+    [Test]
+    public async Task WriterException_PropagatedToReader()
+    {
+        var (_, readerStream) = PipeHelper.StartWriter(
+            _ => throw new InvalidOperationException("writer failed"));
+
+        await using (readerStream)
+        {
+            var readException = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => readerStream.CopyToAsync(Stream.Null));
+            await Assert.That(readException!.Message).IsEqualTo("writer failed");
+        }
+    }
+}

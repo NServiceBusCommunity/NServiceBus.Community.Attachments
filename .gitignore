@@ -17,3 +17,4 @@ TestResults
 /BenchmarkDotNet.Artifacts.FileShare/results
 /src/Attachments.Sql.Benchmarks/BenchmarkDotNet.Artifacts.Sql
 /BenchmarkDotNet.Artifacts.Sql/results
+/src/Attachments.FileShare.Benchmarks/BenchmarkDotNet.Artifacts.FileShare

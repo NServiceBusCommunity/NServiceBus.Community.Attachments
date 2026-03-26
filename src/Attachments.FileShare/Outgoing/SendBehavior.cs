@@ -41,7 +41,7 @@ class SendBehavior(IPersister persister, GetTimeToKeep endpointTimeToKeep) :
                 var outgoing = new Outgoing
                 {
                     Cleanup = cleanup,
-                    StreamInstance = stream,
+                    StreamWriter = stream.CopyToAsync,
                     Metadata = metadata,
                     TimeToKeep = keep,
                 };
@@ -71,11 +71,13 @@ class SendBehavior(IPersister persister, GetTimeToKeep endpointTimeToKeep) :
         context.Headers.Add("Attachments", string.Join(", ", attachmentNames));
     }
 
-    async Task ProcessStream(string messageId, string name, DateTime expiry, Stream stream, IReadOnlyDictionary<string, string>? metadata, Cancel cancel)
+    async Task ProcessWriter(string messageId, string name, DateTime expiry, Func<Stream, Task> writer, IReadOnlyDictionary<string, string>? metadata, Cancel cancel)
     {
-        await using (stream)
+        var (writerTask, readerStream) = PipeHelper.StartWriter(writer, cancel);
+        await using (readerStream)
         {
-            await persister.SaveStream(messageId, name, expiry, stream, metadata, cancel);
+            await persister.SaveStream(messageId, name, expiry, readerStream, metadata, cancel);
+            await writerTask;
         }
     }
 
@@ -96,22 +98,9 @@ class SendBehavior(IPersister persister, GetTimeToKeep endpointTimeToKeep) :
 
     async Task Process(string messageId, Outgoing outgoing, string name, DateTime expiry, Cancel cancel = default)
     {
-        if (outgoing.AsyncStreamFactory is not null)
+        if (outgoing.StreamWriter is not null)
         {
-            var stream = await outgoing.AsyncStreamFactory();
-            await ProcessStream(messageId, name, expiry, stream, outgoing.Metadata, cancel);
-            return;
-        }
-
-        if (outgoing.StreamFactory is not null)
-        {
-            await ProcessStream(messageId, name, expiry, outgoing.StreamFactory(), outgoing.Metadata, cancel);
-            return;
-        }
-
-        if (outgoing.StreamInstance is not null)
-        {
-            await ProcessStream(messageId, name, expiry, outgoing.StreamInstance, outgoing.Metadata, cancel);
+            await ProcessWriter(messageId, name, expiry, outgoing.StreamWriter, outgoing.Metadata, cancel);
             return;
         }
 

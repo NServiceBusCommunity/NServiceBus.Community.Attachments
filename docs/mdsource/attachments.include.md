@@ -4,7 +4,15 @@
 
 Attachment cleanup is enabled by default. It can be disabled using the following:
 
-snippet: DisableCleanupTask
+
+### FileShare
+
+snippet: FileShareDisableCleanupTask
+
+
+### Sql
+
+snippet: SqlDisableCleanupTask
 
 
 ## Controlling attachment lifetime
@@ -28,29 +36,45 @@ The method `TimeToKeep.Default` provides a recommended default for for attachmen
 ## Reading and writing attachments
 
 
+### Choosing the right API for writing attachments
+
+| API | Use when | Memory behavior |
+|---|---|---|
+| `AddStream` | Large payloads or data generated incrementally (recommended for large data) | Streams via `System.IO.Pipelines` with backpressure. Memory stays bounded regardless of payload size. |
+| `Add(Stream)` | An existing `Stream` instance is available | Bridges to `AddStream` internally via `CopyToAsync`. |
+| `AddBytes` / `AddString` | Small payloads already in memory (config, metadata, small documents) | Full payload allocated in memory. |
+| `Add(AttachmentFactory)` | Number of attachments not known at compile time | Dynamic. Each attachment uses the memory model of its content. |
+| `AddFile` | File on disk | Convenience wrapper over `AddStream`. |
+
+```
+AddStream (using System.IO.Pipelines):
+
+┌──────────┐        ┌───────────┐        ┌──────────────┐        ┌─────────┐
+│  Writer  │─write─>│   Pipe    │─read──>│  Attachments │─read──>│ Storage │
+│  Code    │        │  (buffer) │        │   Library    │        │ (SQL/FS)│
+└──────────┘        └───────────┘        └──────────────┘        └─────────┘
+
+Writer and reader run concurrently. Pipe applies backpressure
+so the writer pauses if the reader falls behind.
+```
+
+
 ### Writing attachments to an outgoing message
-
-Approaches to using attachments for an outgoing message.
-
-Note: [Stream.Dispose](https://msdn.microsoft.com/en-us/library/ms227422.aspx) is called after the data has been persisted. As such it is not necessary for any code using attachments to perform this cleanup.
 
 While the below examples illustrate adding an attachment to `SendOptions`, equivalent operations can be performed on `PublishOptions` and `ReplyOptions`
 
 
-#### Factory Approach
+#### AddStream (recommended)
 
-The recommended approach for adding an attachment is by providing a delegate that constructs the stream. The execution of this delegate is then deferred until later in the outgoing pipeline, when the instance of the stream is required to be persisted.
+Use `AddStream` to provide a delegate that writes to a stream. Internally the library uses `System.IO.Pipelines.Pipe` to bridge the writer with storage, enabling concurrent streaming with backpressure. No intermediate `MemoryStream`, `byte[]`, or temp file is needed.
 
-There are both async and sync variants.
+snippet: OutgoingWithStreamInstance
 
-snippet: OutgoingFactory
+snippet: OutgoingWithSavePattern
 
-snippet: OutgoingFactoryAsync
+#### Add with an existing Stream
 
-
-#### Instance Approach
-
-In some cases an instance of a stream is already available in scope and as such it can be passed directly.
+Use `Add` when a `Stream` instance is already available. Internally bridges to `AddStream` via `CopyToAsync`.
 
 snippet: OutgoingInstance
 

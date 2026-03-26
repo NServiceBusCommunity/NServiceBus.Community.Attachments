@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.Attachments
+namespace NServiceBus.Attachments
 #if FileShare
     .FileShare
 #elif Sql
@@ -9,9 +9,7 @@
 class Outgoing
 {
     public Encoding? Encoding { get; init; }
-    public Func<Task<Stream>>? AsyncStreamFactory { get; init; }
-    public Func<Stream>? StreamFactory { get; init; }
-    public Stream? StreamInstance { get; init; }
+    public Func<Stream, Task>? StreamWriter { get; init; }
     public Func<Task<byte[]>>? AsyncBytesFactory { get; init; }
     public Func<byte[]>? BytesFactory { get; init; }
     public byte[]? BytesInstance { get; init; }
@@ -24,7 +22,5 @@ class Outgoing
     public bool HasBytes => BytesInstance != null ||
                             BytesFactory != null ||
                             AsyncBytesFactory != null;
-    public bool HasStream => StreamInstance != null ||
-                             StreamFactory != null ||
-                             AsyncStreamFactory != null;
+    public bool HasStreamWriter => StreamWriter != null;
 }

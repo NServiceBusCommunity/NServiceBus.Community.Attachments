@@ -1,6 +1,6 @@
 ﻿public class Outgoing
 {
-    #region OutgoingFactory
+    #region OutgoingWithStreamInstance
 
     class HandlerFactory :
         IHandleMessages<MyMessage>
@@ -9,29 +9,32 @@
         {
             var sendOptions = new SendOptions();
             var attachments = sendOptions.Attachments();
-            attachments.Add(
+            attachments.AddStream(
                 name: "attachment1",
-                streamFactory: () => File.OpenRead("FilePath.txt"));
+                writer: async stream =>
+                {
+                    await using var source = File.OpenRead("FilePath.txt");
+                    await source.CopyToAsync(stream);
+                });
             return context.Send(new OtherMessage(), sendOptions);
         }
     }
 
     #endregion
 
-    #region OutgoingFactoryAsync
+    #region OutgoingWithSavePattern
 
-    class HandlerFactoryAsync :
+    class HandlerStreamWriter :
         IHandleMessages<MyMessage>
     {
-        static HttpClient httpClient = new();
-
         public Task Handle(MyMessage message, HandlerContext context)
         {
+            var document = new Document();
             var sendOptions = new SendOptions();
             var attachments = sendOptions.Attachments();
-            attachments.Add(
+            attachments.AddStream(
                 name: "attachment1",
-                streamFactory: () => httpClient.GetStreamAsync("theUrl"));
+                writer: document.SaveAsync);
             return context.Send(new OtherMessage(), sendOptions);
         }
     }

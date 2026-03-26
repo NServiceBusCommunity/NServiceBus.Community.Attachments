@@ -10,7 +10,7 @@ Two settings are required as part of the default usage:
  * A connection factory that returns an open instance of a [SqlConnection](https://msdn.microsoft.com/en-us/library/system.data.sqlclient.sqlconnection.aspx). Note that any Exception that occurs during opening the connection should be handled by the factory.
  * A default time to keep for attachments.
 
-snippet: EnableAttachments
+snippet: SqlEnableAttachments
 
 
 ### Recommended Usage
@@ -23,7 +23,7 @@ Also uses the `NServiceBus.Attachments.Sql.TimeToKeep.Default` method for attach
 
 This usage results in the following:
 
-snippet: EnableAttachmentsRecommended
+snippet: SqlEnableAttachmentsRecommended
 
 
 ### Using ambient connectivity

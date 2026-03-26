@@ -2,20 +2,10 @@
 using NServiceBus.Attachments.Sql;
 using NServiceBus.Pipeline;
 
-class SendBehavior :
-    Behavior<IOutgoingLogicalMessageContext>
+class SendBehavior(Func<Cancel, Task<SqlConnection>> connectionFactory, IPersister persister, GetTimeToKeep endpointTimeToKeep)
+    :
+        Behavior<IOutgoingLogicalMessageContext>
 {
-    Func<Cancel, Task<SqlConnection>> connectionFactory;
-    IPersister persister;
-    GetTimeToKeep endpointTimeToKeep;
-
-    public SendBehavior(Func<Cancel, Task<SqlConnection>> connectionFactory, IPersister persister, GetTimeToKeep timeToKeep)
-    {
-        this.connectionFactory = connectionFactory;
-        this.persister = persister;
-        endpointTimeToKeep = timeToKeep;
-    }
-
     public override async Task Invoke(IOutgoingLogicalMessageContext context, Func<Task> next)
     {
         await ProcessStreams(context);
@@ -79,10 +69,11 @@ class SendBehavior :
 
     async Task ProcessOutgoing(TimeSpan? timeToBeReceived, SqlConnection connection, SqlTransaction? transaction, IOutgoingLogicalMessageContext context, OutgoingAttachments outgoingAttachments)
     {
+        var cancel = context.CancellationToken;
         var attachments = new Dictionary<Guid, string>();
         foreach (var (name, value) in outgoingAttachments.Inner)
         {
-            var guid = await ProcessAttachment(timeToBeReceived, connection, transaction, context.MessageId, value, name);
+            var guid = await ProcessAttachment(timeToBeReceived, connection, transaction, context.MessageId, value, name, cancel);
             attachments.Add(guid, name);
         }
 
@@ -93,11 +84,11 @@ class SendBehavior :
                 var outgoing = new Outgoing
                 {
                     Cleanup = cleanup,
-                    StreamInstance = stream,
+                    StreamWriter = stream.CopyToAsync,
                     Metadata = metadata,
                     TimeToKeep = keep,
                 };
-                var guid = await ProcessAttachment(timeToBeReceived, connection, transaction, context.MessageId, outgoing, name);
+                var guid = await ProcessAttachment(timeToBeReceived, connection, transaction, context.MessageId, outgoing, name, cancel);
                 attachments.Add(guid, name);
             });
         }
@@ -126,22 +117,25 @@ class SendBehavior :
         context.Headers.Add("Attachments", string.Join(", ", attachments.Select(_ => $"{_.Key}: {_.Value}")));
     }
 
-    async Task<Guid> ProcessStream(SqlConnection connection, SqlTransaction? transaction, string messageId, string name, DateTime expiry, Stream stream, IReadOnlyDictionary<string, string>? metadata)
+    async Task<Guid> ProcessWriter(SqlConnection connection, SqlTransaction? transaction, string messageId, string name, DateTime expiry, Func<Stream, Task> writer, IReadOnlyDictionary<string, string>? metadata, Cancel cancel)
     {
-        await using (stream)
+        var (writerTask, readerStream) = PipeHelper.StartWriter(writer, cancel);
+        await using (readerStream)
         {
-            return await persister.SaveStream(connection, transaction, messageId, name, expiry, stream, metadata);
+            var guid = await persister.SaveStream(connection, transaction, messageId, name, expiry, readerStream, metadata, cancel);
+            await writerTask;
+            return guid;
         }
     }
 
-    async Task<Guid> ProcessAttachment(TimeSpan? timeToBeReceived, SqlConnection connection, SqlTransaction? transaction, string messageId, Outgoing outgoing, string name)
+    async Task<Guid> ProcessAttachment(TimeSpan? timeToBeReceived, SqlConnection connection, SqlTransaction? transaction, string messageId, Outgoing outgoing, string name, Cancel cancel)
     {
         var outgoingStreamTimeToKeep = outgoing.TimeToKeep ?? endpointTimeToKeep;
         var timeToKeep = outgoingStreamTimeToKeep(timeToBeReceived);
         var expiry = DateTime.UtcNow.Add(timeToKeep);
         try
         {
-            return await Process(connection, transaction, messageId, outgoing, name, expiry);
+            return await Process(connection, transaction, messageId, outgoing, name, expiry, cancel);
         }
         finally
         {
@@ -149,44 +143,33 @@ class SendBehavior :
         }
     }
 
-    async Task<Guid> Process(SqlConnection connection, SqlTransaction? transaction, string messageId, Outgoing outgoing, string name, DateTime expiry)
+    async Task<Guid> Process(SqlConnection connection, SqlTransaction? transaction, string messageId, Outgoing outgoing, string name, DateTime expiry, Cancel cancel)
     {
         var metadata = outgoing.Metadata;
-        if (outgoing.AsyncStreamFactory is not null)
+        if (outgoing.StreamWriter is not null)
         {
-            var stream = await outgoing.AsyncStreamFactory();
-            return await ProcessStream(connection, transaction, messageId, name, expiry, stream, metadata);
-        }
-
-        if (outgoing.StreamFactory is not null)
-        {
-            return await ProcessStream(connection, transaction, messageId, name, expiry, outgoing.StreamFactory(), metadata);
-        }
-
-        if (outgoing.StreamInstance is not null)
-        {
-            return await ProcessStream(connection, transaction, messageId, name, expiry, outgoing.StreamInstance, metadata);
+            return await ProcessWriter(connection, transaction, messageId, name, expiry, outgoing.StreamWriter, metadata, cancel);
         }
 
         if (outgoing.AsyncBytesFactory is not null)
         {
             var bytes = await outgoing.AsyncBytesFactory();
-            return await persister.SaveBytes(connection, transaction, messageId, name, expiry, bytes, metadata);
+            return await persister.SaveBytes(connection, transaction, messageId, name, expiry, bytes, metadata, cancel);
         }
 
         if (outgoing.BytesFactory is not null)
         {
-            return await persister.SaveBytes(connection, transaction, messageId, name, expiry, outgoing.BytesFactory(), metadata);
+            return await persister.SaveBytes(connection, transaction, messageId, name, expiry, outgoing.BytesFactory(), metadata, cancel);
         }
 
         if (outgoing.BytesInstance is not null)
         {
-            return await persister.SaveBytes(connection, transaction, messageId, name, expiry, outgoing.BytesInstance, metadata);
+            return await persister.SaveBytes(connection, transaction, messageId, name, expiry, outgoing.BytesInstance, metadata, cancel);
         }
 
         if (outgoing.StringInstance is not null)
         {
-            return await persister.SaveString(connection, transaction, messageId, name, expiry, outgoing.StringInstance, outgoing.Encoding, metadata);
+            return await persister.SaveString(connection, transaction, messageId, name, expiry, outgoing.StringInstance, outgoing.Encoding, metadata, cancel);
         }
 
         throw new("No matching way to handle outgoing.");

@@ -245,10 +245,10 @@ public class DtcTests
         var sendOptions = new SendOptions();
         sendOptions.RouteToThisEndpoint();
         var attachment = sendOptions.Attachments();
-        attachment.Add(GetStream);
-        attachment.Add(
+        attachment.AddStream(WriteContent);
+        attachment.AddStream(
             "withMetadata",
-            GetStream,
+            WriteContent,
             metadata: new Dictionary<string, string>
             {
                 {
@@ -258,14 +258,10 @@ public class DtcTests
         return endpoint.Send(new DtcSendMessage(), sendOptions);
     }
 
-    static Stream GetStream()
+    static async Task WriteContent(Stream stream)
     {
-        var stream = new MemoryStream();
-        var streamWriter = new StreamWriter(stream);
-        streamWriter.Write("content");
-        streamWriter.Flush();
-        stream.Position = 0;
-        return stream;
+        await using var writer = new StreamWriter(stream, leaveOpen: true);
+        await writer.WriteAsync("content");
     }
 
     static bool IsDtcUnavailable(Exception ex) =>
