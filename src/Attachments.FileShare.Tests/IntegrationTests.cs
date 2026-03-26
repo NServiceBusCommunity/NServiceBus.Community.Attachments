@@ -34,10 +34,10 @@ public class IntegrationTests :
         var sendOptions = new SendOptions();
         sendOptions.RouteToThisEndpoint();
         var attachment = sendOptions.Attachments();
-        attachment.AddStream(async stream => await GetStream().CopyToAsync(stream));
+        attachment.AddStream(WriteContent);
         attachment.AddStream(
             "withMetadata",
-            async stream => await GetStream().CopyToAsync(stream),
+            WriteContent,
             metadata: new Dictionary<string, string>
             {
                 {
@@ -50,6 +50,12 @@ public class IntegrationTests :
             await appendAttachment("viaAttachmentFactory2", GetStream());
         });
         return endpoint.Send(new SendMessage(), sendOptions);
+    }
+
+    static async Task WriteContent(Stream stream)
+    {
+        await using var writer = new StreamWriter(stream, leaveOpen: true);
+        await writer.WriteAsync("content");
     }
 
     static Stream GetStream()
