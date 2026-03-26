@@ -1,9 +1,13 @@
+using BenchmarkDotNet.Attributes;
+using NServiceBus.Attachments.FileShare;
+
 [MemoryDiagnoser]
 [GcServer(true)]
 public class PersisterBenchmarks
 {
     string directory = null!;
     Persister persister = null!;
+    byte[] data = null!;
     int counter;
 
     [Params(1024, 1024 * 100, 1024 * 1024, 1024 * 1024 * 10)]
@@ -17,13 +21,6 @@ public class PersisterBenchmarks
         persister = new(directory);
     }
 
-    byte[] NewData()
-    {
-        var data = new byte[DataSize];
-        Random.Shared.NextBytes(data);
-        return data;
-    }
-
     [IterationSetup]
     public void IterationSetup()
     {
@@ -31,6 +28,8 @@ public class PersisterBenchmarks
         var iterDir = Path.Combine(directory, $"iter{Interlocked.Increment(ref counter)}");
         Directory.CreateDirectory(iterDir);
         persister = new(iterDir);
+        data = new byte[DataSize];
+        Random.Shared.NextBytes(data);
     }
 
     [GlobalCleanup]
@@ -46,24 +45,19 @@ public class PersisterBenchmarks
     [Benchmark]
     public Task SaveStream()
     {
-        var data = NewData();
         var stream = new MemoryStream(data);
         return persister.SaveStream(
             "msg1", "attachment", DateTime.UtcNow.AddDays(1), stream);
     }
 
     [Benchmark]
-    public Task SaveBytes()
-    {
-        var data = NewData();
-        return persister.SaveBytes(
+    public Task SaveBytes() =>
+        persister.SaveBytes(
             "msg1", "attachment", DateTime.UtcNow.AddDays(1), data);
-    }
 
     [Benchmark]
     public async Task SaveAndGetBytes()
     {
-        var data = NewData();
         await persister.SaveBytes(
             "msg1", "attachment", DateTime.UtcNow.AddDays(1), data);
         await persister.GetBytes("msg1", "attachment");
@@ -72,7 +66,6 @@ public class PersisterBenchmarks
     [Benchmark]
     public async Task SaveAndCopyTo()
     {
-        var data = NewData();
         var stream = new MemoryStream(data);
         await persister.SaveStream(
             "msg1", "attachment", DateTime.UtcNow.AddDays(1), stream);
@@ -82,7 +75,6 @@ public class PersisterBenchmarks
     [Benchmark]
     public async Task SaveAndGetStream()
     {
-        var data = NewData();
         var stream = new MemoryStream(data);
         await persister.SaveStream(
             "msg1", "attachment", DateTime.UtcNow.AddDays(1), stream);

@@ -6,6 +6,7 @@ public class PersisterBenchmarks
     SqlDatabase database = null!;
     SqlConnection connection = null!;
     Persister persister = null!;
+    byte[] data = null!;
     int counter;
 
     [Params(1024, 1024 * 100, 1024 * 1024, 1024 * 1024 * 10)]
@@ -39,13 +40,6 @@ public class PersisterBenchmarks
             });
     #pragma warning restore CA1822
 
-    byte[] NewData()
-    {
-        var data = new byte[DataSize];
-        Random.Shared.NextBytes(data);
-        return data;
-    }
-
     [IterationSetup]
     public void IterationSetup()
     {
@@ -53,6 +47,8 @@ public class PersisterBenchmarks
         connection = database.Connection;
         var dbName = new SqlConnectionStringBuilder(database.ConnectionString).InitialCatalog;
         persister = new(dbName);
+        data = new byte[DataSize];
+        Random.Shared.NextBytes(data);
     }
 
     [IterationCleanup]
@@ -102,17 +98,13 @@ public class PersisterBenchmarks
     }
 
     [Benchmark]
-    public Task<Guid> SaveBytes()
-    {
-        var data = NewData();
-        return persister.SaveBytes(
+    public Task<Guid> SaveBytes() =>
+        persister.SaveBytes(
             connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), data);
-    }
 
     [Benchmark]
     public async Task SaveAndGetBytes()
     {
-        var data = NewData();
         await persister.SaveBytes(
             connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), data);
         await persister.GetBytes("msg1", "attachment", connection, null);
@@ -121,7 +113,6 @@ public class PersisterBenchmarks
     [Benchmark]
     public async Task SaveAndCopyTo()
     {
-        var data = NewData();
         var stream = new MemoryStream(data);
         await persister.SaveStream(
             connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), stream);
@@ -131,7 +122,6 @@ public class PersisterBenchmarks
     [Benchmark]
     public async Task SaveAndGetStream()
     {
-        var data = NewData();
         var stream = new MemoryStream(data);
         await persister.SaveStream(
             connection, null, "msg1", "attachment", DateTime.UtcNow.AddDays(1), stream);
