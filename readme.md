@@ -114,27 +114,23 @@ Uses [LocalDb](https://github.com/SimonCropp/LocalDb) with a per-benchmark isola
 
 | Method | DataSize | Mean | Allocated |
 |---|---|---:|---:|
-| SaveStream | 1 KB | 12.28 ms | 25.30 KB |
+| SaveStream | 1 KB | 14.70 ms | 25.16 KB |
 | SaveBytes | 1 KB | 11.51 ms | 21.10 KB |
-| SaveViaPipe | 1 KB | 11.15 ms | 25.23 KB |
 | SaveAndGetBytes | 1 KB | 16.30 ms | 38.67 KB |
 | SaveAndCopyTo | 1 KB | 16.85 ms | 42.41 KB |
 | SaveAndGetStream | 1 KB | 15.56 ms | 41.16 KB |
-| SaveStream | 100 KB | 13.04 ms | 129.63 KB |
+| SaveStream | 100 KB | 14.42 ms | 33.16 KB |
 | SaveBytes | 100 KB | 12.64 ms | 124.77 KB |
-| SaveViaPipe | 100 KB | 15.29 ms | 33.13 KB |
 | SaveAndGetBytes | 100 KB | 18.01 ms | 340.34 KB |
 | SaveAndCopyTo | 100 KB | 17.79 ms | 152.20 KB |
 | SaveAndGetStream | 100 KB | 17.68 ms | 145.48 KB |
-| SaveStream | 1 MB | 35.53 ms | 1118.02 KB |
+| SaveStream | 1 MB | 41.25 ms | 94.20 KB |
 | SaveBytes | 1 MB | 34.59 ms | 1100.77 KB |
-| SaveViaPipe | 1 MB | 35.60 ms | 92.53 KB |
 | SaveAndGetBytes | 1 MB | 42.32 ms | 3164.34 KB |
 | SaveAndCopyTo | 1 MB | 43.21 ms | 1180.41 KB |
 | SaveAndGetStream | 1 MB | 42.30 ms | 1132.30 KB |
-| SaveStream | 10 MB | 234.41 ms | 10912.40 KB |
+| SaveStream | 10 MB | 261.72 ms | 803.57 KB |
 | SaveBytes | 10 MB | 228.35 ms | 10753.71 KB |
-| SaveViaPipe | 10 MB | 238.03 ms | 837.66 KB |
 | SaveAndGetBytes | 10 MB | 247.43 ms | 31268.21 KB |
 | SaveAndCopyTo | 10 MB | 256.46 ms | 11574.94 KB |
 | SaveAndGetStream | 10 MB | 250.81 ms | 10903.18 KB |
@@ -170,7 +166,7 @@ Uses [LocalDb](https://github.com/SimonCropp/LocalDb) with a per-benchmark isola
 
  * **FileShare is ~15-50x faster than SQL** for raw operations, as expected for local file I/O vs database round-trips.
  * **Streaming avoids double allocation on read**: At 10 MB, `SaveAndGetStream` allocates ~10 MB (the data itself), while `SaveAndGetBytes` allocates ~20-31 MB (data copied into a byte array on top of the original).
- * **`SaveViaPipe` keeps memory bounded**: At 10 MB, `SaveViaPipe` allocates only ~838 KB vs ~10.9 MB for `SaveStream`, because data is generated and streamed incrementally via `System.IO.Pipelines` with backpressure — never buffering the full payload.
+ * **`SaveStream` keeps memory bounded**: At 10 MB, `SaveStream` allocates only ~804 KB vs ~10.8 MB for `SaveBytes`, because data is streamed incrementally via `System.IO.Pipelines` with backpressure — never buffering the full payload.
  * **`SaveStream` vs `SaveBytes`**: Nearly identical performance in both implementations.
 
 

@@ -1,6 +1,3 @@
-using BenchmarkDotNet.Attributes;
-using NServiceBus.Attachments.FileShare;
-
 [MemoryDiagnoser]
 [GcServer(true)]
 public class PersisterBenchmarks
@@ -52,7 +49,7 @@ public class PersisterBenchmarks
         var data = NewData();
         var stream = new MemoryStream(data);
         return persister.SaveStream(
-            "msg1", "attachment", DateTime.UtcNow.AddDays(1), stream, null);
+            "msg1", "attachment", DateTime.UtcNow.AddDays(1), stream);
     }
 
     [Benchmark]
@@ -60,7 +57,7 @@ public class PersisterBenchmarks
     {
         var data = NewData();
         return persister.SaveBytes(
-            "msg1", "attachment", DateTime.UtcNow.AddDays(1), data, null);
+            "msg1", "attachment", DateTime.UtcNow.AddDays(1), data);
     }
 
     [Benchmark]
@@ -68,7 +65,7 @@ public class PersisterBenchmarks
     {
         var data = NewData();
         await persister.SaveBytes(
-            "msg1", "attachment", DateTime.UtcNow.AddDays(1), data, null);
+            "msg1", "attachment", DateTime.UtcNow.AddDays(1), data);
         await persister.GetBytes("msg1", "attachment");
     }
 
@@ -78,7 +75,7 @@ public class PersisterBenchmarks
         var data = NewData();
         var stream = new MemoryStream(data);
         await persister.SaveStream(
-            "msg1", "attachment", DateTime.UtcNow.AddDays(1), stream, null);
+            "msg1", "attachment", DateTime.UtcNow.AddDays(1), stream);
         await persister.CopyTo("msg1", "attachment", Stream.Null);
     }
 
@@ -88,7 +85,7 @@ public class PersisterBenchmarks
         var data = NewData();
         var stream = new MemoryStream(data);
         await persister.SaveStream(
-            "msg1", "attachment", DateTime.UtcNow.AddDays(1), stream, null);
+            "msg1", "attachment", DateTime.UtcNow.AddDays(1), stream);
         await using var result = await persister.GetStream("msg1", "attachment");
     }
 }
