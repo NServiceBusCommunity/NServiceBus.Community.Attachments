@@ -32,7 +32,8 @@ The method `TimeToKeep.Default` provides a recommended default for for attachmen
 
 | API | Use when | Memory behavior |
 |---|---|---|
-| `AddStreamWriter` | Large payloads, files, HTTP responses, or any data generated incrementally | Streams via `System.IO.Pipelines` with backpressure. Memory stays bounded regardless of payload size. |
+| `AddStreamWriter` | Large payloads or data generated incrementally (recommended for large data) | Streams via `System.IO.Pipelines` with backpressure. Memory stays bounded regardless of payload size. |
+| `Add(Stream)` | An existing `Stream` instance is available | Bridges to `AddStreamWriter` internally via `CopyToAsync`. |
 | `AddBytes` / `AddString` | Small payloads already in memory (config, metadata, small documents) | Full payload allocated in memory. |
 | `Add(AttachmentFactory)` | Number of attachments not known at compile time | Dynamic. Each attachment uses the memory model of its content. |
 | `AddFile` | File on disk | Convenience wrapper over `AddStreamWriter`. |

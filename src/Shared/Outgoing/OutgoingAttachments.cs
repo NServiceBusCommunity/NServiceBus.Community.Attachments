@@ -50,6 +50,12 @@ class OutgoingAttachments :
                 StreamWriter = streamWriter.WrapStreamWriterInCheck(name)
             });
 
+    public void Add(Stream stream, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null) =>
+        Add("default", stream, timeToKeep, cleanup, metadata);
+
+    public void Add(string name, Stream stream, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null) =>
+        AddStreamWriter(name, target => stream.CopyToAsync(target), timeToKeep, cleanup, metadata);
+
     public void AddBytes(Func<byte[]> bytesFactory, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null) =>
         AddBytes("default", bytesFactory, timeToKeep, cleanup, metadata);
 

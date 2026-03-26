@@ -122,9 +122,9 @@
             var sendOptions = new SendOptions();
             var attachments = sendOptions.Attachments();
             var stream = File.OpenRead("FilePath.txt");
-            attachments.AddStreamWriter(
+            attachments.Add(
                 name: "attachment1",
-                streamWriter: async target => await stream.CopyToAsync(target),
+                stream: stream,
                 cleanup: () => File.Delete("FilePath.txt"));
             return context.Send(new OtherMessage(), sendOptions);
         }

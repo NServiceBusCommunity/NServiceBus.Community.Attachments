@@ -44,6 +44,16 @@ public interface IOutgoingAttachments
     /// <summary>
     /// Add an attachment with <paramref name="name"/> to the current outgoing pipeline.
     /// </summary>
+    void Add(string name, Stream stream, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null);
+
+    /// <summary>
+    /// Add an attachment with the default name to the current outgoing pipeline.
+    /// </summary>
+    void Add(Stream stream, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null);
+
+    /// <summary>
+    /// Add an attachment with <paramref name="name"/> to the current outgoing pipeline.
+    /// </summary>
     /// <remarks>
     /// Use for small payloads where the full data is already in memory.
     /// </remarks>
