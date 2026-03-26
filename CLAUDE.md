@@ -16,15 +16,12 @@ This is a community-backed extension requiring OpenCollective patronage.
 # Build the solution
 dotnet build src --configuration Release
 
-# Run all tests
-dotnet test src --configuration Release
-
-# Run tests for a specific project
-dotnet test src/Attachments.Sql.Tests
-dotnet test src/Attachments.FileShare.Tests
+# Run all tests (use --project, not positional arg)
+dotnet test --project src/Attachments.Sql.Tests --configuration Release
+dotnet test --project src/Attachments.FileShare.Tests --configuration Release
 
 # Run a single test by name
-dotnet test src/Attachments.Sql.Tests --filter "FullyQualifiedName~TestClassName.TestMethodName"
+dotnet test --project src/Attachments.Sql.Tests --configuration Release --filter "FullyQualifiedName~TestClassName.TestMethodName"
 ```
 
 **Prerequisites**:

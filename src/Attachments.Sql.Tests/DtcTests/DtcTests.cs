@@ -45,13 +45,10 @@ public class DtcTests
                 dtcWasNeeded = distributedId is not null && distributedId.Value != Guid.Empty;
                 scope.Complete();
             }
-            catch (Exception ex) when (
-                ex is TransactionAbortedException or
-                       TransactionManagerCommunicationException or
-                       PlatformNotSupportedException)
+            catch (Exception ex) when (IsDtcUnavailable(ex))
             {
-                // DTC is not available — the exception itself proves DTC was needed
-                dtcWasNeeded = true;
+                Skip.Test("MSDTC is not available on this machine");
+                return;
             }
 
             await Assert.That(dtcWasNeeded).IsTrue()
@@ -114,6 +111,11 @@ public class DtcTests
     [Test]
     public async Task WithFix_EndpointTest_NoDtcWithHandlerAndSaga()
     {
+        if (!IsDtcAvailable())
+        {
+            Skip.Test("MSDTC is not available on this machine");
+        }
+
         await using var context = new DtcTestContext();
 
         context.NsbDatabase = await Connection.SqlInstance.Build("DtcEndpoint_Nsb");
@@ -264,5 +266,26 @@ public class DtcTests
         streamWriter.Flush();
         stream.Position = 0;
         return stream;
+    }
+
+    static bool IsDtcUnavailable(Exception ex) =>
+        ex is TransactionAbortedException or
+             TransactionManagerCommunicationException or
+             PlatformNotSupportedException ||
+        (ex is SqlException sqlEx && sqlEx.Message.Contains("MSDTC", StringComparison.OrdinalIgnoreCase));
+
+    static bool IsDtcAvailable()
+    {
+        try
+        {
+            using var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
+            using var transaction = new CommittableTransaction();
+            TransactionInterop.GetTransmitterPropagationToken(transaction);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

@@ -18,7 +18,7 @@ public static class SqlAttachmentsExtensions
         this EndpointConfiguration configuration,
         Func<SqlConnection> connectionFactory,
         GetTimeToKeep? timeToKeep = null,
-        string database = "nservicebus",
+        string? database = null,
         string schema = "dbo",
         string table = "MessageAttachments")
     {
@@ -27,6 +27,8 @@ public static class SqlAttachmentsExtensions
         {
             throw new("This overload of EnableAttachments expects `Func<SqlConnection> connectionFactory` to return a un-opened SqlConnection.");
         }
+
+        database ??= GetDatabaseName(dbConnection);
 
         return EnableAttachments(
             configuration,
@@ -57,10 +59,13 @@ public static class SqlAttachmentsExtensions
         this EndpointConfiguration configuration,
         string connection,
         GetTimeToKeep? timeToKeep = null,
-        string database = "nservicebus",
+        string? database = null,
         string schema = "dbo",
-        string table = "MessageAttachments") =>
-        EnableAttachments(
+        string table = "MessageAttachments")
+    {
+        database ??= new SqlConnectionStringBuilder(connection).InitialCatalog;
+
+        return EnableAttachments(
             configuration,
             connectionFactory: async cancel =>
             {
@@ -72,6 +77,7 @@ public static class SqlAttachmentsExtensions
             database,
             schema,
             table);
+    }
 
     /// <summary>
     /// Enable SQL attachments for this endpoint.
@@ -99,4 +105,7 @@ public static class SqlAttachmentsExtensions
         configuration.DisableFeature<AttachmentsUsedWhenNotEnabledFeature>();
         return attachments;
     }
+
+    static string GetDatabaseName(SqlConnection connection) =>
+        new SqlConnectionStringBuilder(connection.ConnectionString).InitialCatalog;
 }

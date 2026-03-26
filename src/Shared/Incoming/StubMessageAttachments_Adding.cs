@@ -12,7 +12,9 @@ public partial class StubMessageAttachments
     Dictionary<string, MockAttachment> currentAttachments = new(StringComparer.OrdinalIgnoreCase);
     Dictionary<string, Dictionary<string, MockAttachment>> attachments = new(StringComparer.OrdinalIgnoreCase);
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Adds a attachment that can then be used in a test.
+    /// </summary>
     public void AddAttachment(string payload, Encoding? encoding, IDictionary<string, string>? metadata = null) =>
         AddAttachment("default", payload, encoding, metadata);
 
