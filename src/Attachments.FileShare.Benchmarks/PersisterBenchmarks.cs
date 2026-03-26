@@ -1,6 +1,3 @@
-using BenchmarkDotNet.Attributes;
-using NServiceBus.Attachments.FileShare;
-
 [MemoryDiagnoser]
 [GcServer(true)]
 public class PersisterBenchmarks
