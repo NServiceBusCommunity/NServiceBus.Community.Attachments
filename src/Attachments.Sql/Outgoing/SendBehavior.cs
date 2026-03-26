@@ -130,19 +130,10 @@ class SendBehavior :
     async Task<Guid> ProcessWriter(SqlConnection connection, SqlTransaction? transaction, string messageId, string name, DateTime expiry, Func<Stream, Task> writer, IReadOnlyDictionary<string, string>? metadata)
     {
         var pipe = new Pipe();
-        // Writer must run on a separate thread so it can produce data
-        // concurrently while the reader (SaveStream) consumes it.
-        var writerTask = Task.Run(async () =>
-        {
-            try
-            {
-                await writer(pipe.Writer.AsStream());
-            }
-            finally
-            {
-                await pipe.Writer.CompleteAsync();
-            }
-        });
+        // Task.Run ensures the writer runs on a separate thread so the
+        // reader (SaveStream) can start immediately, even if the writer
+        // does synchronous work before its first await.
+        var writerTask = Task.Run(() => PipeHelper.WriteToPipe(writer, pipe));
 
         var readerStream = pipe.Reader.AsStream();
         await using (readerStream)
