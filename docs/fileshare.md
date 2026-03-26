@@ -172,28 +172,7 @@ class HandlerFactory :
     }
 }
 ```
-<sup><a href='/src/Attachments.FileShare.Tests/Snippets/Outgoing.cs#L3-L23' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingWithStreamInstance' title='Start of snippet'>anchor</a></sup>
-<a id='snippet-OutgoingWithStreamInstance-1'></a>
-```cs
-class HandlerFactory :
-    IHandleMessages<MyMessage>
-{
-    public Task Handle(MyMessage message, HandlerContext context)
-    {
-        var sendOptions = new SendOptions();
-        var attachments = sendOptions.Attachments();
-        attachments.AddStream(
-            name: "attachment1",
-            writer: async stream =>
-            {
-                await using var source = File.OpenRead("FilePath.txt");
-                await source.CopyToAsync(stream);
-            });
-        return context.Send(new OtherMessage(), sendOptions);
-    }
-}
-```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L3-L23' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingWithStreamInstance-1' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L3-L23' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingWithStreamInstance' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 <!-- snippet: OutgoingWithSavePattern -->
@@ -214,25 +193,7 @@ class HandlerStreamWriter :
     }
 }
 ```
-<sup><a href='/src/Attachments.FileShare.Tests/Snippets/Outgoing.cs#L26-L43' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingWithSavePattern' title='Start of snippet'>anchor</a></sup>
-<a id='snippet-OutgoingWithSavePattern-1'></a>
-```cs
-class HandlerStreamWriter :
-    IHandleMessages<MyMessage>
-{
-    public Task Handle(MyMessage message, HandlerContext context)
-    {
-        var document = new Document();
-        var sendOptions = new SendOptions();
-        var attachments = sendOptions.Attachments();
-        attachments.AddStream(
-            name: "attachment1",
-            writer: document.SaveAsync);
-        return context.Send(new OtherMessage(), sendOptions);
-    }
-}
-```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L25-L42' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingWithSavePattern-1' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L25-L42' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingWithSavePattern' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 #### Add with an existing Stream
@@ -258,26 +219,7 @@ class HandlerInstance :
     }
 }
 ```
-<sup><a href='/src/Attachments.FileShare.Tests/Snippets/Outgoing.cs#L45-L63' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingInstance' title='Start of snippet'>anchor</a></sup>
-<a id='snippet-OutgoingInstance-1'></a>
-```cs
-class HandlerInstance :
-    IHandleMessages<MyMessage>
-{
-    public Task Handle(MyMessage message, HandlerContext context)
-    {
-        var sendOptions = new SendOptions();
-        var attachments = sendOptions.Attachments();
-        var stream = File.OpenRead("FilePath.txt");
-        attachments.Add(
-            name: "attachment1",
-            stream: stream,
-            cleanup: () => File.Delete("FilePath.txt"));
-        return context.Send(new OtherMessage(), sendOptions);
-    }
-}
-```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L44-L62' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingInstance-1' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L44-L62' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingInstance' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 

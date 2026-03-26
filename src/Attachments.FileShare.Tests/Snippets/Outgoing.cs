@@ -1,7 +1,6 @@
-﻿public class Outgoing
+﻿// no regions since these are the same as the sql snippets
+public class Outgoing
 {
-    #region OutgoingWithStreamInstance
-
     class HandlerFactory :
         IHandleMessages<MyMessage>
     {
@@ -20,11 +19,6 @@
         }
     }
 
-    #endregion
-
-
-    #region OutgoingWithSavePattern
-
     class HandlerStreamWriter :
         IHandleMessages<MyMessage>
     {
@@ -39,10 +33,6 @@
             return context.Send(new OtherMessage(), sendOptions);
         }
     }
-
-    #endregion
-
-    #region OutgoingInstance
 
     class HandlerInstance :
         IHandleMessages<MyMessage>
@@ -59,6 +49,4 @@
             return context.Send(new OtherMessage(), sendOptions);
         }
     }
-
-    #endregion
 }
