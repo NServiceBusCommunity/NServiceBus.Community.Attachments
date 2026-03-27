@@ -14,8 +14,9 @@ public static class Installer
     /// <summary>
     /// Create the attachments storage table.
     /// </summary>
-    public static async Task CreateTable(SqlConnection connection, string database, string schema = "dbo", string table = "MessageAttachments", Cancel cancel = default)
+    public static async Task CreateTable(SqlConnection connection, string? database = null, string schema = "dbo", string table = "MessageAttachments", Cancel cancel = default)
     {
+        database ??= new SqlConnectionStringBuilder(connection.ConnectionString).InitialCatalog;
         await using var command = connection.CreateCommand();
         command.CommandText = GetTableSql();
         command.AddParameter("schema", SqlSanitizer.Sanitize(schema));

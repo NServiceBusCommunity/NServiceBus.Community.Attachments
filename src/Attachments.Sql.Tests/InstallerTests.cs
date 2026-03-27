@@ -8,6 +8,15 @@ public class InstallerTests
         await TableExists("[dbo].[MessageAttachments]", connection);
     }
 
+    [Test]
+    public async Task CreateTableDerivesDatabaseFromConnection()
+    {
+        await using var database = await Connection.SqlInstance.Build("InstallerDerive");
+        var connection = database.Connection;
+        await Installer.CreateTable(connection, table: "DerivedDbAttachments");
+        await TableExists("[dbo].[DerivedDbAttachments]", connection);
+    }
+
     static async Task TableExists(string tableName, SqlConnection connection)
     {
         using var command = connection.CreateCommand();
