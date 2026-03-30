@@ -24,6 +24,7 @@
     <Compile Include="..\Shared\Incoming\IAttachment.cs" />
     <Compile Include="..\Shared\Guard.cs" />
     <Compile Include="..\Shared\PipeHelper.cs" />
+    <Compile Include="..\Shared\PositionTrackingStream.cs" />
     <Compile Include="..\Shared\Extensions.cs" />
     <EmbeddedResource Include="..\Attachments.Sql\Table.sql" LogicalName="Table.sql" />
     <Using Include="System.Data.CommandBehavior" Static="True" />
