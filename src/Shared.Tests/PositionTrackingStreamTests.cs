@@ -66,6 +66,28 @@ public class PositionTrackingStreamTests
     }
 
     [Test]
+    public async Task Dispose_DoesNotDisposeInner()
+    {
+        var inner = new MemoryStream();
+        var stream = new PositionTrackingStream(inner);
+        stream.Dispose();
+        // inner should still be usable
+        inner.Write([1, 2, 3], 0, 3);
+        await Assert.That(inner.ToArray()).IsEquivalentTo(new byte[] { 1, 2, 3 });
+    }
+
+    [Test]
+    public async Task DisposeAsync_DoesNotDisposeInner()
+    {
+        var inner = new MemoryStream();
+        var stream = new PositionTrackingStream(inner);
+        await stream.DisposeAsync();
+        // inner should still be usable
+        inner.Write([1, 2, 3], 0, 3);
+        await Assert.That(inner.ToArray()).IsEquivalentTo(new byte[] { 1, 2, 3 });
+    }
+
+    [Test]
     public async Task PipeHelper_WriterCanReadPosition()
     {
         long capturedPosition = -1;

@@ -52,20 +52,4 @@ class PositionTrackingStream(Stream inner) :
     public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
     public override void SetLength(long value) => throw new NotSupportedException();
-
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            inner.Dispose();
-        }
-
-        base.Dispose(disposing);
-    }
-
-    public override async ValueTask DisposeAsync()
-    {
-        await inner.DisposeAsync();
-        await base.DisposeAsync();
-    }
 }
