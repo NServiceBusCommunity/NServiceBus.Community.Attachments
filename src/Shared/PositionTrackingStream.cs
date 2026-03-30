@@ -3,10 +3,19 @@
 /// PipeWriterStream throws NotSupportedException for Position,
 /// but some libraries (e.g. Aspose.Words) read stream.Position.
 /// </summary>
-class PositionTrackingStream(Stream inner) :
+class PositionTrackingStream :
     Stream
 {
+    readonly Stream inner;
     long position;
+
+    // No resources to dispose (inner stream lifecycle is managed externally).
+    // Suppress finalization to avoid GC overhead from Stream's finalizer.
+    public PositionTrackingStream(Stream inner)
+    {
+        this.inner = inner;
+        GC.SuppressFinalize(this);
+    }
 
     public override bool CanRead => inner.CanRead;
     public override bool CanSeek => false;
