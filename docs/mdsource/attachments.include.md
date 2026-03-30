@@ -70,6 +70,10 @@ Use `AddStream` to provide a delegate that writes to a stream. Internally the li
 
 snippet: OutgoingWithStreamInstance
 
+For synchronous writers, an `Action<Stream>` overload is available. The async approach above is preferred as it avoids blocking the thread during I/O.
+
+snippet: OutgoingWithSyncStreamInstance
+
 snippet: OutgoingWithSavePattern
 
 #### Add with an existing Stream

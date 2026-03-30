@@ -302,6 +302,32 @@ class HandlerFactory :
 <sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L3-L23' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingWithStreamInstance' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
+For synchronous writers, an `Action<Stream>` overload is available:
+
+<!-- snippet: OutgoingWithSyncStreamInstance -->
+<a id='snippet-OutgoingWithSyncStreamInstance'></a>
+```cs
+class HandlerSyncFactory :
+    IHandleMessages<MyMessage>
+{
+    public Task Handle(MyMessage message, HandlerContext context)
+    {
+        var sendOptions = new SendOptions();
+        var attachments = sendOptions.Attachments();
+        attachments.AddStream(
+            name: "attachment1",
+            writer: stream =>
+            {
+                using var source = File.OpenRead("FilePath.txt");
+                source.CopyTo(stream);
+            });
+        return context.Send(new OtherMessage(), sendOptions);
+    }
+}
+```
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L25-L45' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingWithSyncStreamInstance' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
+
 <!-- snippet: OutgoingWithSavePattern -->
 <a id='snippet-OutgoingWithSavePattern'></a>
 ```cs
@@ -320,7 +346,7 @@ class HandlerStreamWriter :
     }
 }
 ```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L25-L42' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingWithSavePattern' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L47-L64' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingWithSavePattern' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 #### Add with an existing Stream
@@ -346,7 +372,7 @@ class HandlerInstance :
     }
 }
 ```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L44-L62' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingInstance' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L66-L84' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingInstance' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 
