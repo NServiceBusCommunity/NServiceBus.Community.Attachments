@@ -157,7 +157,7 @@ class HandlerFactory :
 <sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L3-L23' title='Snippet source file'>snippet source</a> | <a href='#snippet-OutgoingWithStreamInstance' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
-For synchronous writers, an `Action<Stream>` overload is available:
+For synchronous writers, an `Action<Stream>` overload is available. The async approach above is preferred as it avoids blocking the thread during I/O.
 
 <!-- snippet: OutgoingWithSyncStreamInstance -->
 <a id='snippet-OutgoingWithSyncStreamInstance'></a>
