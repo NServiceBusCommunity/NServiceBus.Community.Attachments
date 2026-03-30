@@ -20,7 +20,7 @@ static class PipeHelper
         Exception? error = null;
         try
         {
-            await writer(pipe.Writer.AsStream());
+            await writer(new PositionTrackingStream(pipe.Writer.AsStream()));
         }
         catch (Exception ex)
         {
