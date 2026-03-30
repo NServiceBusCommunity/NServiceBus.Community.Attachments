@@ -39,6 +39,21 @@ class OutgoingAttachments :
     public void AddStream(Func<Stream, Task> writer, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null) =>
         AddStream("default", writer, timeToKeep, cleanup, metadata);
 
+    public void AddStream(Action<Stream> writer, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null) =>
+        AddStream("default", writer, timeToKeep, cleanup, metadata);
+
+    public void AddStream(string name, Action<Stream> writer, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null) =>
+        AddStream(
+            name,
+            stream =>
+            {
+                writer(stream);
+                return Task.CompletedTask;
+            },
+            timeToKeep,
+            cleanup,
+            metadata);
+
     public void AddStream(string name, Func<Stream, Task> writer, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null) =>
         Inner.Add(
             name,
