@@ -28,6 +28,34 @@
     }
 
     [Test]
+    public async Task OutgoingAttachmentsSync()
+    {
+        var context = new RecordingHandlerContext();
+        var handler = new OutgoingAttachmentsSyncHandler();
+        await handler.Handle(new(), context);
+        await Verify(context);
+    }
+
+    public class OutgoingAttachmentsSyncHandler :
+        IHandleMessages<AMessage>
+    {
+        public Task Handle(AMessage message, HandlerContext context)
+        {
+            var options = new SendOptions();
+            var attachments = options.Attachments();
+            attachments.AddStream(
+                "theName",
+                writer: stream =>
+                {
+                    var streamWriter = new StreamWriter(stream, leaveOpen: true);
+                    streamWriter.Write("content");
+                    streamWriter.Flush();
+                });
+            return context.Send(new AMessage(), options);
+        }
+    }
+
+    [Test]
     public async Task IncomingAttachment()
     {
         var context = new RecordingHandlerContext();

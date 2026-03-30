@@ -33,6 +33,39 @@
     }
 
     [Test]
+    public async Task OutgoingAttachmentsSync()
+    {
+        var context = new RecordingHandlerContext();
+        var handler = new OutgoingAttachmentsSyncHandler();
+        await handler.Handle(new(), context);
+        var attachments = context.Sent
+            .Single()
+            .Options
+            .Attachments();
+        var attachment = attachments.Items.Single();
+        await Assert.That(attachment.Name).Contains("theName");
+        await Assert.That(attachments.HasPendingAttachments).IsTrue();
+    }
+
+    public class OutgoingAttachmentsSyncHandler :
+        IHandleMessages<AMessage>
+    {
+        public Task Handle(AMessage message, HandlerContext context)
+        {
+            var options = new SendOptions();
+            var attachments = options.Attachments();
+            attachments.AddStream("theName",
+                stream =>
+                {
+                    var writer = new StreamWriter(stream, leaveOpen: true);
+                    writer.Write("content");
+                    writer.Flush();
+                });
+            return context.Send(new AMessage(), options);
+        }
+    }
+
+    [Test]
     public async Task IncomingAttachment()
     {
         var context = new RecordingHandlerContext();

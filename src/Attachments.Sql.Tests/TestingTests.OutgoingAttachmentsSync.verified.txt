@@ -1,0 +1,18 @@
+{
+  Send: [
+    {
+      TestingTests.AMessage: {},
+      Options: {
+        NServiceBus.Attachments.Sql.IOutgoingAttachments: {
+          DuplicateIncomingAttachments: false,
+          HasPendingAttachments: true,
+          Items: [
+            {
+              Name: theName
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

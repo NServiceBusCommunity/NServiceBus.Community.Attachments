@@ -22,6 +22,28 @@
 
     #endregion
 
+    #region OutgoingWithSyncStreamInstance
+
+    class HandlerSyncFactory :
+        IHandleMessages<MyMessage>
+    {
+        public Task Handle(MyMessage message, HandlerContext context)
+        {
+            var sendOptions = new SendOptions();
+            var attachments = sendOptions.Attachments();
+            attachments.AddStream(
+                name: "attachment1",
+                writer: stream =>
+                {
+                    using var source = File.OpenRead("FilePath.txt");
+                    source.CopyTo(stream);
+                });
+            return context.Send(new OtherMessage(), sendOptions);
+        }
+    }
+
+    #endregion
+
     #region OutgoingWithSavePattern
 
     class HandlerStreamWriter :
