@@ -24,7 +24,7 @@ public class PositionTrackingStreamTests
     {
         using var inner = new MemoryStream();
         using var stream = new PositionTrackingStream(inner);
-        await stream.WriteAsync(new byte[] { 1, 2, 3 }, 0, 3);
+        await stream.WriteAsync([1, 2, 3], 0, 3);
         await Assert.That(stream.Position).IsEqualTo(3);
     }
 

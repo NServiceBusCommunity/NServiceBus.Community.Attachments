@@ -34,13 +34,13 @@ class PositionTrackingStream :
         position += count;
     }
 
-    public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancel)
+    public override async Task WriteAsync(byte[] buffer, int offset, int count, Cancel cancel)
     {
         await inner.WriteAsync(buffer, offset, count, cancel);
         position += count;
     }
 
-    public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancel = default)
+    public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, Cancel cancel = default)
     {
         await inner.WriteAsync(buffer, cancel);
         position += buffer.Length;
@@ -54,7 +54,7 @@ class PositionTrackingStream :
 
     public override void Flush() => inner.Flush();
 
-    public override Task FlushAsync(CancellationToken cancel) => inner.FlushAsync(cancel);
+    public override Task FlushAsync(Cancel cancel) => inner.FlushAsync(cancel);
 
     public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
 
