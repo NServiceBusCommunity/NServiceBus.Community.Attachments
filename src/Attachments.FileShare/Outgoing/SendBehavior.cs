@@ -24,9 +24,14 @@ class SendBehavior(IPersister persister, GetTimeToKeep endpointTimeToKeep) :
             return;
         }
 
+        await ProcessOutgoingCore(context, outgoingAttachments);
+    }
+
+    async Task ProcessOutgoingCore(IOutgoingLogicalMessageContext context, OutgoingAttachments outgoingAttachments)
+    {
         var attachmentNames = new List<string>();
 
-        var timeToBeReceived = extensions.GetTimeToBeReceivedFromConstraint();
+        var timeToBeReceived = context.Extensions.GetTimeToBeReceivedFromConstraint();
 
         foreach (var (name, value) in outgoingAttachments.Inner)
         {
