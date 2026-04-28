@@ -10,21 +10,21 @@ class SendBehavior(IPersister persister, GetTimeToKeep endpointTimeToKeep) :
         await next();
     }
 
-    async Task ProcessOutgoing(IOutgoingLogicalMessageContext context)
+    Task ProcessOutgoing(IOutgoingLogicalMessageContext context)
     {
         var extensions = context.Extensions;
         if (!extensions.TryGet<IOutgoingAttachments>(out var attachments))
         {
-            return;
+            return Task.CompletedTask;
         }
 
         var outgoingAttachments = (OutgoingAttachments) attachments;
         if (!outgoingAttachments.HasPendingAttachments)
         {
-            return;
+            return Task.CompletedTask;
         }
 
-        await ProcessOutgoingCore(context, outgoingAttachments);
+        return ProcessOutgoingCore(context, outgoingAttachments);
     }
 
     async Task ProcessOutgoingCore(IOutgoingLogicalMessageContext context, OutgoingAttachments outgoingAttachments)
