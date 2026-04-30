@@ -77,13 +77,35 @@ public partial class Persister
         Guard.AgainstNullOrEmpty(messageId);
         Guard.AgainstNullOrEmpty(name);
         Guard.AgainstLongAttachmentName(name);
-        await using var command = CreateGetDataCommand(messageId, name, connection, transaction);
-        await using var reader = await command.ExecuteReaderAsync(SequentialAccess | SingleRow, cancel);
-        if (await reader.ReadAsync(cancel))
+        // command/reader ownership is handed off to the returned AttachmentStream's cleanups so the
+        // SqlSequentialStream stays valid until the caller disposes the AttachmentStream. await
+        // using would dispose them at this method's exit, killing the stream before it is read.
+        var command = CreateGetDataCommand(messageId, name, connection, transaction);
+        SqlDataReader? reader = null;
+        try
         {
-            return InnerGetStream(name, reader, command, disposeConnectionOnStreamDispose);
+            reader = await command.ExecuteReaderAsync(SequentialAccess | SingleRow, cancel);
+            if (await reader.ReadAsync(cancel))
+            {
+                return InnerGetStream(name, reader, command, disposeConnectionOnStreamDispose);
+            }
+        }
+        catch
+        {
+            if (reader is not null)
+            {
+                await reader.DisposeAsync();
+            }
+            await command.DisposeAsync();
+            throw;
         }
 
+        await reader.DisposeAsync();
+        await command.DisposeAsync();
+        if (disposeConnectionOnStreamDispose)
+        {
+            await connection.DisposeAsync();
+        }
         throw ThrowNotFound(messageId, name);
     }
 
