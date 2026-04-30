@@ -44,6 +44,39 @@ public static partial class FileShareAttachmentsMessageContextExtensions
         IReadOnlyDictionary<string, string>? metadata = null) =>
         OpenForOptions(context, options, name, timeToKeep, metadata);
 
+    /// <summary>
+    /// See <see cref="OpenOutgoingAttachment(HandlerContext,SendOptions,string,GetTimeToKeep?,IReadOnlyDictionary{string,string}?)"/>.
+    /// The attachment is registered with the default name.
+    /// </summary>
+    public static Task<Stream> OpenOutgoingAttachment(
+        this HandlerContext context,
+        SendOptions options,
+        GetTimeToKeep? timeToKeep = null,
+        IReadOnlyDictionary<string, string>? metadata = null) =>
+        OpenForOptions(context, options, "default", timeToKeep, metadata);
+
+    /// <summary>
+    /// See <see cref="OpenOutgoingAttachment(HandlerContext,SendOptions,string,GetTimeToKeep?,IReadOnlyDictionary{string,string}?)"/>.
+    /// The attachment is registered with the default name.
+    /// </summary>
+    public static Task<Stream> OpenOutgoingAttachment(
+        this HandlerContext context,
+        ReplyOptions options,
+        GetTimeToKeep? timeToKeep = null,
+        IReadOnlyDictionary<string, string>? metadata = null) =>
+        OpenForOptions(context, options, "default", timeToKeep, metadata);
+
+    /// <summary>
+    /// See <see cref="OpenOutgoingAttachment(HandlerContext,SendOptions,string,GetTimeToKeep?,IReadOnlyDictionary{string,string}?)"/>.
+    /// The attachment is registered with the default name.
+    /// </summary>
+    public static Task<Stream> OpenOutgoingAttachment(
+        this HandlerContext context,
+        PublishOptions options,
+        GetTimeToKeep? timeToKeep = null,
+        IReadOnlyDictionary<string, string>? metadata = null) =>
+        OpenForOptions(context, options, "default", timeToKeep, metadata);
+
     static async Task<Stream> OpenForOptions(
         HandlerContext context,
         ExtendableOptions options,
