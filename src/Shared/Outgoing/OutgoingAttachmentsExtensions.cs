@@ -34,4 +34,19 @@ public static class OutgoingAttachmentsExtensions
                 await fileStream.CopyToAsync(stream);
             });
     }
+
+    /// <summary>
+    /// Add an outgoing attachment whose data is produced by transforming the incoming attachment of the same name
+    /// for the current message. See <see cref="IOutgoingAttachments.AddFromIncoming"/>.
+    /// </summary>
+    public static void AddFromIncoming(
+        this IOutgoingAttachments attachments,
+        string name,
+        Func<Stream, Stream, Cancel, Task> transform,
+        bool bufferSource = false,
+        bool bufferSink = false,
+        GetTimeToKeep? timeToKeep = null,
+        Action? cleanup = null,
+        IReadOnlyDictionary<string, string>? metadata = null) =>
+        attachments.AddFromIncoming(name, name, transform, bufferSource, bufferSink, timeToKeep, cleanup, metadata);
 }

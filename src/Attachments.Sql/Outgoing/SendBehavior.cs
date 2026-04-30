@@ -71,9 +71,12 @@ class SendBehavior(Func<Cancel, Task<SqlConnection>> connectionFactory, IPersist
     {
         var cancel = context.CancellationToken;
         var attachments = new Dictionary<Guid, string>();
+        string? incomingMessageId = null;
+        string GetIncomingMessageId() => incomingMessageId ??= context.IncomingMessageId();
+
         foreach (var (name, value) in outgoingAttachments.Inner)
         {
-            var guid = await ProcessAttachment(timeToBeReceived, connection, transaction, context.MessageId, value, name, cancel);
+            var guid = await ProcessAttachment(timeToBeReceived, connection, transaction, context.MessageId, GetIncomingMessageId, value, name, cancel);
             attachments.Add(guid, name);
         }
 
@@ -88,17 +91,16 @@ class SendBehavior(Func<Cancel, Task<SqlConnection>> connectionFactory, IPersist
                     Metadata = metadata,
                     TimeToKeep = keep,
                 };
-                var guid = await ProcessAttachment(timeToBeReceived, connection, transaction, context.MessageId, outgoing, name, cancel);
+                var guid = await ProcessAttachment(timeToBeReceived, connection, transaction, context.MessageId, GetIncomingMessageId, outgoing, name, cancel);
                 attachments.Add(guid, name);
             });
         }
 
         if (outgoingAttachments.DuplicateIncomingAttachments || outgoingAttachments.Duplicates.Count != 0)
         {
-            var incomingMessageId = context.IncomingMessageId();
             if (outgoingAttachments.DuplicateIncomingAttachments)
             {
-                var names = await persister.Duplicate(incomingMessageId, connection, transaction, context.MessageId, context.CancellationToken);
+                var names = await persister.Duplicate(GetIncomingMessageId(), connection, transaction, context.MessageId, context.CancellationToken);
                 foreach (var (id, name) in names)
                 {
                     attachments.Add(id, name);
@@ -107,7 +109,7 @@ class SendBehavior(Func<Cancel, Task<SqlConnection>> connectionFactory, IPersist
 
             foreach (var duplicate in outgoingAttachments.Duplicates)
             {
-                var guid = await persister.Duplicate(incomingMessageId, duplicate.From, connection, transaction, context.MessageId, duplicate.To, context.CancellationToken);
+                var guid = await persister.Duplicate(GetIncomingMessageId(), duplicate.From, connection, transaction, context.MessageId, duplicate.To, context.CancellationToken);
                 attachments.Add(guid, duplicate.To);
             }
         }
@@ -128,14 +130,14 @@ class SendBehavior(Func<Cancel, Task<SqlConnection>> connectionFactory, IPersist
         }
     }
 
-    async Task<Guid> ProcessAttachment(TimeSpan? timeToBeReceived, SqlConnection connection, SqlTransaction? transaction, string messageId, Outgoing outgoing, string name, Cancel cancel)
+    async Task<Guid> ProcessAttachment(TimeSpan? timeToBeReceived, SqlConnection connection, SqlTransaction? transaction, string messageId, Func<string> getIncomingMessageId, Outgoing outgoing, string name, Cancel cancel)
     {
         var outgoingStreamTimeToKeep = outgoing.TimeToKeep ?? endpointTimeToKeep;
         var timeToKeep = outgoingStreamTimeToKeep(timeToBeReceived);
         var expiry = DateTime.UtcNow.Add(timeToKeep);
         try
         {
-            return await Process(connection, transaction, messageId, outgoing, name, expiry, cancel);
+            return await Process(connection, transaction, messageId, getIncomingMessageId, outgoing, name, expiry, cancel);
         }
         finally
         {
@@ -143,9 +145,14 @@ class SendBehavior(Func<Cancel, Task<SqlConnection>> connectionFactory, IPersist
         }
     }
 
-    async Task<Guid> Process(SqlConnection connection, SqlTransaction? transaction, string messageId, Outgoing outgoing, string name, DateTime expiry, Cancel cancel)
+    async Task<Guid> Process(SqlConnection connection, SqlTransaction? transaction, string messageId, Func<string> getIncomingMessageId, Outgoing outgoing, string name, DateTime expiry, Cancel cancel)
     {
         var metadata = outgoing.Metadata;
+        if (outgoing.HasIncomingTransform)
+        {
+            return await ProcessIncomingTransform(connection, transaction, messageId, getIncomingMessageId(), outgoing, name, expiry, cancel);
+        }
+
         if (outgoing.StreamWriter is not null)
         {
             return await ProcessWriter(connection, transaction, messageId, name, expiry, outgoing.StreamWriter, metadata, cancel);
@@ -173,5 +180,55 @@ class SendBehavior(Func<Cancel, Task<SqlConnection>> connectionFactory, IPersist
         }
 
         throw new("No matching way to handle outgoing.");
+    }
+
+    Task<Guid> ProcessIncomingTransform(SqlConnection sendConnection, SqlTransaction? sendTransaction, string toMessageId, string fromMessageId, Outgoing outgoing, string name, DateTime expiry, Cancel cancel)
+    {
+        var transform = outgoing.IncomingTransform!;
+        var fromName = outgoing.IncomingFromName!;
+        var bufferSource = outgoing.BufferSource;
+        var bufferSink = outgoing.BufferSink;
+
+        Func<Stream, Task> writer = async sink =>
+        {
+            await using var readConnection = await connectionFactory(cancel);
+            await persister.ProcessStream(
+                fromMessageId,
+                fromName,
+                readConnection,
+                null,
+                async (inStream, c) =>
+                {
+                    if (bufferSource)
+                    {
+                        using var bufferedSource = new MemoryStream();
+                        await inStream.CopyToAsync(bufferedSource, c);
+                        bufferedSource.Position = 0;
+                        await RunTransform(transform, bufferedSource, sink, bufferSink, c);
+                    }
+                    else
+                    {
+                        await RunTransform(transform, inStream, sink, bufferSink, c);
+                    }
+                },
+                cancel);
+        };
+
+        return ProcessWriter(sendConnection, sendTransaction, toMessageId, name, expiry, writer, outgoing.Metadata, cancel);
+    }
+
+    static async Task RunTransform(Func<Stream, Stream, Cancel, Task> transform, Stream source, Stream pipeSink, bool bufferSink, Cancel cancel)
+    {
+        if (bufferSink)
+        {
+            using var bufferedSink = new MemoryStream();
+            await transform(source, bufferedSink, cancel);
+            bufferedSink.Position = 0;
+            await bufferedSink.CopyToAsync(pipeSink, cancel);
+        }
+        else
+        {
+            await transform(source, pipeSink, cancel);
+        }
     }
 }

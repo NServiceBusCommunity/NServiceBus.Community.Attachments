@@ -136,4 +136,27 @@ public interface IOutgoingAttachments
     /// Duplicates the incoming attachments to the current outgoing pipeline.
     /// </summary>
     void DuplicateIncoming(string fromName, string toName);
+
+    /// <summary>
+    /// Add an outgoing attachment whose data is produced by transforming the incoming attachment of <paramref name="fromName"/>
+    /// for the current message. The library opens the incoming read inside the outgoing pipeline so the source and sink
+    /// streams are live at the same time and no intermediate buffering by the caller is needed.
+    /// </summary>
+    /// <param name="fromName">Name of the incoming attachment to read.</param>
+    /// <param name="toName">Name to assign to the produced outgoing attachment.</param>
+    /// <param name="transform">Delegate that reads from <c>source</c> and writes to <c>sink</c>.</param>
+    /// <param name="bufferSource">If true, the incoming data is buffered to a seekable <see cref="MemoryStream"/> before <paramref name="transform"/> runs. Use when the transform requires seek/Position on the input (e.g. email/MIME parsers).</param>
+    /// <param name="bufferSink">If true, <paramref name="transform"/> writes to a seekable <see cref="MemoryStream"/> which is then drained to storage. Use when the transform requires seek/Position on the output (e.g. Aspose.Slides).</param>
+    /// <param name="timeToKeep">How long the produced outgoing attachment should be retained.</param>
+    /// <param name="cleanup">Optional cleanup callback invoked after the attachment has been processed.</param>
+    /// <param name="metadata">Optional metadata stored alongside the produced outgoing attachment.</param>
+    void AddFromIncoming(
+        string fromName,
+        string toName,
+        Func<Stream, Stream, Cancel, Task> transform,
+        bool bufferSource = false,
+        bool bufferSink = false,
+        GetTimeToKeep? timeToKeep = null,
+        Action? cleanup = null,
+        IReadOnlyDictionary<string, string>? metadata = null);
 }
