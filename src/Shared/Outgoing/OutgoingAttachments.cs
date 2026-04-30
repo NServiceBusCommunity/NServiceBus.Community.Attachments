@@ -146,4 +146,14 @@ class OutgoingAttachments :
                 BufferSource = bufferSource,
                 BufferSink = bufferSink,
             });
+
+    internal void AddPreSaved(string name, Guid? savedGuid, IReadOnlyDictionary<string, string>? metadata) =>
+        Inner.Add(
+            name,
+            new()
+            {
+                Metadata = metadata,
+                IsPreSaved = true,
+                PreSavedGuid = savedGuid,
+            });
 }

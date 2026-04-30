@@ -23,6 +23,12 @@ class Outgoing
     public bool BufferSource { get; init; }
     public bool BufferSink { get; init; }
 
+    // PreSaved: the attachment was written to storage by the handler (immediate-write API)
+    // so SendBehavior must skip the save and only add it to the Attachments header.
+    // PreSavedGuid is populated for Sql (becomes the row guid in the header); null for FileShare.
+    public bool IsPreSaved { get; init; }
+    public Guid? PreSavedGuid { get; init; }
+
     public bool HasString => StringInstance != null;
     public bool HasBytes => BytesInstance != null ||
                             BytesFactory != null ||

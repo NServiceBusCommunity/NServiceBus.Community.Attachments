@@ -7,22 +7,20 @@ public class AddFromIncomingTests
     static byte[]? receivedBytes;
 
     [Test]
-    public async Task TransformsIncomingAttachmentInOutgoingPipeline() =>
-        await RunRoundTrip(
+    public Task TransformsIncomingAttachmentInOutgoingPipeline() =>
+        RunRoundTrip(
             endpointSuffix: "Streamed",
-            initialAttachment: "hello",
-            sendStartMessage: endpoint => endpoint.Send(new InMessage(), BuildSendOptions(endpoint, "hello")),
+            sendStartMessage: endpoint => endpoint.Send(new InMessage(), BuildSendOptions("hello")),
             expected: "HELLO");
 
     [Test]
-    public async Task BufferSourceMakesInputSeekable() =>
-        await RunRoundTrip(
+    public Task BufferSourceMakesInputSeekable() =>
+        RunRoundTrip(
             endpointSuffix: "Buffered",
-            initialAttachment: "seekme",
-            sendStartMessage: endpoint => endpoint.Send(new SeekMessage(), BuildSendOptions(endpoint, "seekme")),
+            sendStartMessage: endpoint => endpoint.Send(new SeekMessage(), BuildSendOptions("seekme")),
             expected: "seekme(len=6)");
 
-    static async Task RunRoundTrip(string endpointSuffix, string initialAttachment, Func<IEndpointInstance, Task> sendStartMessage, string expected)
+    static async Task RunRoundTrip(string endpointSuffix, Func<IEndpointInstance, Task> sendStartMessage, string expected)
     {
         receivedBytes = null;
         resetEvent.Reset();
@@ -58,16 +56,18 @@ public class AddFromIncomingTests
         await Assert.That(Encoding.UTF8.GetString(receivedBytes!)).IsEqualTo(expected);
     }
 
-    static SendOptions BuildSendOptions(IEndpointInstance endpoint, string content)
+    static SendOptions BuildSendOptions(string content)
     {
         var sendOptions = new SendOptions();
         sendOptions.RouteToThisEndpoint();
         var outgoing = sendOptions.Attachments();
-        outgoing.AddStream("input", async stream =>
-        {
-            await using var writer = new StreamWriter(stream, leaveOpen: true);
-            await writer.WriteAsync(content);
-        });
+        outgoing.AddStream(
+            "input",
+            async stream =>
+            {
+                await using var writer = new StreamWriter(stream, leaveOpen: true);
+                await writer.WriteAsync(content);
+            });
         return sendOptions;
     }
 

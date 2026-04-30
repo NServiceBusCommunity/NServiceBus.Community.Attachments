@@ -6,7 +6,7 @@ public class OutgoingAttachmentsTests
     public async Task AddFromIncoming_RegistersTransform()
     {
         var attachments = new OutgoingAttachments();
-        Task Transform(Stream source, Stream sink, Cancel cancel) => Task.CompletedTask;
+        static Task Transform(Stream source, Stream sink, Cancel cancel) => Task.CompletedTask;
 
         attachments.AddFromIncoming("fromName", "toName", Transform);
 
@@ -40,7 +40,7 @@ public class OutgoingAttachmentsTests
     {
         var attachments = new OutgoingAttachments();
         var metadata = new Dictionary<string, string> {{"key", "value"}};
-        GetTimeToKeep timeToKeep = _ => TimeSpan.FromHours(1);
+        static TimeSpan timeToKeep(TimeSpan? _) => TimeSpan.FromHours(1);
 
         attachments.AddFromIncoming(
             fromName: "fromName",
@@ -63,5 +63,30 @@ public class OutgoingAttachmentsTests
         var inner = ((OutgoingAttachments) attachments).Inner;
         await Assert.That(inner.ContainsKey("name")).IsTrue();
         await Assert.That(inner["name"].IncomingFromName).IsEqualTo("name");
+    }
+
+    [Test]
+    public async Task AddPreSaved_RegistersAsSkippableInSendBehavior()
+    {
+        var attachments = new OutgoingAttachments();
+        var guid = Guid.NewGuid();
+        attachments.AddPreSaved("name", guid, metadata: null);
+
+        var entry = attachments.Inner["name"];
+        await Assert.That(entry.IsPreSaved).IsTrue();
+        await Assert.That(entry.PreSavedGuid).IsEqualTo(guid);
+        await Assert.That(entry.HasStreamWriter).IsFalse();
+        await Assert.That(entry.HasIncomingTransform).IsFalse();
+    }
+
+    [Test]
+    public async Task AddPreSaved_WithoutGuid_StillFlagsPreSaved()
+    {
+        var attachments = new OutgoingAttachments();
+        attachments.AddPreSaved("name", savedGuid: null, metadata: null);
+
+        var entry = attachments.Inner["name"];
+        await Assert.That(entry.IsPreSaved).IsTrue();
+        await Assert.That(entry.PreSavedGuid).IsNull();
     }
 }

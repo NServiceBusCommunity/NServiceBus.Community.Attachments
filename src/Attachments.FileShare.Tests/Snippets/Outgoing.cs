@@ -88,4 +88,26 @@ public class Outgoing
             return context.Reply(new OtherMessage(), replyOptions);
         }
     }
+
+    class HandlerImmediateWrite :
+        IHandleMessages<MyMessage>
+    {
+        public async Task Handle(MyMessage message, HandlerContext context)
+        {
+            var replyOptions = new ReplyOptions();
+            bool truncated;
+
+            await using (var sink = await context.OpenOutgoingAttachment(replyOptions, "output"))
+            {
+                truncated = FileShareConverter.Convert(message.Source, sink);
+            }
+
+            await context.Reply(new OtherMessage { Truncated = truncated }, replyOptions);
+        }
+    }
+}
+
+static class FileShareConverter
+{
+    public static bool Convert(string source, Stream sink) => false;
 }

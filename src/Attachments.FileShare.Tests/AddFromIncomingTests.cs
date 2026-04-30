@@ -22,11 +22,13 @@ public class AddFromIncomingTests :
         var sendOptions = new SendOptions();
         sendOptions.RouteToThisEndpoint();
         var attachments = sendOptions.Attachments();
-        attachments.AddStream("input", async stream =>
-        {
-            await using var writer = new StreamWriter(stream, leaveOpen: true);
-            await writer.WriteAsync("hello");
-        });
+        attachments.AddStream(
+            "input",
+            async stream =>
+            {
+                await using var writer = new StreamWriter(stream, leaveOpen: true);
+                await writer.WriteAsync("hello");
+            });
         await endpoint.Send(new InMessage(), sendOptions);
 
         resetEvent.WaitOne(TimeSpan.FromSeconds(20));
@@ -52,11 +54,13 @@ public class AddFromIncomingTests :
         var sendOptions = new SendOptions();
         sendOptions.RouteToThisEndpoint();
         var attachments = sendOptions.Attachments();
-        attachments.AddStream("input", async stream =>
-        {
-            await using var writer = new StreamWriter(stream, leaveOpen: true);
-            await writer.WriteAsync("seekme");
-        });
+        attachments.AddStream(
+            "input",
+            async stream =>
+            {
+                await using var writer = new StreamWriter(stream, leaveOpen: true);
+                await writer.WriteAsync("seekme");
+            });
         await endpoint.Send(new SeekMessage(), sendOptions);
 
         resetEvent.WaitOne(TimeSpan.FromSeconds(20));
