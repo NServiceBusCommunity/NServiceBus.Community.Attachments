@@ -49,4 +49,19 @@ public static class OutgoingAttachmentsExtensions
         Action? cleanup = null,
         IReadOnlyDictionary<string, string>? metadata = null) =>
         attachments.AddFromIncoming(name, name, transform, bufferSource, bufferSink, timeToKeep, cleanup, metadata);
+
+    /// <summary>
+    /// Add an outgoing attachment whose data is produced by transforming the default-named incoming attachment
+    /// of the current message. The produced attachment is registered with the default name.
+    /// See <see cref="IOutgoingAttachments.AddFromIncoming"/>.
+    /// </summary>
+    public static void AddFromIncoming(
+        this IOutgoingAttachments attachments,
+        Func<Stream, Stream, Cancel, Task> transform,
+        bool bufferSource = false,
+        bool bufferSink = false,
+        GetTimeToKeep? timeToKeep = null,
+        Action? cleanup = null,
+        IReadOnlyDictionary<string, string>? metadata = null) =>
+        attachments.AddFromIncoming("default", "default", transform, bufferSource, bufferSink, timeToKeep, cleanup, metadata);
 }
