@@ -107,4 +107,35 @@
     }
 
     #endregion
+
+    #region OpenOutgoingAttachment
+
+    class HandlerImmediateWrite :
+        IHandleMessages<MyMessage>
+    {
+        public async Task Handle(MyMessage message, HandlerContext context)
+        {
+            var replyOptions = new ReplyOptions();
+            bool truncated;
+
+            await using (var sink = await context.OpenOutgoingAttachment(
+                             replyOptions,
+                             "output",
+                             cancel: context.CancellationToken))
+            {
+                // Convert directly to the sink. The result (e.g. truncated)
+                // is available before the reply body is composed.
+                truncated = MyConverter.Convert(message.Source, sink);
+            }
+
+            await context.Reply(new OtherMessage { Truncated = truncated }, replyOptions);
+        }
+    }
+
+    #endregion
+}
+
+static class MyConverter
+{
+    public static bool Convert(string source, Stream sink) => false;
 }

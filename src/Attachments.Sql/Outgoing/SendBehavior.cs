@@ -148,6 +148,11 @@ class SendBehavior(Func<Cancel, Task<SqlConnection>> connectionFactory, IPersist
     async Task<Guid> Process(SqlConnection connection, SqlTransaction? transaction, string messageId, Func<string> getIncomingMessageId, Outgoing outgoing, string name, DateTime expiry, Cancel cancel)
     {
         var metadata = outgoing.Metadata;
+        if (outgoing.IsPreSaved)
+        {
+            return outgoing.PreSavedGuid ?? throw new("Pre-saved Sql attachment is missing the row guid.");
+        }
+
         if (outgoing.HasIncomingTransform)
         {
             return await ProcessIncomingTransform(connection, transaction, messageId, getIncomingMessageId(), outgoing, name, expiry, cancel);

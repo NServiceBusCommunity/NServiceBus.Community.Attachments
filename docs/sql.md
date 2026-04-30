@@ -253,6 +253,7 @@ The method `TimeToKeep.Default` provides a recommended default for for attachmen
 | `AddStream` | Large payloads or data generated incrementally (recommended for large data) | Streams via `System.IO.Pipelines` with backpressure. Memory stays bounded regardless of payload size. |
 | `Add(Stream)` | An existing `Stream` instance is available | Bridges to `AddStream` internally via `CopyToAsync`. |
 | `AddFromIncoming` | The outgoing data is produced by transforming an incoming attachment of the current message | Reads from incoming and writes to the outgoing pipe at the same time. No intermediate buffer (unless `bufferSource`/`bufferSink` is set). |
+| `OpenOutgoingAttachment` | The handler needs the converter's output values (e.g. a "truncated" flag) before composing the outgoing message | Streams straight to storage during handler execution. No intermediate buffer. |
 | `AddBytes` / `AddString` | Small payloads already in memory (config, metadata, small documents) | Full payload allocated in memory. |
 | `Add(AttachmentFactory)` | Number of attachments not known at compile time | Dynamic. Each attachment uses the memory model of its content. |
 | `AddFile` | File on disk | Convenience wrapper over `AddStream`. |
@@ -414,7 +415,42 @@ class HandlerFromIncoming :
 
 `bufferSink: true` runs the transform against a seekable `MemoryStream` and drains it to storage afterwards — use when the transform requires seek operations on its output (e.g. some Aspose libraries).
 
-NOTE: The transform runs *during* the outgoing pipeline (after `context.Reply` / `context.Send` is called). Any value the transform produces (e.g. a "truncated" flag, encoding metadata) cannot influence the outgoing message body, since the body has already been finalized by the caller. Use eager conversion if the handler needs such values in the outgoing message.
+NOTE: The transform runs *during* the outgoing pipeline (after `context.Reply` / `context.Send` is called). Any value the transform produces (e.g. a "truncated" flag, encoding metadata) cannot influence the outgoing message body, since the body has already been finalized by the caller. Use `OpenOutgoingAttachment` (below) when the handler needs such values in the outgoing message.
+
+
+#### Write an outgoing attachment immediately
+
+Use `OpenOutgoingAttachment` when the converter's output values (a "truncated" flag, encoding metadata, page count) need to be in the outgoing message body. The handler writes directly to storage *during* its execution and is free to read any state from the conversion before composing the reply. The library allocates the outgoing message id, sets it on the options, and registers the saved attachment so the outgoing pipeline emits the `Attachments` header but skips the deferred save.
+
+<!-- snippet: OpenOutgoingAttachment -->
+<a id='snippet-OpenOutgoingAttachment'></a>
+```cs
+class HandlerImmediateWrite :
+    IHandleMessages<MyMessage>
+{
+    public async Task Handle(MyMessage message, HandlerContext context)
+    {
+        var replyOptions = new ReplyOptions();
+        bool truncated;
+
+        await using (var sink = await context.OpenOutgoingAttachment(
+                         replyOptions,
+                         "output",
+                         cancel: context.CancellationToken))
+        {
+            // Convert directly to the sink. The result (e.g. truncated)
+            // is available before the reply body is composed.
+            truncated = MyConverter.Convert(message.Source, sink);
+        }
+
+        await context.Reply(new OtherMessage { Truncated = truncated }, replyOptions);
+    }
+}
+```
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L111-L135' title='Snippet source file'>snippet source</a> | <a href='#snippet-OpenOutgoingAttachment' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
+
+NOTE: If the handler succeeds in saving but the outgoing dispatch fails (or the handler exits without ever sending the message), the saved attachment becomes an orphan. The cleanup task removes orphans by `Expiry`, but the asymmetry depends on `TransportTransactionMode`. Under `SendsAtomicWithReceive` everything is atomic; under `ReceiveOnly` / `None` the asymmetry is the same one the deferred APIs already have.
 
 
 ### Reading attachments for an incoming message

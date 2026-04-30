@@ -16,6 +16,11 @@ public interface IPersister
     Task SaveStream(string messageId, string name, DateTime expiry, Stream stream, IReadOnlyDictionary<string, string>? metadata, Cancel cancel = default);
 
     /// <summary>
+    /// Opens a writable <see cref="Stream"/> for an attachment. Caller writes data and disposes to commit.
+    /// </summary>
+    Task<Stream> OpenSaveStream(string messageId, string name, DateTime expiry, IReadOnlyDictionary<string, string>? metadata = null, Cancel cancel = default);
+
+    /// <summary>
     /// Saves <paramref name="value" /> as an attachment.
     /// </summary>
     /// <exception cref="TaskCanceledException">If <paramref name="cancel" /> is <see cref="Cancel.IsCancellationRequested" />.</exception>

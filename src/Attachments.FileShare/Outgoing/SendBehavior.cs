@@ -105,6 +105,11 @@ class SendBehavior(IPersister persister, GetTimeToKeep endpointTimeToKeep) :
 
     async Task Process(string messageId, Func<string> getIncomingMessageId, Outgoing outgoing, string name, DateTime expiry, Cancel cancel = default)
     {
+        if (outgoing.IsPreSaved)
+        {
+            return;
+        }
+
         if (outgoing.HasIncomingTransform)
         {
             await ProcessIncomingTransform(messageId, getIncomingMessageId(), outgoing, name, expiry, cancel);

@@ -61,4 +61,35 @@ public partial class Persister
         await using var fileStream = FileHelpers.OpenWrite(dataFile);
         await action(fileStream, cancel);
     }
+
+    /// <summary>
+    /// Open a writable <see cref="Stream"/> for an attachment, creating the directory and metadata files
+    /// up-front. The caller writes data and disposes the stream to commit. Used by the immediate-write API
+    /// to stream straight to disk during handler execution rather than via the deferred outgoing pipeline.
+    /// </summary>
+    public virtual async Task<Stream> OpenSaveStream(
+        string messageId,
+        string name,
+        DateTime expiry,
+        IReadOnlyDictionary<string, string>? metadata = null,
+        Cancel cancel = default)
+    {
+        Guard.AgainstNullOrEmpty(messageId);
+        Guard.AgainstNullOrEmpty(name);
+
+        var attachmentDirectory = GetAttachmentDirectory(messageId, name);
+        ThrowIfDirectoryExists(attachmentDirectory, messageId, name);
+
+        Directory.CreateDirectory(attachmentDirectory);
+        var dataFile = Path.Combine(attachmentDirectory, "data");
+        expiry = expiry.ToUniversalTime();
+        var expiryFile = Path.Combine(attachmentDirectory, $"{expiry:yyyy-MM-ddTHHmm}.expiry");
+        await using (File.Create(expiryFile))
+        {
+        }
+
+        await WriteMetadata(attachmentDirectory, metadata, cancel);
+
+        return FileHelpers.OpenWrite(dataFile);
+    }
 }
