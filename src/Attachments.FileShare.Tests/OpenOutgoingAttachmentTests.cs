@@ -66,7 +66,7 @@ public class OpenOutgoingAttachmentTests :
             var replyOptions = new ReplyOptions();
             bool truncated;
 
-            await using (var sink = await context.OpenOutgoingAttachment(replyOptions, "output", cancel: context.CancellationToken))
+            await using (var sink = await context.OpenOutgoingAttachment(replyOptions, "output"))
             {
                 using var reader = new StreamReader(sourceBuffer, leaveOpen: true);
                 var content = await reader.ReadToEndAsync(context.CancellationToken);

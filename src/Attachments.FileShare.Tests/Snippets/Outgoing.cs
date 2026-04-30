@@ -97,7 +97,7 @@ public class Outgoing
             var replyOptions = new ReplyOptions();
             bool truncated;
 
-            await using (var sink = await context.OpenOutgoingAttachment(replyOptions, "output", cancel: context.CancellationToken))
+            await using (var sink = await context.OpenOutgoingAttachment(replyOptions, "output"))
             {
                 truncated = FileShareConverter.Convert(message.Source, sink);
             }

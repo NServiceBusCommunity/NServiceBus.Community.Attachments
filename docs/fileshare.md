@@ -290,19 +290,23 @@ class HandlerImmediateWrite :
 
         await using (var sink = await context.OpenOutgoingAttachment(
                          replyOptions,
-                         "output",
-                         cancel: context.CancellationToken))
+                         "TheAttachmentName"))
         {
             // Convert directly to the sink. The result (e.g. truncated)
             // is available before the reply body is composed.
             truncated = MyConverter.Convert(message.Source, sink);
         }
 
-        await context.Reply(new OtherMessage { Truncated = truncated }, replyOptions);
+        await context.Reply(
+            new OtherMessage
+            {
+                Truncated = truncated
+            },
+            replyOptions);
     }
 }
 ```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L111-L135' title='Snippet source file'>snippet source</a> | <a href='#snippet-OpenOutgoingAttachment' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/Outgoing.cs#L111-L139' title='Snippet source file'>snippet source</a> | <a href='#snippet-OpenOutgoingAttachment' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 NOTE: If the handler succeeds in saving but the outgoing dispatch fails (or the handler exits without ever sending the message), the saved attachment becomes an orphan. The cleanup task removes orphans by `Expiry`, but the asymmetry depends on `TransportTransactionMode`. Under `SendsAtomicWithReceive` everything is atomic; under `ReceiveOnly` / `None` the asymmetry is the same one the deferred APIs already have.

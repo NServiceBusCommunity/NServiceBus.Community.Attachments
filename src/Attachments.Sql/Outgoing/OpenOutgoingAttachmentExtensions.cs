@@ -22,41 +22,37 @@ public static partial class SqlAttachmentsMessageContextExtensions
         SendOptions options,
         string name,
         GetTimeToKeep? timeToKeep = null,
-        IReadOnlyDictionary<string, string>? metadata = null,
-        Cancel cancel = default) =>
-        OpenForOptions(context, options, name, timeToKeep, metadata, cancel);
+        IReadOnlyDictionary<string, string>? metadata = null) =>
+        OpenForOptions(context, options, name, timeToKeep, metadata);
 
     /// <summary>
-    /// See <see cref="OpenOutgoingAttachment(HandlerContext,SendOptions,string,GetTimeToKeep?,IReadOnlyDictionary{string,string}?,Cancel)"/>.
+    /// See <see cref="OpenOutgoingAttachment(HandlerContext,SendOptions,string,GetTimeToKeep?,IReadOnlyDictionary{string,string}?)"/>.
     /// </summary>
     public static Task<Stream> OpenOutgoingAttachment(
         this HandlerContext context,
         ReplyOptions options,
         string name,
         GetTimeToKeep? timeToKeep = null,
-        IReadOnlyDictionary<string, string>? metadata = null,
-        Cancel cancel = default) =>
-        OpenForOptions(context, options, name, timeToKeep, metadata, cancel);
+        IReadOnlyDictionary<string, string>? metadata = null) =>
+        OpenForOptions(context, options, name, timeToKeep, metadata);
 
     /// <summary>
-    /// See <see cref="OpenOutgoingAttachment(HandlerContext,SendOptions,string,GetTimeToKeep?,IReadOnlyDictionary{string,string}?,Cancel)"/>.
+    /// See <see cref="OpenOutgoingAttachment(HandlerContext,SendOptions,string,GetTimeToKeep?,IReadOnlyDictionary{string,string}?)"/>.
     /// </summary>
     public static Task<Stream> OpenOutgoingAttachment(
         this HandlerContext context,
         PublishOptions options,
         string name,
         GetTimeToKeep? timeToKeep = null,
-        IReadOnlyDictionary<string, string>? metadata = null,
-        Cancel cancel = default) =>
-        OpenForOptions(context, options, name, timeToKeep, metadata, cancel);
+        IReadOnlyDictionary<string, string>? metadata = null) =>
+        OpenForOptions(context, options, name, timeToKeep, metadata);
 
     static async Task<Stream> OpenForOptions(
         HandlerContext context,
         ExtendableOptions options,
         string name,
         GetTimeToKeep? timeToKeep,
-        IReadOnlyDictionary<string, string>? metadata,
-        Cancel cancel)
+        IReadOnlyDictionary<string, string>? metadata)
     {
         Guard.AgainstNullOrEmpty(name);
 
@@ -65,6 +61,7 @@ public static partial class SqlAttachmentsMessageContextExtensions
             throw new("OpenOutgoingAttachment used when attachments not enabled. Call EndpointConfiguration.EnableAttachments() first.");
         }
 
+        var cancel = context.CancellationToken;
         var messageId = options.GetMessageId() ?? Guid.NewGuid().ToString();
         options.SetMessageId(messageId);
 

@@ -40,7 +40,7 @@ public class OutgoingAttachmentsTests
     {
         var attachments = new OutgoingAttachments();
         var metadata = new Dictionary<string, string> {{"key", "value"}};
-        GetTimeToKeep timeToKeep = _ => TimeSpan.FromHours(1);
+        static TimeSpan timeToKeep(TimeSpan? _) => TimeSpan.FromHours(1);
 
         attachments.AddFromIncoming(
             fromName: "fromName",

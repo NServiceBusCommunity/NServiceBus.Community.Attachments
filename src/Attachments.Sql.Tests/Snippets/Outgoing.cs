@@ -120,15 +120,19 @@
 
             await using (var sink = await context.OpenOutgoingAttachment(
                              replyOptions,
-                             "output",
-                             cancel: context.CancellationToken))
+                             "TheAttachmentName"))
             {
                 // Convert directly to the sink. The result (e.g. truncated)
                 // is available before the reply body is composed.
                 truncated = MyConverter.Convert(message.Source, sink);
             }
 
-            await context.Reply(new OtherMessage { Truncated = truncated }, replyOptions);
+            await context.Reply(
+                new OtherMessage
+                {
+                    Truncated = truncated
+                },
+                replyOptions);
         }
     }
 

@@ -157,7 +157,7 @@ class SendBehavior(IPersister persister, GetTimeToKeep endpointTimeToKeep) :
         var bufferSource = outgoing.BufferSource;
         var bufferSink = outgoing.BufferSink;
 
-        Func<Stream, Task> writer = sink =>
+        Task Writer(Stream sink) =>
             persister.ProcessStream(
                 fromMessageId,
                 fromName,
@@ -174,10 +174,9 @@ class SendBehavior(IPersister persister, GetTimeToKeep endpointTimeToKeep) :
                     {
                         await RunTransform(transform, inStream, sink, bufferSink, c);
                     }
-                },
-                cancel);
+                }, cancel);
 
-        return ProcessWriter(toMessageId, name, expiry, writer, outgoing.Metadata, cancel);
+        return ProcessWriter(toMessageId, name, expiry, Writer, outgoing.Metadata, cancel);
     }
 
     static async Task RunTransform(Func<Stream, Stream, Cancel, Task> transform, Stream source, Stream pipeSink, bool bufferSink, Cancel cancel)
