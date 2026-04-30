@@ -1,7 +1,7 @@
 
 <Project>
   <PropertyGroup>
-    <Version>19.3.0</Version>
+    <Version>19.4.0</Version>
     <LangVersion>preview</LangVersion>
     <AssemblyVersion>1.0.0</AssemblyVersion>
     <PackageTags>NServiceBus, Attachments, DataBus</PackageTags>
