@@ -42,6 +42,7 @@ The method `TimeToKeep.Default` provides a recommended default for for attachmen
 |---|---|---|
 | `AddStream` | Large payloads or data generated incrementally (recommended for large data) | Streams via `System.IO.Pipelines` with backpressure. Memory stays bounded regardless of payload size. |
 | `Add(Stream)` | An existing `Stream` instance is available | Bridges to `AddStream` internally via `CopyToAsync`. |
+| `AddFromIncoming` | The outgoing data is produced by transforming an incoming attachment of the current message | Reads from incoming and writes to the outgoing pipe at the same time. No intermediate buffer (unless `bufferSource`/`bufferSink` is set). |
 | `AddBytes` / `AddString` | Small payloads already in memory (config, metadata, small documents) | Full payload allocated in memory. |
 | `Add(AttachmentFactory)` | Number of attachments not known at compile time | Dynamic. Each attachment uses the memory model of its content. |
 | `AddFile` | File on disk | Convenience wrapper over `AddStream`. |
@@ -81,6 +82,21 @@ snippet: OutgoingWithSavePattern
 Use `Add` when a `Stream` instance is already available. Internally bridges to `AddStream` via `CopyToAsync`.
 
 snippet: OutgoingInstance
+
+
+#### Transform an incoming attachment
+
+Use `AddFromIncoming` to produce an outgoing attachment by transforming an incoming attachment of the current message. The library opens the incoming read inside the outgoing pipeline so the source and sink streams are live at the same time. No intermediate `MemoryStream` or temp file is needed.
+
+This is useful when the handler reads an incoming attachment, runs it through a converter, and forwards the converted bytes — without the handler needing to manage the lifetime of the incoming SQL/file stream across the deferred `AddStream` writer.
+
+snippet: OutgoingFromIncoming
+
+`bufferSource: true` buffers the incoming data to a seekable `MemoryStream` before the transform runs — use when the transform requires `Length`/`Position`/`Seek` on its input (e.g. email/MIME parsers).
+
+`bufferSink: true` runs the transform against a seekable `MemoryStream` and drains it to storage afterwards — use when the transform requires seek operations on its output (e.g. some Aspose libraries).
+
+NOTE: The transform runs *during* the outgoing pipeline (after `context.Reply` / `context.Send` is called). Any value the transform produces (e.g. a "truncated" flag, encoding metadata) cannot influence the outgoing message body, since the body has already been finalized by the caller. Use eager conversion if the handler needs such values in the outgoing message.
 
 
 ### Reading attachments for an incoming message

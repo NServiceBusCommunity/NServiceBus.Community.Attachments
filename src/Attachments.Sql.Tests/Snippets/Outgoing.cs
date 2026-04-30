@@ -82,4 +82,29 @@
     }
 
     #endregion
+
+    #region OutgoingFromIncoming
+
+    class HandlerFromIncoming :
+        IHandleMessages<MyMessage>
+    {
+        public Task Handle(MyMessage message, HandlerContext context)
+        {
+            var replyOptions = new ReplyOptions();
+            var attachments = replyOptions.Attachments();
+            attachments.AddFromIncoming(
+                fromName: "input",
+                toName: "output",
+                transform: async (source, sink, cancel) =>
+                {
+                    using var reader = new StreamReader(source, leaveOpen: true);
+                    var content = await reader.ReadToEndAsync(cancel);
+                    await using var writer = new StreamWriter(sink, leaveOpen: true);
+                    await writer.WriteAsync(content.ToUpperInvariant());
+                });
+            return context.Reply(new OtherMessage(), replyOptions);
+        }
+    }
+
+    #endregion
 }

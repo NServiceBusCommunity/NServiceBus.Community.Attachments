@@ -132,4 +132,18 @@ class OutgoingAttachments :
                 Cleanup = cleanup.WrapCleanupInCheck(name),
                 AsyncBytesFactory = bytesFactory.WrapFuncTaskInCheck(name)
             });
+
+    public void AddFromIncoming(string fromName, string toName, Func<Stream, Stream, Cancel, Task> transform, bool bufferSource = false, bool bufferSink = false, GetTimeToKeep? timeToKeep = null, Action? cleanup = null, IReadOnlyDictionary<string, string>? metadata = null) =>
+        Inner.Add(
+            toName,
+            new()
+            {
+                Metadata = metadata,
+                TimeToKeep = timeToKeep,
+                Cleanup = cleanup.WrapCleanupInCheck(toName),
+                IncomingFromName = fromName,
+                IncomingTransform = transform,
+                BufferSource = bufferSource,
+                BufferSink = bufferSink,
+            });
 }
