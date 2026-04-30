@@ -25,12 +25,12 @@ class ReceiveBehavior(Func<Cancel, Task<SqlConnection>> connectionBuilder, IPers
             {
                 if (storageAccessor.TryGetTransaction(session, out var transaction))
                 {
-                    return new(transaction, persister);
+                    return new(transaction, connectionBuilder, persister);
                 }
 
                 if (storageAccessor.TryGetConnection(session, out var connection))
                 {
-                    return new(connection, persister);
+                    return new(connection, connectionBuilder, persister);
                 }
             }
         }
@@ -46,12 +46,12 @@ class ReceiveBehavior(Func<Cancel, Task<SqlConnection>> connectionBuilder, IPers
 
                 if (transportTransaction.TryGet("System.Data.SqlClient.SqlTransaction", out SqlTransaction? dbTransaction))
                 {
-                    return new(dbTransaction, persister);
+                    return new(dbTransaction, connectionBuilder, persister);
                 }
 
                 if (transportTransaction.TryGet("System.Data.SqlClient.SqlConnection", out SqlConnection? connection))
                 {
-                    return new(connection, persister);
+                    return new(connection, connectionBuilder, persister);
                 }
             }
             else

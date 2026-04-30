@@ -88,6 +88,23 @@ public class PersisterTests
     }
 
     [Test]
+    public async Task GetStreamReadAfterReturn()
+    {
+        // Regression: AttachmentStream.CopyToAsync used to throw ObjectDisposedException because
+        // Persister.GetStream wrapped command/reader in await using, disposing them at method exit
+        // before the caller could read from the returned stream.
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
+        var connection = database.Connection;
+        await persister.SaveStream(connection, null, "theMessageId", "theName", defaultTestDate, GetStream(), metadata);
+
+        await using var attachment = await persister.GetStream("theMessageId", "theName", connection, null, false);
+        var array = ToBytes(attachment);
+        await Assert.That((int)array[0]).IsEqualTo(5);
+        await Assert.That(attachment.Name).IsEqualTo("theName");
+    }
+
+    [Test]
     public async Task ProcessByteArray()
     {
         var (database, persister) = await BuildDb();

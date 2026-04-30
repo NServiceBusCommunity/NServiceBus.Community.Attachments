@@ -87,6 +87,8 @@ Attachments can leverage the ambient SQL connectivity from either the [transport
 
 If both `UseSynchronizedStorageSessionConnectivity` and `UseTransportConnectivity` are defined, the `SynchronizedStorageSession` will be used first, followed by the `TransportTransaction`.
 
+Ambient connectivity applies to attachment writes only — attachment saves run on the ambient connection/transaction so the save is atomic with the receive (under `SendsAtomicWithReceive`) or the persister's storage session. Attachment reads always run on a fresh connection from the `connectionFactory` and are not enlisted in the receive transaction. This lets a handler hold an `OpenOutgoingAttachment` sink open while reading incoming attachments without colliding with the write on a non-MARS connection. Each read call (`GetStream`, `CopyTo`, `GetBytes`, `ProcessStream`, etc.) opens its own short-lived connection; SQL connection pooling makes this cheap.
+
 
 #### Use SynchronizedStorageSession connectivity
 
@@ -106,8 +108,8 @@ attachments.UseSynchronizedStorageSessionConnectivity();
 This approach attempts to use the SynchronizedStorageSession using the following steps:
 
  * For the current context attempt to retrieve an instance of `SynchronizedStorageSession`. If no `SynchronizedStorageSession` exists, don't continue and fall back to the [SqlConnection](https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlconnection) retrieved by the `connectionFactory`.
- * Attempt to retrieve a property named 'Transaction' that is a [SqlTransaction](https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqltransaction) from the `SynchronizedStorageSession`. If it exists, use it for all SQL operations in the current pipeline.
- * Attempt to retrieve a property named 'Connection' that is a [SqlConnection](https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlconnection) from the `SynchronizedStorageSession`. If it exists, use it for all SQL operations in the current pipeline.
+ * Attempt to retrieve a property named 'Transaction' that is a [SqlTransaction](https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqltransaction) from the `SynchronizedStorageSession`. If it exists, use it for outgoing attachment operations in the current pipeline.
+ * Attempt to retrieve a property named 'Connection' that is a [SqlConnection](https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlconnection) from the `SynchronizedStorageSession`. If it exists, use it for outgoing attachment operations in the current pipeline.
 
 The properties are retrieved using [reflection](https://docs.microsoft.com/en-us/dotnet/framework/reflection-and-codedom/reflection) since there is no API in NServiceBus to access SynchronizedStorageSession data via type.
 
@@ -130,9 +132,9 @@ attachments.UseTransportConnectivity();
 This approach attempts to use the transport transaction using the following steps:
 
  * For the current context, attempt to retrieve an instance of `TransportTransaction`. If no `TransportTransaction` exists, don't continue and fall back to using the [SqlConnection](https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlconnection) retrieved by the `connectionFactory`.
- * Attempt to retrieve an instance of [Transaction](https://docs.microsoft.com/en-us/dotnet/api/system.transactions.transaction) from the `TransportTransaction`. If it exists, use it in [SqlConnection.EnlistTransaction](https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlconnection.enlisttransaction) with an instance of [SqlConnection](https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlconnection) retrieved by the `connectionFactory`. Then use that [SqlConnection](https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlconnection) for all SQL operations in the current pipeline.
- * Attempt to retrieve an instance of [SqlTransaction](https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqltransaction) from the `TransportTransaction`. If it exists, use it for all SQL operations in the current pipeline.
- * Attempt to retrieve an instance of [SqlConnection](https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlconnection) from the `TransportTransaction`. If it exists, use it for all SQL operations in the current pipeline.
+ * Attempt to retrieve an instance of [Transaction](https://docs.microsoft.com/en-us/dotnet/api/system.transactions.transaction) from the `TransportTransaction`. If it exists, use it in [SqlConnection.EnlistTransaction](https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlconnection.enlisttransaction) with an instance of [SqlConnection](https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlconnection) retrieved by the `connectionFactory`. Then use that [SqlConnection](https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlconnection) for outgoing attachment operations in the current pipeline.
+ * Attempt to retrieve an instance of [SqlTransaction](https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqltransaction) from the `TransportTransaction`. If it exists, use it for outgoing attachment operations in the current pipeline.
+ * Attempt to retrieve an instance of [SqlConnection](https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlconnection) from the `TransportTransaction`. If it exists, use it for outgoing attachment operations in the current pipeline.
  * Any attachments associated with a message send will be deleted after message processing.
 
 
