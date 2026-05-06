@@ -8,7 +8,7 @@
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageVersion Include="ConfigureAwait.Fody" Version="3.4.0" />
     <PackageVersion Include="Fody" Version="6.9.3" />
-    <PackageVersion Include="LocalDb" Version="24.0.0" />
+    <PackageVersion Include="LocalDb" Version="24.1.0" />
     <PackageVersion Include="MarkdownSnippets.MsBuild" Version="28.2.0" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.0.1" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.7" />
