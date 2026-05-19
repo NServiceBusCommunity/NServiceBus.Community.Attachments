@@ -4,7 +4,7 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Argon" Version="0.33.5" />
+    <PackageVersion Include="Argon" Version="0.34.0" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageVersion Include="ConfigureAwait.Fody" Version="3.4.0" />
     <PackageVersion Include="Fody" Version="6.9.3" />
