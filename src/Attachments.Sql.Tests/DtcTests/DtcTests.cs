@@ -1,5 +1,4 @@
 using System.Transactions;
-using Microsoft.Extensions.DependencyInjection;
 using NServiceBus.Persistence.Sql;
 
 public class DtcTests
@@ -148,7 +147,6 @@ public class DtcTests
         attachments.DisableCleanupTask();
 
         configuration.UseSerialization<SystemJsonSerializer>();
-        configuration.RegisterComponents(_ => _.AddSingleton(context));
 
         // SQL Persistence on NSB DB
         var persistence = configuration.UsePersistence<SqlPersistence>();
@@ -176,8 +174,13 @@ public class DtcTests
             return Task.CompletedTask;
         }));
 
-        var endpoint = await Endpoint.Start(configuration);
-        await SendStartMessage(endpoint);
+        var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddSingleton(context);
+        builder.Services.AddNServiceBusEndpoint(configuration);
+        using var host = builder.Build();
+        await host.StartAsync();
+        var session = host.Services.GetRequiredService<IMessageSession>();
+        await SendStartMessage(session);
 
         var timeout = TimeSpan.FromSeconds(30);
         if (!context.HandlerEvent.WaitOne(timeout))
@@ -205,7 +208,7 @@ public class DtcTests
             throw new("Saga timed out");
         }
 
-        await endpoint.Stop();
+        await host.StopAsync();
 
         // Assert handler operations
         await Assert.That(context.HandlerAdoWriteSucceeded).IsTrue();
@@ -240,7 +243,7 @@ public class DtcTests
             cancellationToken: default);
     }
 
-    static Task SendStartMessage(IEndpointInstance endpoint)
+    static Task SendStartMessage(IMessageSession session)
     {
         var sendOptions = new SendOptions();
         sendOptions.RouteToThisEndpoint();
@@ -255,7 +258,7 @@ public class DtcTests
                     "key", "value"
                 }
             });
-        return endpoint.Send(new DtcSendMessage(), sendOptions);
+        return session.Send(new DtcSendMessage(), sendOptions);
     }
 
     static async Task WriteContent(Stream stream)

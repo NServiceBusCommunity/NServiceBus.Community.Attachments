@@ -1,5 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-
 [NotInParallel]
 public class AddFromIncomingTests
 {
@@ -10,17 +8,17 @@ public class AddFromIncomingTests
     public Task TransformsIncomingAttachmentInOutgoingPipeline() =>
         RunRoundTrip(
             endpointSuffix: "Streamed",
-            sendStartMessage: endpoint => endpoint.Send(new InMessage(), BuildSendOptions("hello")),
+            sendStartMessage: session => session.Send(new InMessage(), BuildSendOptions("hello")),
             expected: "HELLO");
 
     [Test]
     public Task BufferSourceMakesInputSeekable() =>
         RunRoundTrip(
             endpointSuffix: "Buffered",
-            sendStartMessage: endpoint => endpoint.Send(new SeekMessage(), BuildSendOptions("seekme")),
+            sendStartMessage: session => session.Send(new SeekMessage(), BuildSendOptions("seekme")),
             expected: "seekme(len=6)");
 
-    static async Task RunRoundTrip(string endpointSuffix, Func<IEndpointInstance, Task> sendStartMessage, string expected)
+    static async Task RunRoundTrip(string endpointSuffix, Func<IMessageSession, Task> sendStartMessage, string expected)
     {
         receivedBytes = null;
         resetEvent.Reset();
@@ -38,20 +36,24 @@ public class AddFromIncomingTests
         configuration.EnableInstallers();
         configuration.PurgeOnStartup(true);
         attachments.DisableCleanupTask();
-        configuration.RegisterComponents(_ => _.AddSingleton(resetEvent));
         var transport = configuration.UseTransport<LearningTransport>();
         transport.StorageDirectory(Path.Combine(Path.GetTempPath(), $"AddFromIncoming_{endpointSuffix}"));
         transport.Transactions(TransportTransactionMode.SendsAtomicWithReceive);
 
-        var endpoint = await Endpoint.Start(configuration);
-        await sendStartMessage(endpoint);
+        var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddSingleton(resetEvent);
+        builder.Services.AddNServiceBusEndpoint(configuration);
+        using var host = builder.Build();
+        await host.StartAsync();
+        var session = host.Services.GetRequiredService<IMessageSession>();
+        await sendStartMessage(session);
 
         if (!resetEvent.WaitOne(TimeSpan.FromSeconds(20)))
         {
             throw new("TimedOut");
         }
 
-        await endpoint.Stop();
+        await host.StopAsync();
 
         await Assert.That(Encoding.UTF8.GetString(receivedBytes!)).IsEqualTo(expected);
     }

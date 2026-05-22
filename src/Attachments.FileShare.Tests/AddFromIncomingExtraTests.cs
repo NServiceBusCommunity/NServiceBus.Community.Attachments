@@ -72,11 +72,15 @@ public class AddFromIncomingExtraTests :
         configuration.UsePersistence<LearningPersistence>();
         var transport = configuration.UseTransport<LearningTransport>();
         transport.StorageDirectory(transportPath);
-        configuration.RegisterComponents(_ => _.AddSingleton(state));
         configuration.EnableAttachments(attachmentsPath, TimeToKeep.Default);
         configuration.UseSerialization<SystemJsonSerializer>();
         configuration.DisableRetries();
-        var endpoint = await Endpoint.Start(configuration);
+        var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddSingleton(state);
+        builder.Services.AddNServiceBusEndpoint(configuration);
+        using var host = builder.Build();
+        await host.StartAsync();
+        var session = host.Services.GetRequiredService<IMessageSession>();
 
         var sendOptions = new SendOptions();
         sendOptions.RouteToThisEndpoint();
@@ -86,10 +90,10 @@ public class AddFromIncomingExtraTests :
             await using var writer = new StreamWriter(stream, leaveOpen: true);
             await writer.WriteAsync(sourceContent);
         });
-        await endpoint.Send(new TMessage(), sendOptions);
+        await session.Send(new TMessage(), sendOptions);
 
         var fired = state.Reply.WaitOne(TimeSpan.FromSeconds(expectReply ? 10 : 5));
-        await endpoint.Stop();
+        await host.StopAsync();
 
         if (expectReply && !fired)
         {

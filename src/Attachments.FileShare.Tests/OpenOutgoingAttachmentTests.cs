@@ -16,10 +16,14 @@ public class OpenOutgoingAttachmentTests :
         var configuration = new EndpointConfiguration("FileShareOpenOutgoingAttachmentTests");
         configuration.UsePersistence<LearningPersistence>();
         configuration.UseTransport<LearningTransport>();
-        configuration.RegisterComponents(_ => _.AddSingleton(resetEvent));
         configuration.EnableAttachments(Path.GetFullPath("attachments/OpenOutgoingAttachmentTests"), TimeToKeep.Default);
         configuration.UseSerialization<SystemJsonSerializer>();
-        var endpoint = await Endpoint.Start(configuration);
+        var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddSingleton(resetEvent);
+        builder.Services.AddNServiceBusEndpoint(configuration);
+        using var host = builder.Build();
+        await host.StartAsync();
+        var session = host.Services.GetRequiredService<IMessageSession>();
 
         var sendOptions = new SendOptions();
         sendOptions.RouteToThisEndpoint();
@@ -31,10 +35,10 @@ public class OpenOutgoingAttachmentTests :
                 await using var writer = new StreamWriter(stream, leaveOpen: true);
                 await writer.WriteAsync("hello");
             });
-        await endpoint.Send(new InMessage(), sendOptions);
+        await session.Send(new InMessage(), sendOptions);
 
         resetEvent.WaitOne(TimeSpan.FromSeconds(20));
-        await endpoint.Stop();
+        await host.StopAsync();
 
         await Assert.That(Encoding.UTF8.GetString(receivedBytes!)).IsEqualTo("HELLO");
         await Assert.That(receivedTruncated).IsTrue();

@@ -1,4 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
 using NServiceBus.Persistence.Sql;
 using TUnit.Core.Interfaces;
 
@@ -57,7 +56,6 @@ public class IntegrationTests
             attachments.DisableEarlyCleanup();
         }
 
-        configuration.RegisterComponents(registration: _ => _.AddSingleton(context));
         if (useSqlPersistence)
         {
             var persistence = configuration.UsePersistence<SqlPersistence>();
@@ -100,8 +98,13 @@ public class IntegrationTests
             transport.Transactions(transactionMode);
         }
 
-        var endpoint = await Endpoint.Start(configuration);
-        var startMessageId = await SendStartMessage(endpoint);
+        var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddSingleton(context);
+        builder.Services.AddNServiceBusEndpoint(configuration);
+        using var host = builder.Build();
+        await host.StartAsync();
+        var session = host.Services.GetRequiredService<IMessageSession>();
+        var startMessageId = await SendStartMessage(session);
 
         var timeout = TimeSpan.FromSeconds(20);
         if (!context.HandlerEvent.WaitOne(timeout))
@@ -128,7 +131,7 @@ public class IntegrationTests
             }
         }
 
-        await endpoint.Stop();
+        await host.StopAsync();
     }
 
     static Task RunSqlScripts(string endpointName, Func<SqlConnection> connectionBuilder)
@@ -149,7 +152,7 @@ public class IntegrationTests
             cancellationToken: default);
     }
 
-    static async Task<string> SendStartMessage(IEndpointInstance endpoint)
+    static async Task<string> SendStartMessage(IMessageSession session)
     {
         var sendOptions = new SendOptions();
         sendOptions.RouteToThisEndpoint();
@@ -173,7 +176,7 @@ public class IntegrationTests
             await appendAttachment("viaAttachmentFactory1", GetStream());
             await appendAttachment("viaAttachmentFactory2", GetStream());
         });
-        await endpoint.Send(new SendMessage(), sendOptions);
+        await session.Send(new SendMessage(), sendOptions);
         return messageId;
     }
 

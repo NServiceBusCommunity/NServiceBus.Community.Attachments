@@ -18,3 +18,4 @@ TestResults
 /src/Attachments.Sql.Benchmarks/BenchmarkDotNet.Artifacts.Sql
 /BenchmarkDotNet.Artifacts.Sql/results
 /src/Attachments.FileShare.Benchmarks/BenchmarkDotNet.Artifacts.FileShare
+.claude/settings.local.json

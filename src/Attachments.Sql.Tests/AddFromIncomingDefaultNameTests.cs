@@ -1,5 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-
 [NotInParallel]
 public class AddFromIncomingDefaultNameTests
 {
@@ -25,27 +23,31 @@ public class AddFromIncomingDefaultNameTests
         configuration.EnableInstallers();
         configuration.PurgeOnStartup(true);
         attachments.DisableCleanupTask();
-        configuration.RegisterComponents(_ => _.AddSingleton(resetEvent));
         var transport = configuration.UseTransport<LearningTransport>();
         transport.StorageDirectory(Path.Combine(Path.GetTempPath(), "AddFromIncomingDefaultName"));
         transport.Transactions(TransportTransactionMode.SendsAtomicWithReceive);
 
-        var endpoint = await Endpoint.Start(configuration);
+        var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddSingleton(resetEvent);
+        builder.Services.AddNServiceBusEndpoint(configuration);
+        using var host = builder.Build();
+        await host.StartAsync();
+        var session = host.Services.GetRequiredService<IMessageSession>();
 
         // Sender writes the incoming attachment under the default name.
         var sendOptions = new SendOptions();
         sendOptions.RouteToThisEndpoint();
         var outgoing = sendOptions.Attachments();
         outgoing.Add(BuildStream("hello"));
-        await endpoint.Send(new InMessage(), sendOptions);
+        await session.Send(new InMessage(), sendOptions);
 
         if (!resetEvent.WaitOne(TimeSpan.FromSeconds(20)))
         {
-            await endpoint.Stop();
+            await host.StopAsync();
             throw new("TimedOut");
         }
 
-        await endpoint.Stop();
+        await host.StopAsync();
 
         await Assert.That(Encoding.UTF8.GetString(receivedBytes!)).IsEqualTo("HELLO");
     }

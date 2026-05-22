@@ -1,5 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-
 [NotInParallel]
 public class OpenOutgoingAttachmentDefaultNameTests
 {
@@ -24,22 +22,26 @@ public class OpenOutgoingAttachmentDefaultNameTests
         configuration.EnableInstallers();
         configuration.PurgeOnStartup(true);
         attachments.DisableCleanupTask();
-        configuration.RegisterComponents(_ => _.AddSingleton(state));
         var transport = configuration.UseTransport<LearningTransport>();
         transport.StorageDirectory(Path.Combine(Path.GetTempPath(), "OpenDefaultName"));
         transport.Transactions(TransportTransactionMode.SendsAtomicWithReceive);
 
-        var endpoint = await Endpoint.Start(configuration);
+        var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddSingleton(state);
+        builder.Services.AddNServiceBusEndpoint(configuration);
+        using var host = builder.Build();
+        await host.StartAsync();
+        var session = host.Services.GetRequiredService<IMessageSession>();
 
-        await endpoint.SendLocal(new InMessage());
+        await session.SendLocal(new InMessage());
 
         if (!state.Reply.WaitOne(TimeSpan.FromSeconds(20)))
         {
-            await endpoint.Stop();
+            await host.StopAsync();
             throw new("TimedOut");
         }
 
-        await endpoint.Stop();
+        await host.StopAsync();
 
         await Assert.That(Encoding.UTF8.GetString(state.Bytes!)).IsEqualTo("HELLO");
     }

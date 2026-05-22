@@ -14,10 +14,14 @@ public class AddFromIncomingTests :
         var configuration = new EndpointConfiguration("FileShareAddFromIncomingTests");
         configuration.UsePersistence<LearningPersistence>();
         configuration.UseTransport<LearningTransport>();
-        configuration.RegisterComponents(_ => _.AddSingleton(resetEvent));
         configuration.EnableAttachments(Path.GetFullPath("attachments/AddFromIncomingTests"), TimeToKeep.Default);
         configuration.UseSerialization<SystemJsonSerializer>();
-        var endpoint = await Endpoint.Start(configuration);
+        var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddSingleton(resetEvent);
+        builder.Services.AddNServiceBusEndpoint(configuration);
+        using var host = builder.Build();
+        await host.StartAsync();
+        var session = host.Services.GetRequiredService<IMessageSession>();
 
         var sendOptions = new SendOptions();
         sendOptions.RouteToThisEndpoint();
@@ -29,10 +33,10 @@ public class AddFromIncomingTests :
                 await using var writer = new StreamWriter(stream, leaveOpen: true);
                 await writer.WriteAsync("hello");
             });
-        await endpoint.Send(new InMessage(), sendOptions);
+        await session.Send(new InMessage(), sendOptions);
 
         resetEvent.WaitOne(TimeSpan.FromSeconds(20));
-        await endpoint.Stop();
+        await host.StopAsync();
 
         await Assert.That(Encoding.UTF8.GetString(receivedBytes!)).IsEqualTo("HELLO");
     }
@@ -46,10 +50,14 @@ public class AddFromIncomingTests :
         var configuration = new EndpointConfiguration("FileShareAddFromIncomingBufferSourceTests");
         configuration.UsePersistence<LearningPersistence>();
         configuration.UseTransport<LearningTransport>();
-        configuration.RegisterComponents(_ => _.AddSingleton(resetEvent));
         configuration.EnableAttachments(Path.GetFullPath("attachments/AddFromIncomingBufferSourceTests"), TimeToKeep.Default);
         configuration.UseSerialization<SystemJsonSerializer>();
-        var endpoint = await Endpoint.Start(configuration);
+        var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddSingleton(resetEvent);
+        builder.Services.AddNServiceBusEndpoint(configuration);
+        using var host = builder.Build();
+        await host.StartAsync();
+        var session = host.Services.GetRequiredService<IMessageSession>();
 
         var sendOptions = new SendOptions();
         sendOptions.RouteToThisEndpoint();
@@ -61,10 +69,10 @@ public class AddFromIncomingTests :
                 await using var writer = new StreamWriter(stream, leaveOpen: true);
                 await writer.WriteAsync("seekme");
             });
-        await endpoint.Send(new SeekMessage(), sendOptions);
+        await session.Send(new SeekMessage(), sendOptions);
 
         resetEvent.WaitOne(TimeSpan.FromSeconds(20));
-        await endpoint.Stop();
+        await host.StopAsync();
 
         await Assert.That(Encoding.UTF8.GetString(receivedBytes!)).IsEqualTo("seekme(len=6)");
     }

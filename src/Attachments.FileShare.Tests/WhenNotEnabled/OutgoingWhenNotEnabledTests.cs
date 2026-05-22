@@ -1,4 +1,4 @@
-﻿public class OutgoingWhenNotEnabledTests
+public class OutgoingWhenNotEnabledTests
 {
     [Test]
     public async Task Run()
@@ -7,11 +7,15 @@
         configuration.UsePersistence<LearningPersistence>();
         configuration.UseTransport<LearningTransport>();
         configuration.UseSerialization<SystemJsonSerializer>();
-        var endpoint = await Endpoint.Start(configuration);
+        var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddNServiceBusEndpoint(configuration);
+        using var host = builder.Build();
+        await host.StartAsync();
+        var session = host.Services.GetRequiredService<IMessageSession>();
 
         try
         {
-            await SendStartMessageWithAttachment(endpoint);
+            await SendStartMessageWithAttachment(session);
             throw new InvalidOperationException("Expected exception was not thrown");
         }
         catch (Exception exception)
@@ -19,16 +23,16 @@
             await Verify(exception.Message);
         }
 
-        await endpoint.Stop();
+        await host.StopAsync();
     }
 
-    static Task SendStartMessageWithAttachment(IEndpointInstance endpoint)
+    static Task SendStartMessageWithAttachment(IMessageSession session)
     {
         var sendOptions = new SendOptions();
         sendOptions.RouteToThisEndpoint();
         var attachment = sendOptions.Attachments();
         attachment.AddStream(WriteContent);
-        return endpoint.Send(new SendMessage(), sendOptions);
+        return session.Send(new SendMessage(), sendOptions);
     }
 
     static async Task WriteContent(Stream stream)

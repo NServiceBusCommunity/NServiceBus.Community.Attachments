@@ -1,5 +1,3 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-
 public class IncomingWhenNotEnabledTests : IDisposable
 {
     public ManualResetEvent ResetEvent = new(false);
@@ -12,11 +10,15 @@ public class IncomingWhenNotEnabledTests : IDisposable
         configuration.UsePersistence<LearningPersistence>();
         configuration.UseTransport<LearningTransport>();
         configuration.UseSerialization<SystemJsonSerializer>();
-        configuration.RegisterComponents(_ => _.AddSingleton(this));
-        var endpoint = await Endpoint.Start(configuration);
-        await endpoint.SendLocal(new SendMessage());
+        var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddSingleton(this);
+        builder.Services.AddNServiceBusEndpoint(configuration);
+        using var host = builder.Build();
+        await host.StartAsync();
+        var session = host.Services.GetRequiredService<IMessageSession>();
+        await session.SendLocal(new SendMessage());
         ResetEvent.WaitOne();
-        await endpoint.Stop();
+        await host.StopAsync();
 
         await Assert.That(Exception).IsNotNull();
         await Verify(Exception!.Message);
