@@ -1,5 +1,4 @@
 ﻿using System.Transactions;
-using NServiceBus.Logging;
 
 public static class ModuleInitializer
 {
@@ -8,6 +7,5 @@ public static class ModuleInitializer
     {
         TransactionManager.ImplicitDistributedTransactions = true;
         VerifierSettings.InitializePlugins();
-        LogManager.UseFactory(NullLogger.Instance);
     }
 }

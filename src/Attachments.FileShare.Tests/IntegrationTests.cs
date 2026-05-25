@@ -1,4 +1,4 @@
-﻿using TUnit.Core.Interfaces;
+using TUnit.Core.Interfaces;
 
 public class ParallelLimit4 : IParallelLimit
 {
@@ -17,19 +17,23 @@ public class IntegrationTests :
         var configuration = new EndpointConfiguration("FileShareIntegrationTests");
         configuration.UsePersistence<LearningPersistence>();
         configuration.UseTransport<LearningTransport>();
-        configuration.RegisterComponents(_ => _.AddSingleton(resetEvent));
         configuration.EnableAttachments(Path.GetFullPath("attachments/IntegrationTests"), TimeToKeep.Default);
         configuration.UseSerialization<SystemJsonSerializer>();
-        var endpoint = await Endpoint.Start(configuration);
-        await SendStartMessage(endpoint);
+        var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddSingleton(resetEvent);
+        builder.Services.AddNServiceBusEndpoint(configuration);
+        using var host = builder.Build();
+        await host.StartAsync();
+        var session = host.Services.GetRequiredService<IMessageSession>();
+        await SendStartMessage(session);
         resetEvent.WaitOne();
-        await endpoint.Stop();
+        await host.StopAsync();
     }
 
     public void Dispose() =>
         resetEvent.Dispose();
 
-    static Task SendStartMessage(IEndpointInstance endpoint)
+    static Task SendStartMessage(IMessageSession session)
     {
         var sendOptions = new SendOptions();
         sendOptions.RouteToThisEndpoint();
@@ -49,7 +53,7 @@ public class IntegrationTests :
             await appendAttachment("viaAttachmentFactory1", GetStream());
             await appendAttachment("viaAttachmentFactory2", GetStream());
         });
-        return endpoint.Send(new SendMessage(), sendOptions);
+        return session.Send(new SendMessage(), sendOptions);
     }
 
     static async Task WriteContent(Stream stream)

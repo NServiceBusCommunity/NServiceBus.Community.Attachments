@@ -1,5 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-
 [NotInParallel]
 public class OpenOutgoingAttachmentConcurrentReadTests
 {
@@ -32,13 +30,17 @@ public class OpenOutgoingAttachmentConcurrentReadTests
         configuration.EnableInstallers();
         configuration.PurgeOnStartup(true);
         attachments.DisableCleanupTask();
-        configuration.RegisterComponents(_ => _.AddSingleton(state));
 
         var transport = configuration.UseTransport<SqlServerTransport>();
         transport.ConnectionString(connectionString);
         transport.Transactions(transactionMode);
 
-        var endpoint = await Endpoint.Start(configuration);
+        var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddSingleton(state);
+        builder.Services.AddNServiceBusEndpoint(configuration);
+        using var host = builder.Build();
+        await host.StartAsync();
+        var session = host.Services.GetRequiredService<IMessageSession>();
 
         var sendOptions = new SendOptions();
         sendOptions.RouteToThisEndpoint();
@@ -48,15 +50,15 @@ public class OpenOutgoingAttachmentConcurrentReadTests
             await using var writer = new StreamWriter(stream, leaveOpen: true);
             await writer.WriteAsync("hello");
         });
-        await endpoint.Send(new InMessage(), sendOptions);
+        await session.Send(new InMessage(), sendOptions);
 
         if (!state.Reply.WaitOne(TimeSpan.FromSeconds(30)))
         {
-            await endpoint.Stop();
+            await host.StopAsync();
             throw new($"TimedOut for mode {transactionMode}");
         }
 
-        await endpoint.Stop();
+        await host.StopAsync();
 
         await Assert.That(Encoding.UTF8.GetString(state.Bytes!)).IsEqualTo("HELLO");
     }

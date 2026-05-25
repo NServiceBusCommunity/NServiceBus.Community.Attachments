@@ -1,5 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-
 [NotInParallel]
 public class AddFromIncomingExtraTests
 {
@@ -47,12 +45,16 @@ public class AddFromIncomingExtraTests
         configuration.EnableInstallers();
         configuration.PurgeOnStartup(true);
         attachments.DisableCleanupTask();
-        configuration.RegisterComponents(_ => _.AddSingleton(state));
         var transport = configuration.UseTransport<LearningTransport>();
         transport.StorageDirectory(Path.Combine(Path.GetTempPath(), $"AddFromIncomingExtra_{suffix}"));
         transport.Transactions(TransportTransactionMode.SendsAtomicWithReceive);
 
-        var endpoint = await Endpoint.Start(configuration);
+        var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddSingleton(state);
+        builder.Services.AddNServiceBusEndpoint(configuration);
+        using var host = builder.Build();
+        await host.StartAsync();
+        var session = host.Services.GetRequiredService<IMessageSession>();
 
         var sendOptions = new SendOptions();
         sendOptions.RouteToThisEndpoint();
@@ -62,15 +64,15 @@ public class AddFromIncomingExtraTests
             await using var writer = new StreamWriter(stream, leaveOpen: true);
             await writer.WriteAsync(sourceContent);
         });
-        await endpoint.Send(new TMessage(), sendOptions);
+        await session.Send(new TMessage(), sendOptions);
 
         if (!state.Reply.WaitOne(TimeSpan.FromSeconds(20)))
         {
-            await endpoint.Stop();
+            await host.StopAsync();
             throw new("TimedOut");
         }
 
-        await endpoint.Stop();
+        await host.StopAsync();
     }
 
     class BufferSinkMessage :

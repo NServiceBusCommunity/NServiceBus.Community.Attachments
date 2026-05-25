@@ -1,5 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-
 [NotInParallel]
 public class OpenOutgoingAttachmentTests
 {
@@ -27,12 +25,16 @@ public class OpenOutgoingAttachmentTests
         configuration.EnableInstallers();
         configuration.PurgeOnStartup(true);
         attachments.DisableCleanupTask();
-        configuration.RegisterComponents(_ => _.AddSingleton(resetEvent));
         var transport = configuration.UseTransport<LearningTransport>();
         transport.StorageDirectory(Path.Combine(Path.GetTempPath(), "OpenOutgoingAttachmentTests"));
         transport.Transactions(TransportTransactionMode.SendsAtomicWithReceive);
 
-        var endpoint = await Endpoint.Start(configuration);
+        var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddSingleton(resetEvent);
+        builder.Services.AddNServiceBusEndpoint(configuration);
+        using var host = builder.Build();
+        await host.StartAsync();
+        var session = host.Services.GetRequiredService<IMessageSession>();
 
         var sendOptions = new SendOptions();
         sendOptions.RouteToThisEndpoint();
@@ -42,14 +44,14 @@ public class OpenOutgoingAttachmentTests
             await using var writer = new StreamWriter(stream, leaveOpen: true);
             await writer.WriteAsync("hello");
         });
-        await endpoint.Send(new InMessage(), sendOptions);
+        await session.Send(new InMessage(), sendOptions);
 
         if (!resetEvent.WaitOne(TimeSpan.FromSeconds(20)))
         {
             throw new("TimedOut");
         }
 
-        await endpoint.Stop();
+        await host.StopAsync();
 
         await Assert.That(Encoding.UTF8.GetString(receivedBytes!)).IsEqualTo("HELLO");
         await Assert.That(receivedTruncated).IsTrue();

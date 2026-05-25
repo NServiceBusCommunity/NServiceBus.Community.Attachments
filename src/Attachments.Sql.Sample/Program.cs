@@ -1,4 +1,6 @@
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using NServiceBus.Attachments.Sql;
 
 class Program
@@ -19,19 +21,23 @@ class Program
         SqlConnection NewConnection() => new(connectionString);
         var attachments = configuration.EnableAttachments(NewConnection, TimeToKeep.Default);
         attachments.UseTransportConnectivity();
-        var endpoint = await Endpoint.Start(configuration);
-        await SendMessage(endpoint);
+        var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddNServiceBusEndpoint(configuration);
+        using var host = builder.Build();
+        await host.StartAsync();
+        var session = host.Services.GetRequiredService<IMessageSession>();
+        await SendMessage(session);
         Console.WriteLine("Press any key to stop program");
         Console.ReadKey();
-        await endpoint.Stop();
+        await host.StopAsync();
     }
 
-    static Task SendMessage(IEndpointInstance endpoint)
+    static Task SendMessage(IMessageSession session)
     {
         var sendOptions = new SendOptions();
         sendOptions.RouteToThisEndpoint();
         var attachments = sendOptions.Attachments();
         attachments.AddString(name: "foo", value: "content");
-        return endpoint.Send(new SendMessage(), sendOptions);
+        return session.Send(new SendMessage(), sendOptions);
     }
 }

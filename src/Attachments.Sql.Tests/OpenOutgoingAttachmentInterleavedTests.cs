@@ -1,5 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-
 [NotInParallel]
 public class OpenOutgoingAttachmentInterleavedTests
 {
@@ -32,13 +30,17 @@ public class OpenOutgoingAttachmentInterleavedTests
         configuration.EnableInstallers();
         configuration.PurgeOnStartup(true);
         attachments.DisableCleanupTask();
-        configuration.RegisterComponents(_ => _.AddSingleton(state));
 
         var transport = configuration.UseTransport<SqlServerTransport>();
         transport.ConnectionString(connectionString);
         transport.Transactions(transactionMode);
 
-        var endpoint = await Endpoint.Start(configuration);
+        var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddSingleton(state);
+        builder.Services.AddNServiceBusEndpoint(configuration);
+        using var host = builder.Build();
+        await host.StartAsync();
+        var session = host.Services.GetRequiredService<IMessageSession>();
 
         // Use a payload long enough to span many read iterations against the 16-byte buffer.
         var payload = string.Concat(Enumerable.Repeat("abcdefghij", 1000));
@@ -51,15 +53,15 @@ public class OpenOutgoingAttachmentInterleavedTests
             await using var writer = new StreamWriter(stream, leaveOpen: true);
             await writer.WriteAsync(payload);
         });
-        await endpoint.Send(new InMessage(), sendOptions);
+        await session.Send(new InMessage(), sendOptions);
 
         if (!state.Reply.WaitOne(TimeSpan.FromSeconds(30)))
         {
-            await endpoint.Stop();
+            await host.StopAsync();
             throw new($"TimedOut for mode {transactionMode}");
         }
 
-        await endpoint.Stop();
+        await host.StopAsync();
 
         await Assert.That(Encoding.UTF8.GetString(state.Bytes!)).IsEqualTo(payload.ToUpperInvariant());
     }
