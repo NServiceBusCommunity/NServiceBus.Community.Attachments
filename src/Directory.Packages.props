@@ -9,7 +9,7 @@
     <PackageVersion Include="ConfigureAwait.Fody" Version="3.4.1" />
     <PackageVersion Include="Fody" Version="6.9.3" />
     <PackageVersion Include="LocalDb" Version="24.1.2" />
-    <PackageVersion Include="MarkdownSnippets.MsBuild" Version="28.3.0" />
+    <PackageVersion Include="MarkdownSnippets.MsBuild" Version="28.3.1" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.0.1" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.9" />
     <PackageVersion Include="NServiceBus" Version="10.2.5" />
@@ -24,6 +24,6 @@
     <PackageVersion Include="EmptyFiles" Version="8.18.1" />
     <PackageVersion Include="SimpleInfoName" Version="3.2.0" />
     <PackageVersion Include="Verify" Version="31.19.1" />
-    <PackageVersion Include="TUnit" Version="1.53.0" />
+    <PackageVersion Include="TUnit" Version="1.54.0" />
   </ItemGroup>
 </Project>
