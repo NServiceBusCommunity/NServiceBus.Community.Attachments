@@ -8,7 +8,7 @@
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageVersion Include="ConfigureAwait.Fody" Version="3.4.1" />
     <PackageVersion Include="Fody" Version="6.9.3" />
-    <PackageVersion Include="LocalDb" Version="26.2.0" />
+    <PackageVersion Include="LocalDb" Version="27.2.1" />
     <PackageVersion Include="MarkdownSnippets.MsBuild" Version="28.5.0" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.1.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.12" />
@@ -24,6 +24,6 @@
     <PackageVersion Include="EmptyFiles" Version="8.19.0" />
     <PackageVersion Include="SimpleInfoName" Version="3.2.0" />
     <PackageVersion Include="Verify" Version="33.1.5" />
-    <PackageVersion Include="TUnit" Version="1.70.1" />
+    <PackageVersion Include="TUnit" Version="1.71.0" />
   </ItemGroup>
 </Project>

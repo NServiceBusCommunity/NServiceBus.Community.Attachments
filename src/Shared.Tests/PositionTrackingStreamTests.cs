@@ -4,7 +4,7 @@ public class PositionTrackingStreamTests
     public async Task Position_StartsAtZero()
     {
         using var inner = new MemoryStream();
-        using var stream = new PositionTrackingStream(inner);
+        await using var stream = new PositionTrackingStream(inner);
         await Assert.That(stream.Position).IsEqualTo(0);
     }
 
@@ -12,7 +12,7 @@ public class PositionTrackingStreamTests
     public async Task Write_TracksPosition()
     {
         using var inner = new MemoryStream();
-        using var stream = new PositionTrackingStream(inner);
+        await using var stream = new PositionTrackingStream(inner);
         stream.Write([1, 2, 3], 0, 3);
         await Assert.That(stream.Position).IsEqualTo(3);
         stream.Write([4, 5], 0, 2);
@@ -23,7 +23,7 @@ public class PositionTrackingStreamTests
     public async Task WriteAsync_TracksPosition()
     {
         using var inner = new MemoryStream();
-        using var stream = new PositionTrackingStream(inner);
+        await using var stream = new PositionTrackingStream(inner);
         await stream.WriteAsync([1, 2, 3], 0, 3);
         await Assert.That(stream.Position).IsEqualTo(3);
     }
@@ -32,7 +32,7 @@ public class PositionTrackingStreamTests
     public async Task WriteAsyncMemory_TracksPosition()
     {
         using var inner = new MemoryStream();
-        using var stream = new PositionTrackingStream(inner);
+        await using var stream = new PositionTrackingStream(inner);
         await stream.WriteAsync(new byte[] { 1, 2, 3, 4 }.AsMemory());
         await Assert.That(stream.Position).IsEqualTo(4);
     }
@@ -41,7 +41,7 @@ public class PositionTrackingStreamTests
     public async Task WriteByte_TracksPosition()
     {
         using var inner = new MemoryStream();
-        using var stream = new PositionTrackingStream(inner);
+        await using var stream = new PositionTrackingStream(inner);
         stream.WriteByte(42);
         await Assert.That(stream.Position).IsEqualTo(1);
         stream.WriteByte(43);
@@ -60,9 +60,10 @@ public class PositionTrackingStreamTests
     public async Task WrittenData_PassedToInnerStream()
     {
         using var inner = new MemoryStream();
-        using var stream = new PositionTrackingStream(inner);
+        await using var stream = new PositionTrackingStream(inner);
         stream.Write([10, 20, 30], 0, 3);
-        await Assert.That(inner.ToArray()).IsEquivalentTo(new byte[] { 10, 20, 30 });
+        await Assert.That(inner.ToArray())
+            .IsEquivalentTo(new byte[] { 10, 20, 30 });
     }
 
     [Test]
@@ -70,10 +71,12 @@ public class PositionTrackingStreamTests
     {
         var inner = new MemoryStream();
         var stream = new PositionTrackingStream(inner);
+        // ReSharper disable once MethodHasAsyncOverload
         stream.Dispose();
         // inner should still be usable
         inner.Write([1, 2, 3], 0, 3);
-        await Assert.That(inner.ToArray()).IsEquivalentTo(new byte[] { 1, 2, 3 });
+        await Assert.That(inner.ToArray())
+            .IsEquivalentTo(new byte[] { 1, 2, 3 });
     }
 
     [Test]
@@ -84,7 +87,8 @@ public class PositionTrackingStreamTests
         await stream.DisposeAsync();
         // inner should still be usable
         inner.Write([1, 2, 3], 0, 3);
-        await Assert.That(inner.ToArray()).IsEquivalentTo(new byte[] { 1, 2, 3 });
+        await Assert.That(inner.ToArray())
+            .IsEquivalentTo(new byte[] { 1, 2, 3 });
     }
 
     [Test]

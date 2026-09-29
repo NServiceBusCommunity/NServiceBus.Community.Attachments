@@ -19,7 +19,7 @@ public class InstallerTests
 
     static async Task TableExists(string tableName, SqlConnection connection)
     {
-        using var command = connection.CreateCommand();
+        await using var command = connection.CreateCommand();
         command.CommandText =
             $"""
              select case when exists(

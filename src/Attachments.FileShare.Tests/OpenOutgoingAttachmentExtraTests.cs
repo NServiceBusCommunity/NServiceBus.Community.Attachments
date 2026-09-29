@@ -215,9 +215,12 @@ public class OpenOutgoingAttachmentExtraTests :
         {
             var replyOptions = new ReplyOptions();
             var sink = await context.OpenOutgoingAttachment(replyOptions, "output");
+            // ReSharper disable once UseAwaitUsing
             using (sink)
             {
+                // ReSharper disable once UseAwaitUsing
                 using var w = new StreamWriter(sink, leaveOpen: true);
+                // ReSharper disable once MethodHasAsyncOverload
                 w.Write("sync");
             }
 
