@@ -13,7 +13,6 @@
     <PackageReference Include="NServiceBus" />
     <PackageReference Include="NServiceBus.Persistence.Sql" />
     <PackageReference Include="NServiceBus.Transport.SqlServer" />
-    <PackageReference Include="Verify.DiffPlex" />
     <PackageReference Include="Verify.TUnit" />
     <PackageReference Include="DiffEngine" />
     <PackageReference Include="EmptyFiles" />
