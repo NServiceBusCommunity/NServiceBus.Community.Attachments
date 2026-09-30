@@ -518,6 +518,55 @@ public class PersisterTests
     }
 
     [Test]
+    public async Task TransferReplace()
+    {
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
+        var connection = database.Connection;
+        var sourceId = await persister.SaveStream(connection, null, "theSourceMessageId", "theName", defaultTestDate, new MemoryStream([5]), metadata);
+        await persister.SaveStream(connection, null, "theTargetMessageId", "theName", defaultTestDate, new MemoryStream([6]), metadata);
+
+        var transferredId = await persister.Transfer("theSourceMessageId", "theName", connection, null, "theTargetMessageId", replace: true);
+
+        await Assert.That(transferredId).IsEqualTo(sourceId);
+        var info = await persister.ReadAllInfo(connection, null);
+        await Assert.That(info.Count).IsEqualTo(1);
+        byte[] bytes = await persister.GetBytes("theTargetMessageId", "theName", connection, null);
+        await Assert.That((int) bytes[0]).IsEqualTo(5);
+    }
+
+    [Test]
+    public async Task TransferReplaceSourceNotFound()
+    {
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
+        var connection = database.Connection;
+        await persister.SaveStream(connection, null, "theTargetMessageId", "theName", defaultTestDate, new MemoryStream([6]), metadata);
+
+        await Assert.ThrowsAsync<Exception>(
+            () => persister.Transfer("theSourceMessageId", "theName", connection, null, "theTargetMessageId", replace: true));
+
+        // the existing attachment is kept when there is nothing to replace it with
+        byte[] bytes = await persister.GetBytes("theTargetMessageId", "theName", connection, null);
+        await Assert.That((int) bytes[0]).IsEqualTo(6);
+    }
+
+    [Test]
+    public async Task TransferReplaceToSelf()
+    {
+        var (database, persister) = await BuildDb();
+        await using var _ = database;
+        var connection = database.Connection;
+        var sourceId = await persister.SaveStream(connection, null, "theMessageId", "theName", defaultTestDate, new MemoryStream([5]), metadata);
+
+        var transferredId = await persister.Transfer("theMessageId", "theName", connection, null, "theMessageId", replace: true);
+
+        await Assert.That(transferredId).IsEqualTo(sourceId);
+        byte[] bytes = await persister.GetBytes("theMessageId", "theName", connection, null);
+        await Assert.That((int) bytes[0]).IsEqualTo(5);
+    }
+
+    [Test]
     public async Task ReadAllMessageInfoAction()
     {
         var (database, persister) = await BuildDb();

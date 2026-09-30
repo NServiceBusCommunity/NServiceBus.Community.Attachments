@@ -62,8 +62,10 @@ public partial interface IMessageAttachments
     /// It is removed by <see cref="DeleteForSaga"/> or, once it expires, by the cleanup task.
     /// <paramref name="newName"/> is the name to give the attachment in <paramref name="saga"/>. When null the existing name is kept.
     /// <paramref name="timeToKeep"/> is how long to keep the attachment, from now. When null the existing expiry is kept.
+    /// When <paramref name="replace"/> is true any attachment <paramref name="saga"/> already owns with the same name is deleted first.
+    /// Otherwise an existing attachment with the same name causes an exception.
     /// </summary>
-    Task TransferToSaga(IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, Cancel cancel = default);
+    Task TransferToSaga(IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, bool replace = false, Cancel cancel = default);
 
     /// <summary>
     /// Transfer ownership of the attachment of <paramref name="name"/>, for the current message, to <paramref name="saga"/>.
@@ -72,8 +74,10 @@ public partial interface IMessageAttachments
     /// It is removed by <see cref="DeleteForSaga"/> or, once it expires, by the cleanup task.
     /// <paramref name="newName"/> is the name to give the attachment in <paramref name="saga"/>. When null the existing name is kept.
     /// <paramref name="timeToKeep"/> is how long to keep the attachment, from now. When null the existing expiry is kept.
+    /// When <paramref name="replace"/> is true any attachment <paramref name="saga"/> already owns with the same name is deleted first.
+    /// Otherwise an existing attachment with the same name causes an exception.
     /// </summary>
-    Task TransferToSaga(string name, IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, Cancel cancel = default);
+    Task TransferToSaga(string name, IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, bool replace = false, Cancel cancel = default);
 
     /// <summary>
     /// Get a <see cref="byte"/> array, for <paramref name="saga"/>, the attachment of <paramref name="name"/>.

@@ -8,17 +8,17 @@ class MessageAttachmentsFromSqlFactory(SqlAttachmentState state, string messageI
     Func<Cancel, Task<SqlConnection>> connectionFactory = state.GetConnection;
     IPersister persister = state.Persister;
 
-    public Task TransferToSaga(IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, Cancel cancel = default) =>
-        TransferToSaga("default", saga, newName, timeToKeep, cancel);
+    public Task TransferToSaga(IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, bool replace = false, Cancel cancel = default) =>
+        TransferToSaga("default", saga, newName, timeToKeep, replace, cancel);
 
     // Runs on the receive transaction so the transfer only commits if the handler succeeds.
     // Early cleanup then deletes by the incoming message id, which no longer matches the row.
-    public Task TransferToSaga(string name, IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, Cancel cancel = default)
+    public Task TransferToSaga(string name, IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, bool replace = false, Cancel cancel = default)
     {
         var owner = SagaAttachmentOwner.Key(saga);
         var expiry = SagaAttachmentOwner.Expiry(timeToKeep);
         return state.Execute(
-            (connection, transaction) => persister.Transfer(messageId, name, connection, transaction, owner, newName, expiry, cancel),
+            (connection, transaction) => persister.Transfer(messageId, name, connection, transaction, owner, newName, expiry, replace, cancel),
             cancel);
     }
 

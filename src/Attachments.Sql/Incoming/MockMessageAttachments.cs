@@ -55,11 +55,11 @@ public partial class MockMessageAttachments
         Task.CompletedTask;
 
     /// <inheritdoc />
-    public virtual Task TransferToSaga(IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, Cancel cancel = default) =>
+    public virtual Task TransferToSaga(IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, bool replace = false, Cancel cancel = default) =>
         Task.CompletedTask;
 
     /// <inheritdoc />
-    public virtual Task TransferToSaga(string name, IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, Cancel cancel = default) =>
+    public virtual Task TransferToSaga(string name, IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, bool replace = false, Cancel cancel = default) =>
         Task.CompletedTask;
 
     /// <inheritdoc />

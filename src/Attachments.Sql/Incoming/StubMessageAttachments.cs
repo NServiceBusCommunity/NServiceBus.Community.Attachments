@@ -62,11 +62,11 @@ public partial class StubMessageAttachments
     }
 
     /// <inheritdoc />
-    public virtual Task TransferToSaga(IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, Cancel cancel = default) =>
-        TransferToSaga("default", saga, newName, timeToKeep, cancel);
+    public virtual Task TransferToSaga(IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, bool replace = false, Cancel cancel = default) =>
+        TransferToSaga("default", saga, newName, timeToKeep, replace, cancel);
 
     /// <inheritdoc />
-    public virtual Task TransferToSaga(string name, IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, Cancel cancel = default)
+    public virtual Task TransferToSaga(string name, IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, bool replace = false, Cancel cancel = default)
     {
         var attachment = GetCurrentMessageAttachment(name);
         var owner = SagaAttachmentOwner.Key(saga);
@@ -76,7 +76,11 @@ public partial class StubMessageAttachments
         }
 
         var targetName = newName ?? attachment.Name;
-        if (attachmentsForSaga.ContainsKey(targetName))
+        if (replace)
+        {
+            attachmentsForSaga.Remove(targetName);
+        }
+        else if (attachmentsForSaga.ContainsKey(targetName))
         {
             throw new($"Could not transfer attachment. An attachment named '{targetName}' already exists for '{owner}'. Name:{name}");
         }

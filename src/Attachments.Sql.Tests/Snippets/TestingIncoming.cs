@@ -168,10 +168,10 @@ class MyMessageAttachments : IMessageAttachments
     public Task ProcessByteArrayForMessage(string messageId, Func<AttachmentBytes, Cancel, Task> action, Cancel cancel = default) =>
         throw new NotImplementedException();
 
-    public Task TransferToSaga(IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, Cancel cancel = default) =>
+    public Task TransferToSaga(IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, bool replace = false, Cancel cancel = default) =>
         throw new NotImplementedException();
 
-    public Task TransferToSaga(string name, IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, Cancel cancel = default) =>
+    public Task TransferToSaga(string name, IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, bool replace = false, Cancel cancel = default) =>
         throw new NotImplementedException();
 
     public Task<AttachmentBytes> GetBytesForSaga(IContainSagaData saga, string name, Cancel cancel = default) =>

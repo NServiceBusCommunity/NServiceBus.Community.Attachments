@@ -17,7 +17,9 @@ class TransferSaga(IntegrationTestContext context) :
         // at which point early cleanup has run for this message
         var sendOptions = new SendOptions();
         sendOptions.RouteToThisEndpoint();
-        sendOptions.Attachments().AddString("second content");
+        var outgoing = sendOptions.Attachments();
+        outgoing.AddString("second content");
+        outgoing.AddString("replacement", "replacement content");
         await handlerContext.Send(
             new ContinueTransferSaga
             {
@@ -32,11 +34,16 @@ class TransferSaga(IntegrationTestContext context) :
         var attachments = handlerContext.Attachments();
         await attachments.TransferToSaga(Data, "second", cancel: cancel);
 
-        // "first" was transferred by a previous message. "second" was transferred by this handler, so reading it
-        // proves the ForSaga reads run on the same connection and transaction as the transfer
+        // "first" was transferred by the start message, and so survived that message's early cleanup
+        var original = await attachments.GetStringForSaga(Data, "first", cancel: cancel);
+        await Assert.That(original.Value).IsEqualTo("first content");
+        await attachments.TransferToSaga("replacement", Data, "first", replace: true, cancel: cancel);
+
+        // both were transferred by this handler, so reading them proves the ForSaga reads run on the same
+        // connection and transaction as the transfer
         var first = await attachments.GetStringForSaga(Data, "first", cancel: cancel);
         var second = await attachments.GetStringForSaga(Data, "second", cancel: cancel);
-        await Assert.That(first.Value).IsEqualTo("first content");
+        await Assert.That(first.Value).IsEqualTo("replacement content");
         await Assert.That(second.Value).IsEqualTo("second content");
 
         var deleted = await attachments.DeleteForSaga(Data, cancel);

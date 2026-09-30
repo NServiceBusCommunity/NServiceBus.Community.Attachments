@@ -113,6 +113,26 @@
     }
 
     [Test]
+    public async Task StubTransferToSagaReplace()
+    {
+        var sagaData = new ASagaData
+        {
+            Id = Guid.NewGuid()
+        };
+        var attachments = new StubMessageAttachments();
+        attachments.AddAttachment("older", [5]);
+        attachments.AddAttachment("newer", [6]);
+        await attachments.TransferToSaga("older", sagaData, "doc");
+
+        await Assert.ThrowsAsync<Exception>(() => attachments.TransferToSaga("newer", sagaData, "doc"));
+        await attachments.TransferToSaga("newer", sagaData, "doc", replace: true);
+
+        byte[] doc = await attachments.GetBytesForSaga(sagaData, "doc");
+        await Assert.That((int) doc[0]).IsEqualTo(6);
+        await Assert.That(await attachments.DeleteForSaga(sagaData)).IsEqualTo(1);
+    }
+
+    [Test]
     public async Task StubProcessByteArrayForMessageDefaultName()
     {
         var attachments = new StubMessageAttachments();

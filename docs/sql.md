@@ -177,7 +177,7 @@ class ConvertSaga :
 <!-- endSnippet -->
 
  * Early cleanup deletes attachments by the incoming message id. After a transfer that id no longer matches, so the attachment survives after the message finishes processing.
- * Pass `newName` when several messages carry an attachment with the same name, since a saga can only own one attachment of each name.
+ * Pass `newName` when several messages carry an attachment with the same name, since a saga can only own one attachment of each name. Transferring to a name the saga already owns throws, unless `replace: true` is passed, in which case the existing attachment is deleted first. This suits sagas that can receive a newer reply for the same item, where the latest should win. If the attachment being transferred does not exist, nothing is deleted.
  * The attachment keeps its existing expiry unless `timeToKeep` is passed, and the [cleanup task](#data-cleanup) removes it once it expires. Call `DeleteForSaga` to remove the saga's attachments as soon as they are no longer needed.
  * `TransferToSaga`, `GetBytesForSaga`, `GetMemoryStreamForSaga`, `GetStringForSaga` and `DeleteForSaga` run on the ambient connection and transaction, so they are atomic with the rest of the handler and see transfers made earlier in the same handler. This requires `UseSynchronizedStorageSessionConnectivity` or `UseTransportConnectivity`. Without either, each call commits on its own connection.
  * The other read members use a separate connection. Read any attachments of the current message before transferring them, since a read on a separate connection can wait on the transfer's lock until the handler's transaction commits.

@@ -87,9 +87,11 @@ public interface IPersister
     /// Moves an attachment to a different message id by updating its row in place. The attachment data is not copied.
     /// When <paramref name="targetName" /> is null the existing name is kept.
     /// When <paramref name="expiry" /> is null the existing expiry is kept.
+    /// When <paramref name="replace" /> is true any attachment <paramref name="targetMessageId" /> already has with the same name is deleted first.
+    /// Otherwise an existing attachment with the same name causes an exception.
     /// Returns the id of the attachment row, which is unchanged by the transfer.
     /// </summary>
-    Task<Guid> Transfer(string sourceMessageId, string name, SqlConnection connection, SqlTransaction? transaction, string targetMessageId, string? targetName = null, DateTime? expiry = null, Cancel cancel = default);
+    Task<Guid> Transfer(string sourceMessageId, string name, SqlConnection connection, SqlTransaction? transaction, string targetMessageId, string? targetName = null, DateTime? expiry = null, bool replace = false, Cancel cancel = default);
 
     /// <summary>
     /// Reads all <see cref="AttachmentBytes" />s for an attachment.
