@@ -89,5 +89,67 @@
         }
     }
 
+    [Test]
+    public async Task StubTransferToSaga()
+    {
+        var sagaData = new ASagaData
+        {
+            Id = Guid.NewGuid()
+        };
+        var attachments = new StubMessageAttachments();
+        attachments.AddAttachment([5]);
+        attachments.AddAttachment("second", [6]);
+
+        await attachments.TransferToSaga(sagaData, "first");
+        await attachments.TransferToSaga("second", sagaData, timeToKeep: TimeSpan.FromDays(1));
+
+        await Assert.That(await attachments.GetMetadata().CountAsync()).IsEqualTo(0);
+        byte[] first = await attachments.GetBytesForSaga(sagaData, "first");
+        await Assert.That((int) first[0]).IsEqualTo(5);
+        byte[] second = await attachments.GetBytesForSaga(sagaData, "second");
+        await Assert.That((int) second[0]).IsEqualTo(6);
+        await Assert.That(await attachments.DeleteForSaga(sagaData)).IsEqualTo(2);
+        await Assert.That(await attachments.DeleteForSaga(sagaData)).IsEqualTo(0);
+    }
+
+    [Test]
+    public async Task StubProcessByteArrayForMessageDefaultName()
+    {
+        var attachments = new StubMessageAttachments();
+        attachments.AddAttachmentForMessage("theMessageId", [5]);
+        byte[]? received = null;
+
+        await attachments.ProcessByteArrayForMessage(
+            "theMessageId",
+            (bytes, _) =>
+            {
+                received = bytes;
+                return Task.CompletedTask;
+            });
+
+        await Assert.That((int) received![0]).IsEqualTo(5);
+    }
+
+    [Test]
+    public async Task StubProcessStreamForMessageDefaultName()
+    {
+        var attachments = new StubMessageAttachments();
+        attachments.AddAttachmentForMessage("theMessageId", [5]);
+        var received = -1;
+
+        await attachments.ProcessStreamForMessage(
+            "theMessageId",
+            (stream, _) =>
+            {
+                received = stream.ReadByte();
+                return Task.CompletedTask;
+            });
+
+        await Assert.That(received).IsEqualTo(5);
+    }
+
+    public class ASagaData :
+        ContainSagaData;
+
     public class AMessage;
 }

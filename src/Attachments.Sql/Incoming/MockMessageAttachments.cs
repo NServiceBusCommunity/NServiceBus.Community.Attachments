@@ -54,4 +54,27 @@ public partial class MockMessageAttachments
     public virtual Task ProcessByteArraysForMessage(string messageId, Func<AttachmentBytes, Cancel, Task> action, Cancel cancel = default) =>
         Task.CompletedTask;
 
+    /// <inheritdoc />
+    public virtual Task TransferToSaga(IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, Cancel cancel = default) =>
+        Task.CompletedTask;
+
+    /// <inheritdoc />
+    public virtual Task TransferToSaga(string name, IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, Cancel cancel = default) =>
+        Task.CompletedTask;
+
+    /// <inheritdoc />
+    public virtual Task<AttachmentBytes> GetBytesForSaga(IContainSagaData saga, string name, Cancel cancel = default) =>
+        Task.FromResult(AttachmentBytes.Empty);
+
+    /// <inheritdoc />
+    public virtual Task<MemoryStream> GetMemoryStreamForSaga(IContainSagaData saga, string name, Cancel cancel = default) =>
+        Task.FromResult(new MemoryStream());
+
+    /// <inheritdoc />
+    public virtual Task<AttachmentString> GetStringForSaga(IContainSagaData saga, string name, Encoding? encoding = null, Cancel cancel = default) =>
+        Task.FromResult(AttachmentString.Empty);
+
+    /// <inheritdoc />
+    public virtual Task<int> DeleteForSaga(IContainSagaData saga, Cancel cancel = default) =>
+        Task.FromResult(0);
 }

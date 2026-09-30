@@ -138,6 +138,51 @@ This approach attempts to use the transport transaction using the following step
  * Any attachments associated with a message send will be deleted after message processing.
 
 
+## Transferring attachments to a saga
+
+A saga that gathers attachments from several messages (for example, replies in a scatter-gather) can take ownership of each incoming attachment instead of copying its data into saga state. `TransferToSaga` updates the attachment's row in place, so the `varbinary` data is not copied or rewritten.
+
+<!-- snippet: TransferToSaga -->
+<a id='snippet-TransferToSaga'></a>
+```cs
+class ConvertSaga :
+    Saga<ConvertSaga.SagaData>,
+    IAmStartedByMessages<StartConvert>,
+    IHandleMessages<ConvertCompleted>
+{
+    public async Task Handle(ConvertCompleted message, HandlerContext context)
+    {
+        var cancel = context.CancellationToken;
+        var attachments = context.Attachments();
+
+        // Move the reply's attachment to this saga. The row is updated in place, so no data is copied,
+        // and it is not deleted when the reply finishes processing.
+        await attachments.TransferToSaga(Data, newName: message.Format, cancel: cancel);
+        Data.Received.Add(message.Format);
+        if (Data.Received.Count < 2)
+        {
+            return;
+        }
+
+        // Reads the attachments transferred by earlier replies, and the one transferred above.
+        var pdf = await attachments.GetBytesForSaga(Data, "pdf", cancel);
+        var word = await attachments.GetBytesForSaga(Data, "word", cancel);
+
+        // Use the documents, then remove them.
+        await attachments.DeleteForSaga(Data, cancel);
+        MarkAsComplete();
+    }
+```
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/Incoming.cs#L118-L148' title='Snippet source file'>snippet source</a> | <a href='#snippet-TransferToSaga' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
+
+ * Early cleanup deletes attachments by the incoming message id. After a transfer that id no longer matches, so the attachment survives after the message finishes processing.
+ * Pass `newName` when several messages carry an attachment with the same name, since a saga can only own one attachment of each name.
+ * The attachment keeps its existing expiry unless `timeToKeep` is passed, and the [cleanup task](#data-cleanup) removes it once it expires. Call `DeleteForSaga` to remove the saga's attachments as soon as they are no longer needed.
+ * `TransferToSaga`, `GetBytesForSaga`, `GetMemoryStreamForSaga`, `GetStringForSaga` and `DeleteForSaga` run on the ambient connection and transaction, so they are atomic with the rest of the handler and see transfers made earlier in the same handler. This requires `UseSynchronizedStorageSessionConnectivity` or `UseTransportConnectivity`. Without either, each call commits on its own connection.
+ * The other read members use a separate connection. Read any attachments of the current message before transferring them, since a read on a separate connection can wait on the transfer's lock until the handler's transaction commits.
+
+
 ## Installation
 
 

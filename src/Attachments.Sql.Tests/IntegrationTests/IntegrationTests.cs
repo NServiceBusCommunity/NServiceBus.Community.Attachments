@@ -117,6 +117,14 @@ public class IntegrationTests
             throw new("TimedOut");
         }
 
+        await SendStartTransferSaga(session);
+        if (!context.TransferSagaEvent.WaitOne(timeout))
+        {
+            throw new("TimedOut waiting for TransferSaga");
+        }
+
+        await AssertNoSagaOwnedAttachments(connectionString, databaseName);
+
         if (useSqlTransportConnection &&
             useSqlTransport &&
             transactionMode != TransportTransactionMode.None &&
@@ -178,6 +186,35 @@ public class IntegrationTests
         });
         await session.Send(new SendMessage(), sendOptions);
         return messageId;
+    }
+
+    static Task SendStartTransferSaga(IMessageSession session)
+    {
+        var sendOptions = new SendOptions();
+        sendOptions.RouteToThisEndpoint();
+        sendOptions.Attachments().AddString("first content");
+        return session.Send(new StartTransferSaga(), sendOptions);
+    }
+
+    // TransferSaga deletes what it owns before completing. The handler signals before its transaction commits,
+    // so poll briefly for the delete to become visible.
+    static async Task AssertNoSagaOwnedAttachments(string connectionString, string databaseName)
+    {
+        var persister = new Persister(databaseName, table: "Attachments");
+        for (var attempt = 0; attempt < 20; attempt++)
+        {
+            await using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
+            var infos = await persister.ReadAllInfo(connection, null);
+            if (!infos.Any(_ => _.MessageId.StartsWith("saga-")))
+            {
+                return;
+            }
+
+            await Task.Delay(100);
+        }
+
+        throw new("Expected saga owned attachments to be deleted");
     }
 
     static async Task WriteContent(Stream stream)

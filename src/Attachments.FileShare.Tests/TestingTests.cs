@@ -99,5 +99,23 @@
         }
     }
 
+    [Test]
+    public async Task StubProcessStreamForMessageDefaultName()
+    {
+        var attachments = new StubMessageAttachments();
+        attachments.AddAttachmentForMessage("theMessageId", [5]);
+        var received = -1;
+
+        await attachments.ProcessStreamForMessage(
+            "theMessageId",
+            (stream, _) =>
+            {
+                received = stream.ReadByte();
+                return Task.CompletedTask;
+            });
+
+        await Assert.That(received).IsEqualTo(5);
+    }
+
     public class AMessage;
 }

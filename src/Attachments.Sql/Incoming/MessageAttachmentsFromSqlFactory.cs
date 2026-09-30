@@ -2,9 +2,61 @@
 using NServiceBus.Attachments.Sql;
 // ReSharper disable ParameterHidesPrimaryConstructorParameter
 
-class MessageAttachmentsFromSqlFactory(Func<Cancel, Task<SqlConnection>> connectionFactory, string messageId, IPersister persister) :
+class MessageAttachmentsFromSqlFactory(SqlAttachmentState state, string messageId) :
     IMessageAttachments
 {
+    Func<Cancel, Task<SqlConnection>> connectionFactory = state.GetConnection;
+    IPersister persister = state.Persister;
+
+    public Task TransferToSaga(IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, Cancel cancel = default) =>
+        TransferToSaga("default", saga, newName, timeToKeep, cancel);
+
+    // Runs on the receive transaction so the transfer only commits if the handler succeeds.
+    // Early cleanup then deletes by the incoming message id, which no longer matches the row.
+    public Task TransferToSaga(string name, IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, Cancel cancel = default)
+    {
+        var owner = SagaAttachmentOwner.Key(saga);
+        var expiry = SagaAttachmentOwner.Expiry(timeToKeep);
+        return state.Execute(
+            (connection, transaction) => persister.Transfer(messageId, name, connection, transaction, owner, newName, expiry, cancel),
+            cancel);
+    }
+
+    // The ForSaga reads run on the receive transaction, rather than a fresh connection, so they see
+    // attachments transferred earlier in the same handler. They are all buffered so that no reader is
+    // left open on the shared connection.
+    public Task<AttachmentBytes> GetBytesForSaga(IContainSagaData saga, string name, Cancel cancel = default)
+    {
+        var owner = SagaAttachmentOwner.Key(saga);
+        return state.Execute(
+            (connection, transaction) => persister.GetBytes(owner, name, connection, transaction, cancel),
+            cancel);
+    }
+
+    public Task<MemoryStream> GetMemoryStreamForSaga(IContainSagaData saga, string name, Cancel cancel = default)
+    {
+        var owner = SagaAttachmentOwner.Key(saga);
+        return state.Execute(
+            (connection, transaction) => persister.GetMemoryStream(owner, name, connection, transaction, cancel),
+            cancel);
+    }
+
+    public Task<AttachmentString> GetStringForSaga(IContainSagaData saga, string name, Encoding? encoding = null, Cancel cancel = default)
+    {
+        var owner = SagaAttachmentOwner.Key(saga);
+        return state.Execute(
+            (connection, transaction) => persister.GetString(owner, name, connection, transaction, encoding, cancel),
+            cancel);
+    }
+
+    public Task<int> DeleteForSaga(IContainSagaData saga, Cancel cancel = default)
+    {
+        var owner = SagaAttachmentOwner.Key(saga);
+        return state.Execute(
+            (connection, transaction) => persister.DeleteAttachments(owner, connection, transaction, cancel),
+            cancel);
+    }
+
     public async Task CopyTo(Stream target, Cancel cancel = default)
     {
         await using var connection = await connectionFactory(cancel);

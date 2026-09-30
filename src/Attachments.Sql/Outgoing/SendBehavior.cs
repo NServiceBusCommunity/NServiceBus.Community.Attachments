@@ -30,28 +30,9 @@ class SendBehavior(Func<Cancel, Task<SqlConnection>> connectionFactory, IPersist
 
         if (context.Extensions.TryGet<SqlAttachmentState>(out var state))
         {
-            if (state.Transaction is not null)
-            {
-                await using var connectionFromState = await state.GetConnection(context.CancellationToken);
-                connectionFromState.EnlistTransaction(state.Transaction);
-                await ProcessOutgoing(timeToBeReceived, connectionFromState, null, context, outgoingAttachments);
-                return;
-            }
-
-            if (state.SqlTransaction is not null)
-            {
-                await ProcessOutgoing(timeToBeReceived, state.SqlTransaction.Connection!, state.SqlTransaction, context, outgoingAttachments);
-                return;
-            }
-
-            if (state.SqlConnection is not null)
-            {
-                await ProcessOutgoing(timeToBeReceived, state.SqlConnection, null, context, outgoingAttachments);
-                return;
-            }
-
-            await using var connection = await state.GetConnection(context.CancellationToken);
-            await ProcessOutgoing(timeToBeReceived, connection, null, context, outgoingAttachments);
+            await state.Execute(
+                (connection, transaction) => ProcessOutgoing(timeToBeReceived, connection, transaction, context, outgoingAttachments),
+                context.CancellationToken);
             return;
         }
 

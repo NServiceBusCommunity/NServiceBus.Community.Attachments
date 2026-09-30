@@ -84,6 +84,14 @@ public interface IPersister
     Task<IReadOnlyList<(Guid, string)>> Duplicate(string sourceMessageId, SqlConnection connection, SqlTransaction? transaction, string targetMessageId, Cancel cancel = default);
 
     /// <summary>
+    /// Moves an attachment to a different message id by updating its row in place. The attachment data is not copied.
+    /// When <paramref name="targetName" /> is null the existing name is kept.
+    /// When <paramref name="expiry" /> is null the existing expiry is kept.
+    /// Returns the id of the attachment row, which is unchanged by the transfer.
+    /// </summary>
+    Task<Guid> Transfer(string sourceMessageId, string name, SqlConnection connection, SqlTransaction? transaction, string targetMessageId, string? targetName = null, DateTime? expiry = null, Cancel cancel = default);
+
+    /// <summary>
     /// Reads all <see cref="AttachmentBytes" />s for an attachment.
     /// </summary>
     IAsyncEnumerable<AttachmentBytes> GetBytes(string messageId, SqlConnection connection, SqlTransaction? transaction, Cancel cancel = default);

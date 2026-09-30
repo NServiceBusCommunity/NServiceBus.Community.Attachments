@@ -39,4 +39,41 @@ class SqlAttachmentState
             throw new("Provided ConnectionFactory threw an exception", exception);
         }
     }
+
+    /// <summary>
+    /// Runs <paramref name="action"/> on the connection, and transaction, of the current receive when one is available.
+    /// Otherwise runs it on a new connection from the factory.
+    /// </summary>
+    public async Task<T> Execute<T>(Func<SqlConnection, SqlTransaction?, Task<T>> action, Cancel cancel)
+    {
+        if (Transaction is not null)
+        {
+            await using var connectionFromState = await GetConnection(cancel);
+            connectionFromState.EnlistTransaction(Transaction);
+            return await action(connectionFromState, null);
+        }
+
+        if (SqlTransaction is not null)
+        {
+            return await action(SqlTransaction.Connection!, SqlTransaction);
+        }
+
+        if (SqlConnection is not null)
+        {
+            return await action(SqlConnection, null);
+        }
+
+        await using var connection = await GetConnection(cancel);
+        return await action(connection, null);
+    }
+
+    /// <inheritdoc cref="Execute{T}"/>
+    public Task Execute(Func<SqlConnection, SqlTransaction?, Task> action, Cancel cancel) =>
+        Execute(
+            async (connection, transaction) =>
+            {
+                await action(connection, transaction);
+                return true;
+            },
+            cancel);
 }

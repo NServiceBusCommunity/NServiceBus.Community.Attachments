@@ -54,4 +54,21 @@ static class SqlExtensions
         parameter.Value = value;
         command.Parameters.Add(parameter);
     }
+
+    public static void AddParameter(this SqlCommand command, string name, DateTime? value)
+    {
+        var parameter = command.CreateParameter();
+        parameter.ParameterName = name;
+        parameter.DbType = DbType.DateTime2;
+        if (value is null)
+        {
+            parameter.Value = DBNull.Value;
+        }
+        else
+        {
+            parameter.Value = value.Value;
+        }
+
+        command.Parameters.Add(parameter);
+    }
 }

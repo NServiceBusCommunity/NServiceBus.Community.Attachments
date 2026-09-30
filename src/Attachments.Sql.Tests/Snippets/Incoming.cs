@@ -114,4 +114,66 @@ public class Incoming
     }
 
     #endregion
+
+    #region TransferToSaga
+
+    class ConvertSaga :
+        Saga<ConvertSaga.SagaData>,
+        IAmStartedByMessages<StartConvert>,
+        IHandleMessages<ConvertCompleted>
+    {
+        public async Task Handle(ConvertCompleted message, HandlerContext context)
+        {
+            var cancel = context.CancellationToken;
+            var attachments = context.Attachments();
+
+            // Move the reply's attachment to this saga. The row is updated in place, so no data is copied,
+            // and it is not deleted when the reply finishes processing.
+            await attachments.TransferToSaga(Data, newName: message.Format, cancel: cancel);
+            Data.Received.Add(message.Format);
+            if (Data.Received.Count < 2)
+            {
+                return;
+            }
+
+            // Reads the attachments transferred by earlier replies, and the one transferred above.
+            var pdf = await attachments.GetBytesForSaga(Data, "pdf", cancel);
+            var word = await attachments.GetBytesForSaga(Data, "word", cancel);
+
+            // Use the documents, then remove them.
+            await attachments.DeleteForSaga(Data, cancel);
+            MarkAsComplete();
+        }
+
+        #endregion
+
+        public Task Handle(StartConvert message, HandlerContext context)
+        {
+            Data.DocumentId = message.DocumentId;
+            return Task.CompletedTask;
+        }
+
+        protected override void ConfigureHowToFindSaga(SagaPropertyMapper<SagaData> mapper) =>
+            mapper.MapSaga(_ => _.DocumentId)
+                .ToMessage<StartConvert>(_ => _.DocumentId);
+
+        public class SagaData :
+            ContainSagaData
+        {
+            public Guid DocumentId { get; set; }
+            public List<string> Received { get; set; } = [];
+        }
+    }
+
+    class StartConvert :
+        IMessage
+    {
+        public Guid DocumentId { get; set; }
+    }
+
+    class ConvertCompleted :
+        IMessage
+    {
+        public string Format { get; set; } = null!;
+    }
 }

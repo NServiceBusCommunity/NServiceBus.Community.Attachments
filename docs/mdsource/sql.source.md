@@ -65,6 +65,19 @@ This approach attempts to use the transport transaction using the following step
  * Any attachments associated with a message send will be deleted after message processing.
 
 
+## Transferring attachments to a saga
+
+A saga that gathers attachments from several messages (for example, replies in a scatter-gather) can take ownership of each incoming attachment instead of copying its data into saga state. `TransferToSaga` updates the attachment's row in place, so the `varbinary` data is not copied or rewritten.
+
+snippet: TransferToSaga
+
+ * Early cleanup deletes attachments by the incoming message id. After a transfer that id no longer matches, so the attachment survives after the message finishes processing.
+ * Pass `newName` when several messages carry an attachment with the same name, since a saga can only own one attachment of each name.
+ * The attachment keeps its existing expiry unless `timeToKeep` is passed, and the [cleanup task](#data-cleanup) removes it once it expires. Call `DeleteForSaga` to remove the saga's attachments as soon as they are no longer needed.
+ * `TransferToSaga`, `GetBytesForSaga`, `GetMemoryStreamForSaga`, `GetStringForSaga` and `DeleteForSaga` run on the ambient connection and transaction, so they are atomic with the rest of the handler and see transfers made earlier in the same handler. This requires `UseSynchronizedStorageSessionConnectivity` or `UseTransportConnectivity`. Without either, each call commits on its own connection.
+ * The other read members use a separate connection. Read any attachments of the current message before transferring them, since a read on a separate connection can wait on the transfer's lock until the handler's transaction commits.
+
+
 ## Installation
 
 
