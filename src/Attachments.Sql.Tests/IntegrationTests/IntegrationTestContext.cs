@@ -2,6 +2,7 @@ class IntegrationTestContext : IAsyncDisposable
 {
     public ManualResetEvent HandlerEvent = new(false);
     public ManualResetEvent SagaEvent = new(false);
+    public ManualResetEvent TransferSagaEvent = new(false);
     public bool ShouldPerformNestedConnection;
     public string? ConnectionString;
     public SqlDatabase? Database;
@@ -24,5 +25,6 @@ class IntegrationTestContext : IAsyncDisposable
 
         HandlerEvent.Dispose();
         SagaEvent.Dispose();
+        TransferSagaEvent.Dispose();
     }
 }

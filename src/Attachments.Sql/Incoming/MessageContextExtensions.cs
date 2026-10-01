@@ -15,6 +15,8 @@ public static partial class SqlAttachmentsMessageContextExtensions
     /// transaction's connection. This lets a handler hold an <c>OpenOutgoingAttachment</c> sink
     /// open while reading incoming attachments without tripping MARS, at the cost of incoming
     /// reads no longer being enlisted in the receive transaction.
+    /// The exception is the saga members (<c>TransferToSaga</c>, the buffered <c>*ForSaga</c> reads, and <c>DeleteForSaga</c>),
+    /// which run on the receive transaction's connection so they are atomic with the handler.
     /// </remarks>
     public static IMessageAttachments Attachments(this HandlerContext context)
     {
@@ -30,6 +32,6 @@ public static partial class SqlAttachmentsMessageContextExtensions
             throw new($"Attachments used when not enabled. For example IMessageHandlerContext.{nameof(Attachments)}() was used but Attachments was not enabled via EndpointConfiguration.{nameof(SqlAttachmentsExtensions.EnableAttachments)}().");
         }
 
-        return new MessageAttachmentsFromSqlFactory(state.GetConnection, context.MessageId, state.Persister);
+        return new MessageAttachmentsFromSqlFactory(state, context.MessageId);
     }
 }

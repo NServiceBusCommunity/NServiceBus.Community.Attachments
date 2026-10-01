@@ -51,6 +51,18 @@ public class Usage
         #endregion
     }
 
+    void DisableSagaCompletionCleanup(EndpointConfiguration configuration)
+    {
+        #region DisableSagaCompletionCleanup
+
+        var attachments = configuration.EnableAttachments(
+            connectionFactory: OpenConnection,
+            timeToKeep: TimeToKeep.Default);
+        attachments.DisableSagaCompletionCleanup();
+
+        #endregion
+    }
+
     void UseTransportConnectivity(EndpointConfiguration configuration)
     {
         #region UseTransportConnectivity

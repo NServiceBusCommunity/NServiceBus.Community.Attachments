@@ -117,7 +117,7 @@ public partial class StubMessageAttachments :
 
     /// <inheritdoc />
     public virtual Task ProcessStreamForMessage(string messageId, Func<AttachmentStream, Cancel, Task> action, Cancel cancel = default) =>
-        ProcessStreamForMessage("default", messageId, action, cancel);
+        ProcessStreamForMessage(messageId, "default", action, cancel);
 
     /// <inheritdoc />
     public virtual async Task ProcessStreamsForMessage(string messageId, Func<AttachmentStream, Cancel, Task> action, Cancel cancel = default)

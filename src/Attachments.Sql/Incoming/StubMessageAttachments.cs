@@ -50,7 +50,7 @@ public partial class StubMessageAttachments
 
     /// <inheritdoc />
     public virtual Task ProcessByteArrayForMessage(string messageId, Func<AttachmentBytes, Cancel, Task> action, Cancel cancel = default) =>
-        ProcessByteArrayForMessage("default", messageId, action, cancel);
+        ProcessByteArrayForMessage(messageId, "default", action, cancel);
 
     /// <inheritdoc />
     public virtual async Task ProcessByteArraysForMessage(string messageId, Func<AttachmentBytes, Cancel, Task> action, Cancel cancel = default)
@@ -59,5 +59,65 @@ public partial class StubMessageAttachments
         {
             await action(pair.Value.ToAttachmentBytes(), cancel);
         }
+    }
+
+    /// <inheritdoc />
+    public virtual Task TransferToSaga(IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, bool replace = false, Cancel cancel = default) =>
+        TransferToSaga("default", saga, newName, timeToKeep, replace, cancel);
+
+    /// <inheritdoc />
+    public virtual Task TransferToSaga(string name, IContainSagaData saga, string? newName = null, TimeSpan? timeToKeep = null, bool replace = false, Cancel cancel = default)
+    {
+        var attachment = GetCurrentMessageAttachment(name);
+        var owner = SagaAttachmentOwner.Key(saga);
+        if (!attachments.TryGetValue(owner, out var attachmentsForSaga))
+        {
+            attachments[owner] = attachmentsForSaga = new(StringComparer.OrdinalIgnoreCase);
+        }
+
+        var targetName = newName ?? attachment.Name;
+        if (replace)
+        {
+            attachmentsForSaga.Remove(targetName);
+        }
+        else if (attachmentsForSaga.ContainsKey(targetName))
+        {
+            throw new($"Could not transfer attachment. An attachment named '{targetName}' already exists for '{owner}'. Name:{name}");
+        }
+
+        currentAttachments.Remove(name);
+        attachment.Name = targetName;
+        var expiry = SagaAttachmentOwner.Expiry(timeToKeep);
+        if (expiry is not null)
+        {
+            attachment.Expiry = expiry.Value;
+        }
+
+        attachmentsForSaga.Add(targetName, attachment);
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public virtual Task<AttachmentBytes> GetBytesForSaga(IContainSagaData saga, string name, Cancel cancel = default) =>
+        GetBytesForMessage(SagaAttachmentOwner.Key(saga), name, cancel);
+
+    /// <inheritdoc />
+    public virtual Task<MemoryStream> GetMemoryStreamForSaga(IContainSagaData saga, string name, Cancel cancel = default) =>
+        GetMemoryStreamForMessage(SagaAttachmentOwner.Key(saga), name, cancel);
+
+    /// <inheritdoc />
+    public virtual Task<AttachmentString> GetStringForSaga(IContainSagaData saga, string name, Encoding? encoding = null, Cancel cancel = default) =>
+        GetStringForMessage(SagaAttachmentOwner.Key(saga), name, encoding, cancel);
+
+    /// <inheritdoc />
+    public virtual Task<int> DeleteForSaga(IContainSagaData saga, Cancel cancel = default)
+    {
+        var owner = SagaAttachmentOwner.Key(saga);
+        if (attachments.Remove(owner, out var attachmentsForSaga))
+        {
+            return Task.FromResult(attachmentsForSaga.Count);
+        }
+
+        return Task.FromResult(0);
     }
 }
