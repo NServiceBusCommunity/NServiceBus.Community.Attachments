@@ -20,6 +20,7 @@ class TransferSaga(IntegrationTestContext context) :
         var outgoing = sendOptions.Attachments();
         outgoing.AddString("second content");
         outgoing.AddString("replacement", "replacement content");
+        outgoing.AddString("last", "last content");
         await handlerContext.Send(
             new ContinueTransferSaga
             {
@@ -48,6 +49,9 @@ class TransferSaga(IntegrationTestContext context) :
 
         var deleted = await attachments.DeleteForSaga(Data, cancel);
         await Assert.That(deleted).IsEqualTo(2);
+
+        // left for saga completion cleanup to delete. The test asserts no saga owned attachments remain
+        await attachments.TransferToSaga("last", Data, cancel: cancel);
 
         MarkAsComplete();
         context.TransferSagaEvent.Set();

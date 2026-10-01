@@ -140,8 +140,7 @@ public class Incoming
             var pdf = await attachments.GetBytesForSaga(Data, "pdf", cancel);
             var word = await attachments.GetBytesForSaga(Data, "word", cancel);
 
-            // Use the documents, then remove them.
-            await attachments.DeleteForSaga(Data, cancel);
+            // Use the documents. Completing the saga deletes the attachments it owns.
             MarkAsComplete();
         }
 

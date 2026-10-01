@@ -59,7 +59,7 @@ public partial interface IMessageAttachments
     /// Transfer ownership of the attachment with the default name of <see cref="string.Empty"/>, for the current message, to <paramref name="saga"/>.
     /// The attachment row is updated in place, so the attachment data is not copied.
     /// Once transferred the attachment is no longer removed by early cleanup of the current message.
-    /// It is removed by <see cref="DeleteForSaga"/> or, once it expires, by the cleanup task.
+    /// It is removed when the saga completes (unless <see cref="AttachmentSettings.DisableSagaCompletionCleanup"/> is used), by <see cref="DeleteForSaga"/>, or once it expires by the cleanup task.
     /// <paramref name="newName"/> is the name to give the attachment in <paramref name="saga"/>. When null the existing name is kept.
     /// <paramref name="timeToKeep"/> is how long to keep the attachment, from now. When null the existing expiry is kept.
     /// When <paramref name="replace"/> is true any attachment <paramref name="saga"/> already owns with the same name is deleted first.
@@ -71,7 +71,7 @@ public partial interface IMessageAttachments
     /// Transfer ownership of the attachment of <paramref name="name"/>, for the current message, to <paramref name="saga"/>.
     /// The attachment row is updated in place, so the attachment data is not copied.
     /// Once transferred the attachment is no longer removed by early cleanup of the current message.
-    /// It is removed by <see cref="DeleteForSaga"/> or, once it expires, by the cleanup task.
+    /// It is removed when the saga completes (unless <see cref="AttachmentSettings.DisableSagaCompletionCleanup"/> is used), by <see cref="DeleteForSaga"/>, or once it expires by the cleanup task.
     /// <paramref name="newName"/> is the name to give the attachment in <paramref name="saga"/>. When null the existing name is kept.
     /// <paramref name="timeToKeep"/> is how long to keep the attachment, from now. When null the existing expiry is kept.
     /// When <paramref name="replace"/> is true any attachment <paramref name="saga"/> already owns with the same name is deleted first.
@@ -100,6 +100,8 @@ public partial interface IMessageAttachments
     /// <summary>
     /// Delete all attachments owned by <paramref name="saga"/>.
     /// Runs on the connection of the current receive, so the delete is rolled back if the handler fails.
+    /// Not needed before completing the saga, since saga owned attachments are deleted on completion
+    /// (unless <see cref="AttachmentSettings.DisableSagaCompletionCleanup"/> is used). Use it to free attachments earlier.
     /// </summary>
     /// <returns>The number of attachments deleted.</returns>
     Task<int> DeleteForSaga(IContainSagaData saga, Cancel cancel = default);

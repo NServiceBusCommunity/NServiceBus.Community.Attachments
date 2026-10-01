@@ -142,6 +142,53 @@ public class IntegrationTests
         await host.StopAsync();
     }
 
+    [Test]
+    public async Task SagaCompletionCleanupDisabled()
+    {
+        await using var context = new IntegrationTestContext();
+        context.Database = await Connection.SqlInstance.Build("Int_SagaCompletionCleanupDisabled");
+        var connectionString = context.Database.ConnectionString;
+        context.ConnectionString = connectionString;
+        var databaseName = new SqlConnectionStringBuilder(connectionString).InitialCatalog;
+
+        var configuration = new EndpointConfiguration("SqlIntegrationTestsCleanupDisabled");
+        SqlConnection NewConnection() => new(connectionString);
+        var attachments = configuration.EnableAttachments(NewConnection, TimeToKeep.Default, database: databaseName, table: "Attachments");
+        attachments.DisableCleanupTask();
+        attachments.DisableSagaCompletionCleanup();
+        configuration.UseSerialization<SystemJsonSerializer>();
+        configuration.UsePersistence<LearningPersistence>();
+        configuration.DisableRetries();
+        configuration.EnableInstallers();
+        configuration.PurgeOnStartup(true);
+        var transport = configuration.UseTransport<LearningTransport>();
+        transport.StorageDirectory("Int_SagaCompletionCleanupDisabled");
+
+        var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddSingleton(context);
+        builder.Services.AddNServiceBusEndpoint(configuration);
+        using var host = builder.Build();
+        await host.StartAsync();
+        var session = host.Services.GetRequiredService<IMessageSession>();
+
+        await SendStartTransferSaga(session);
+        if (!context.TransferSagaEvent.WaitOne(TimeSpan.FromSeconds(20)))
+        {
+            throw new("TimedOut waiting for TransferSaga");
+        }
+
+        await host.StopAsync();
+
+        // TransferSaga deletes all but "last" itself, and completes still owning "last"
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+        var persister = new Persister(databaseName, table: "Attachments");
+        var infos = await persister.ReadAllInfo(connection, null);
+        var sagaOwned = infos.Where(_ => _.MessageId.StartsWith("saga-")).ToList();
+        await Assert.That(sagaOwned).HasSingleItem();
+        await Assert.That(sagaOwned[0].Name).IsEqualTo("last");
+    }
+
     static Task RunSqlScripts(string endpointName, Func<SqlConnection> connectionBuilder)
     {
         var baseDir = AppDomain.CurrentDomain.BaseDirectory;
@@ -196,12 +243,13 @@ public class IntegrationTests
         return session.Send(new StartTransferSaga(), sendOptions);
     }
 
-    // TransferSaga deletes what it owns before completing. The handler signals before its transaction commits,
-    // so poll briefly for the delete to become visible.
+    // TransferSaga deletes some of what it owns, and saga completion cleanup deletes the rest.
+    // The handler signals before completion cleanup runs and its transaction commits,
+    // so poll briefly for the deletes to become visible.
     static async Task AssertNoSagaOwnedAttachments(string connectionString, string databaseName)
     {
         var persister = new Persister(databaseName, table: "Attachments");
-        for (var attempt = 0; attempt < 20; attempt++)
+        for (var attempt = 0; attempt < 50; attempt++)
         {
             await using var connection = new SqlConnection(connectionString);
             await connection.OpenAsync();

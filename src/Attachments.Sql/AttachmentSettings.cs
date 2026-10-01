@@ -14,6 +14,7 @@ public partial class AttachmentSettings
     internal string TableName;
     internal bool InstallerDisabled;
     internal bool RunEarlyCleanup = true;
+    internal bool RunSagaCompletionCleanup = true;
     internal bool UseTransport;
     internal bool UseSynchronizedStorage;
 
@@ -49,4 +50,11 @@ public partial class AttachmentSettings
     /// </summary>
     public void DisableEarlyCleanup() =>
         RunEarlyCleanup = false;
+
+    /// <summary>
+    /// Disable deleting the attachments owned by a saga, via <c>IMessageAttachments.TransferToSaga</c>, when that saga completes.
+    /// When disabled, saga owned attachments are removed by <see cref="IMessageAttachments.DeleteForSaga"/> or, once they expire, by the cleanup task.
+    /// </summary>
+    public void DisableSagaCompletionCleanup() =>
+        RunSagaCompletionCleanup = false;
 }

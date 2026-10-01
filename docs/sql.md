@@ -63,7 +63,7 @@ async Task<SqlConnection> OpenConnection(Cancel cancel)
     }
 }
 ```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/Usage.cs#L115-L132' title='Snippet source file'>snippet source</a> | <a href='#snippet-OpenConnection' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/Usage.cs#L127-L144' title='Snippet source file'>snippet source</a> | <a href='#snippet-OpenConnection' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 Also uses the `NServiceBus.Attachments.Sql.TimeToKeep.Default` method for attachment cleanup.
@@ -102,7 +102,7 @@ var attachments = configuration.EnableAttachments(
     TimeToKeep.Default);
 attachments.UseSynchronizedStorageSessionConnectivity();
 ```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/Usage.cs#L68-L75' title='Snippet source file'>snippet source</a> | <a href='#snippet-UseSynchronizedStorageSessionConnectivity' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/Usage.cs#L80-L87' title='Snippet source file'>snippet source</a> | <a href='#snippet-UseSynchronizedStorageSessionConnectivity' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 This approach attempts to use the SynchronizedStorageSession using the following steps:
@@ -126,7 +126,7 @@ var attachments = configuration.EnableAttachments(
     TimeToKeep.Default);
 attachments.UseTransportConnectivity();
 ```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/Usage.cs#L56-L63' title='Snippet source file'>snippet source</a> | <a href='#snippet-UseTransportConnectivity' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/Usage.cs#L68-L75' title='Snippet source file'>snippet source</a> | <a href='#snippet-UseTransportConnectivity' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 This approach attempts to use the transport transaction using the following steps:
@@ -168,19 +168,39 @@ class ConvertSaga :
         var pdf = await attachments.GetBytesForSaga(Data, "pdf", cancel);
         var word = await attachments.GetBytesForSaga(Data, "word", cancel);
 
-        // Use the documents, then remove them.
-        await attachments.DeleteForSaga(Data, cancel);
+        // Use the documents. Completing the saga deletes the attachments it owns.
         MarkAsComplete();
     }
 ```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/Incoming.cs#L118-L148' title='Snippet source file'>snippet source</a> | <a href='#snippet-TransferToSaga' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/Incoming.cs#L118-L147' title='Snippet source file'>snippet source</a> | <a href='#snippet-TransferToSaga' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
  * Early cleanup deletes attachments by the incoming message id. After a transfer that id no longer matches, so the attachment survives after the message finishes processing.
  * Pass `newName` when several messages carry an attachment with the same name, since a saga can only own one attachment of each name. Transferring to a name the saga already owns throws, unless `replace: true` is passed, in which case the existing attachment is deleted first. This suits sagas that can receive a newer reply for the same item, where the latest should win. If the attachment being transferred does not exist, nothing is deleted.
- * The attachment keeps its existing expiry unless `timeToKeep` is passed, and the [cleanup task](#data-cleanup) removes it once it expires. Call `DeleteForSaga` to remove the saga's attachments as soon as they are no longer needed.
+ * The attachment keeps its existing expiry unless `timeToKeep` is passed.
  * `TransferToSaga`, `GetBytesForSaga`, `GetMemoryStreamForSaga`, `GetStringForSaga` and `DeleteForSaga` run on the ambient connection and transaction, so they are atomic with the rest of the handler and see transfers made earlier in the same handler. This requires `UseSynchronizedStorageSessionConnectivity` or `UseTransportConnectivity`. Without either, each call commits on its own connection.
  * The other read members use a separate connection. Read any attachments of the current message before transferring them, since a read on a separate connection can wait on the transfer's lock until the handler's transaction commits.
+
+
+### Cleanup of saga owned attachments
+
+When a saga completes, the attachments it owns are deleted, in the same transaction as the handler that completed it. Saga owned attachments are otherwise removed by:
+
+ * `DeleteForSaga`, to free them before the saga completes.
+ * The [cleanup task](#data-cleanup), once they expire. This covers sagas that never complete.
+
+Deleting on completion runs one `delete` each time any saga on the endpoint completes, including sagas that do not use attachments. It can be disabled:
+
+<!-- snippet: DisableSagaCompletionCleanup -->
+<a id='snippet-DisableSagaCompletionCleanup'></a>
+```cs
+var attachments = configuration.EnableAttachments(
+    connectionFactory: OpenConnection,
+    timeToKeep: TimeToKeep.Default);
+attachments.DisableSagaCompletionCleanup();
+```
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/Usage.cs#L56-L63' title='Snippet source file'>snippet source</a> | <a href='#snippet-DisableSagaCompletionCleanup' title='Start of snippet'>anchor</a></sup>
+<!-- endSnippet -->
 
 
 ## Installation
@@ -198,7 +218,7 @@ var attachments = configuration.EnableAttachments(
     connectionFactory: OpenConnection,
     timeToKeep: TimeToKeep.Default);
 ```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/Usage.cs#L80-L87' title='Snippet source file'>snippet source</a> | <a href='#snippet-ExecuteAtStartup' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/Usage.cs#L92-L99' title='Snippet source file'>snippet source</a> | <a href='#snippet-ExecuteAtStartup' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 NOTE: Note that this is also a valid approach for higher level environments.
@@ -217,7 +237,7 @@ var attachments = configuration.EnableAttachments(
     timeToKeep: TimeToKeep.Default);
 attachments.DisableInstaller();
 ```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/Usage.cs#L92-L100' title='Snippet source file'>snippet source</a> | <a href='#snippet-DisableInstaller' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/Usage.cs#L104-L112' title='Snippet source file'>snippet source</a> | <a href='#snippet-DisableInstaller' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 
@@ -233,7 +253,7 @@ var attachments = configuration.EnableAttachments(
     timeToKeep: TimeToKeep.Default,
     table: "CustomAttachmentsTableName");
 ```
-<sup><a href='/src/Attachments.Sql.Tests/Snippets/Usage.cs#L105-L112' title='Snippet source file'>snippet source</a> | <a href='#snippet-UseTableName' title='Start of snippet'>anchor</a></sup>
+<sup><a href='/src/Attachments.Sql.Tests/Snippets/Usage.cs#L117-L124' title='Snippet source file'>snippet source</a> | <a href='#snippet-UseTableName' title='Start of snippet'>anchor</a></sup>
 <!-- endSnippet -->
 
 
