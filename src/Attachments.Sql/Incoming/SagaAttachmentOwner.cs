@@ -1,5 +1,3 @@
-using NServiceBus;
-
 static class SagaAttachmentOwner
 {
     // stored in the MessageId column, so must fit in nvarchar(50). "saga-" plus a 36 char guid is 41
