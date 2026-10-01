@@ -47,6 +47,23 @@ toc
  * https://www.nuget.org/packages/NServiceBus.Community.Attachments.Sql.Raw
 
 
+## How it works
+
+Attachment data is written to storage (SQL or a file share) when a message is sent. Only the message itself goes through the transport. The receiving endpoint reads attachment data from storage on demand.
+
+```mermaid
+sequenceDiagram
+    participant Sender as Sending endpoint
+    participant Storage as Attachment storage (SQL/FileShare)
+    participant Transport
+    participant Receiver as Receiving endpoint
+    Sender->>Storage: Write attachment data
+    Sender->>Transport: Send message (no attachment data)
+    Transport->>Receiver: Deliver message
+    Receiver->>Storage: Read attachments on demand
+```
+
+
 ## Compared to the DataBus
 
 This project delivers similar functionality to the [DataBus](https://docs.particular.net/nservicebus/messaging/databus/). However it does have some different behavior:

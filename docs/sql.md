@@ -87,6 +87,18 @@ Attachments can leverage the ambient SQL connectivity from either the [transport
 
 If both `UseSynchronizedStorageSessionConnectivity` and `UseTransportConnectivity` are defined, the `SynchronizedStorageSession` will be used first, followed by the `TransportTransaction`.
 
+The connection used for outgoing attachment writes is resolved as follows:
+
+```mermaid
+flowchart TD
+    Start([Outgoing attachment write]) --> Session{UseSynchronizedStorageSessionConnectivity<br/>and the session has a<br/>SqlTransaction or SqlConnection?}
+    Session -- Yes --> UseSession[Use the session's<br/>SqlTransaction or SqlConnection]
+    Session -- No --> Transport{UseTransportConnectivity<br/>and a TransportTransaction exists?}
+    Transport -- Has a Transaction --> Enlist[Enlist a connectionFactory<br/>connection in the Transaction]
+    Transport -- Has a SqlTransaction<br/>or SqlConnection --> UseTransport[Use the transport's<br/>SqlTransaction or SqlConnection]
+    Transport -- No --> Factory[Use a new connection<br/>from connectionFactory]
+```
+
 Ambient connectivity applies to attachment writes only — attachment saves run on the ambient connection/transaction so the save is atomic with the receive (under `SendsAtomicWithReceive`) or the persister's storage session. Attachment reads always run on a fresh connection from the `connectionFactory` and are not enlisted in the receive transaction. This lets a handler hold an `OpenOutgoingAttachment` sink open while reading incoming attachments without colliding with the write on a non-MARS connection. Each read call (`GetStream`, `CopyTo`, `GetBytes`, `ProcessStream`, etc.) opens its own short-lived connection; SQL connection pooling makes this cheap.
 
 
@@ -180,6 +192,18 @@ class ConvertSaga :
  * The attachment keeps its existing expiry unless `timeToKeep` is passed.
  * `TransferToSaga`, `GetBytesForSaga`, `GetMemoryStreamForSaga`, `GetStringForSaga` and `DeleteForSaga` run on the ambient connection and transaction, so they are atomic with the rest of the handler and see transfers made earlier in the same handler. This requires `UseSynchronizedStorageSessionConnectivity` or `UseTransportConnectivity`. Without either, each call commits on its own connection.
  * The other read members use a separate connection. Read any attachments of the current message before transferring them, since a read on a separate connection can wait on the transfer's lock until the handler's transaction commits.
+
+The lifecycle of an attachment transferred to a saga:
+
+```mermaid
+stateDiagram-v2
+    state "Owned by the message" as Message
+    state "Owned by the saga" as Saga
+    [*] --> Message: Sent with a message
+    Message --> Saga: TransferToSaga
+    Message --> [*]: Early cleanup after processing,<br/>or cleanup task once expired
+    Saga --> [*]: Saga completes, DeleteForSaga,<br/>or cleanup task once expired
+```
 
 
 ### Cleanup of saga owned attachments
@@ -325,17 +349,16 @@ The method `TimeToKeep.Default` provides a recommended default for for attachmen
 | `Add(AttachmentFactory)` | Number of attachments not known at compile time | Dynamic. Each attachment uses the memory model of its content. |
 | `AddFile` | File on disk | Convenience wrapper over `AddStream`. |
 
-```
-AddStream (using System.IO.Pipelines):
+`AddStream` uses System.IO.Pipelines:
 
-┌──────────┐        ┌───────────┐        ┌──────────────┐        ┌─────────┐
-│  Writer  │─write─>│   Pipe    │─read──>│  Attachments │─read──>│ Storage │
-│  Code    │        │  (buffer) │        │   Library    │        │ (SQL/FS)│
-└──────────┘        └───────────┘        └──────────────┘        └─────────┘
-
-Writer and reader run concurrently. Pipe applies backpressure
-so the writer pauses if the reader falls behind.
+```mermaid
+flowchart LR
+    Writer["Writer Code"] -- write --> Pipe["Pipe (buffer)"]
+    Pipe -- read --> Lib["Attachments Library"]
+    Lib -- read --> Storage["Storage (SQL/FS)"]
 ```
+
+Writer and reader run concurrently. Pipe applies backpressure so the writer pauses if the reader falls behind.
 
 
 ### Writing attachments to an outgoing message

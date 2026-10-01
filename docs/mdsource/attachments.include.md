@@ -48,17 +48,16 @@ The method `TimeToKeep.Default` provides a recommended default for for attachmen
 | `Add(AttachmentFactory)` | Number of attachments not known at compile time | Dynamic. Each attachment uses the memory model of its content. |
 | `AddFile` | File on disk | Convenience wrapper over `AddStream`. |
 
-```
-AddStream (using System.IO.Pipelines):
+`AddStream` uses System.IO.Pipelines:
 
-┌──────────┐        ┌───────────┐        ┌──────────────┐        ┌─────────┐
-│  Writer  │─write─>│   Pipe    │─read──>│  Attachments │─read──>│ Storage │
-│  Code    │        │  (buffer) │        │   Library    │        │ (SQL/FS)│
-└──────────┘        └───────────┘        └──────────────┘        └─────────┘
-
-Writer and reader run concurrently. Pipe applies backpressure
-so the writer pauses if the reader falls behind.
+```mermaid
+flowchart LR
+    Writer["Writer Code"] -- write --> Pipe["Pipe (buffer)"]
+    Pipe -- read --> Lib["Attachments Library"]
+    Lib -- read --> Storage["Storage (SQL/FS)"]
 ```
+
+Writer and reader run concurrently. Pipe applies backpressure so the writer pauses if the reader falls behind.
 
 
 ### Writing attachments to an outgoing message
