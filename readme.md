@@ -46,6 +46,7 @@ Thanks to all the backing developers. Support this project by [becoming a patron
 <!-- toc -->
 ## Contents
 
+  * [How it works](#how-it-works)
   * [Compared to the DataBus](#compared-to-the-databus)
     * [Read on demand](#read-on-demand)
     * [Memory usage](#memory-usage)
