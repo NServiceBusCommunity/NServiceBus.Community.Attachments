@@ -9,7 +9,7 @@
     <PackageVersion Include="ConfigureAwait.Fody" Version="3.4.1" />
     <PackageVersion Include="Fody" Version="6.9.3" />
     <PackageVersion Include="LocalDb" Version="27.2.5" />
-    <PackageVersion Include="MarkdownSnippets.MsBuild" Version="28.5.0" />
+    <PackageVersion Include="MarkdownSnippets.MsBuild" Version="28.5.1" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.1.1" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.13" />
     <PackageVersion Include="NServiceBus" Version="10.2.9" />
