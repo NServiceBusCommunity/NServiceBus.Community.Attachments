@@ -94,7 +94,7 @@ public class OpenOutgoingAttachmentSqlTransportTests
             await using (var sink = await context.OpenOutgoingAttachment(replyOptions, "output"))
             {
                 await using var writer = new StreamWriter(sink, leaveOpen: true);
-                await writer.WriteAsync("HELLO");
+                await writer.WriteAsync("HELLO", context.CancellationToken);
             }
             await context.Reply(new OutMessage(), replyOptions);
         }

@@ -70,7 +70,7 @@ public class OpenOutgoingAttachmentDefaultNameTests
             await using (var sink = await context.OpenOutgoingAttachment(sendOptions))
             {
                 await using var writer = new StreamWriter(sink, leaveOpen: true);
-                await writer.WriteAsync("HELLO");
+                await writer.WriteAsync("HELLO", context.CancellationToken);
             }
 
             await context.Send(new OutMessage(), sendOptions);
