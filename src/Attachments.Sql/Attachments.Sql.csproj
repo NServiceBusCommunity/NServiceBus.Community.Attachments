@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyName>NServiceBus.Community.Attachments.Sql</AssemblyName>
     <PackageName>NServiceBus.Community.Attachments.Sql</PackageName>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <DefineConstants>$(DefineConstants);Sql</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
