@@ -137,7 +137,7 @@ public class OpenOutgoingAttachmentExtraTests :
             await using (var sink = await context.OpenOutgoingAttachment(sendOptions, "output"))
             {
                 await using var writer = new StreamWriter(sink, leaveOpen: true);
-                await writer.WriteAsync("HELLO");
+                await writer.WriteAsync("HELLO", context.CancellationToken);
             }
 
             await context.Send(new OutMessage(), sendOptions);
@@ -155,7 +155,7 @@ public class OpenOutgoingAttachmentExtraTests :
             await using (var sink = await context.OpenOutgoingAttachment(replyOptions, "output"))
             {
                 await using var writer = new StreamWriter(sink, leaveOpen: true);
-                await writer.WriteAsync("payload");
+                await writer.WriteAsync("payload", context.CancellationToken);
             }
 
             await context.Reply(new OutMessage(), replyOptions);
@@ -172,13 +172,13 @@ public class OpenOutgoingAttachmentExtraTests :
             await using (var first = await context.OpenOutgoingAttachment(replyOptions, "output"))
             {
                 await using var w = new StreamWriter(first, leaveOpen: true);
-                await w.WriteAsync("FIRST");
+                await w.WriteAsync("FIRST", context.CancellationToken);
             }
 
             await using (var second = await context.OpenOutgoingAttachment(replyOptions, "second"))
             {
                 await using var w = new StreamWriter(second, leaveOpen: true);
-                await w.WriteAsync("SECOND");
+                await w.WriteAsync("SECOND", context.CancellationToken);
             }
 
             await context.Reply(new OutMessage(), replyOptions);
@@ -195,7 +195,7 @@ public class OpenOutgoingAttachmentExtraTests :
             await using (var sink = await context.OpenOutgoingAttachment(replyOptions, "output"))
             {
                 await using var w = new StreamWriter(sink, leaveOpen: true);
-                await w.WriteAsync("IMMEDIATE");
+                await w.WriteAsync("IMMEDIATE", context.CancellationToken);
             }
 
             replyOptions.Attachments().AddStream("second", async stream =>

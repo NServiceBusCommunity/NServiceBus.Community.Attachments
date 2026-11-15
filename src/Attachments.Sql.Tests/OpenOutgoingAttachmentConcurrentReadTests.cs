@@ -92,7 +92,7 @@ public class OpenOutgoingAttachmentConcurrentReadTests
                 using var reader = new StreamReader(sourceBuffer, leaveOpen: true);
                 var content = await reader.ReadToEndAsync(context.CancellationToken);
                 await using var writer = new StreamWriter(sink, leaveOpen: true);
-                await writer.WriteAsync(content.ToUpperInvariant());
+                await writer.WriteAsync(content.ToUpperInvariant(), context.CancellationToken);
             }
 
             await context.Reply(new OutMessage(), replyOptions);
